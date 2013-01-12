@@ -16,6 +16,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
+
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.bukkit.FlagStateManager.PlayerFlagState;
@@ -121,6 +122,7 @@ public class WorldGuardVehicleListener implements Listener {
 
                 String greeting = set.getFlag(DefaultFlag.GREET_MESSAGE, localPlayer);
                 String farewell = set.getFlag(DefaultFlag.FAREWELL_MESSAGE, localPlayer);
+                String texture = set.getFlag(DefaultFlag.TEXTURE_PACK);
                 Boolean notifyEnter = set.getFlag(DefaultFlag.NOTIFY_ENTER, localPlayer);
                 Boolean notifyLeave = set.getFlag(DefaultFlag.NOTIFY_LEAVE, localPlayer);
 
@@ -136,6 +138,11 @@ public class WorldGuardVehicleListener implements Listener {
                     String replacedGreeting = plugin.replaceMacros(
                             player, BukkitUtil.replaceColorMacros(greeting));
                     player.sendMessage(ChatColor.AQUA + " ** " + replacedGreeting);
+                }
+
+                if (texture != null && (state.lastTexture == null
+                        || !state.lastTexture.equals(texture))) {
+                    player.setTexturePack(texture);
                 }
 
                 if ((notifyLeave == null || !notifyLeave)
@@ -165,6 +172,7 @@ public class WorldGuardVehicleListener implements Listener {
 
                 state.lastGreeting = greeting;
                 state.lastFarewell = farewell;
+                state.lastTexture = texture;
                 state.notifiedForEnter = notifyEnter;
                 state.notifiedForLeave = notifyLeave;
                 state.lastExitAllowed = exitAllowed;

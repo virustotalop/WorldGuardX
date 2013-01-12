@@ -214,6 +214,7 @@ public class WorldGuardPlayerListener implements Listener {
 
                     String greeting = set.getFlag(DefaultFlag.GREET_MESSAGE);//, localPlayer);
                     String farewell = set.getFlag(DefaultFlag.FAREWELL_MESSAGE);//, localPlayer);
+                    String texture = set.getFlag(DefaultFlag.TEXTURE_PACK);
                     Boolean notifyEnter = set.getFlag(DefaultFlag.NOTIFY_ENTER);//, localPlayer);
                     Boolean notifyLeave = set.getFlag(DefaultFlag.NOTIFY_LEAVE);//, localPlayer);
                     GameMode gameMode = set.getFlag(DefaultFlag.GAME_MODE);
@@ -234,6 +235,11 @@ public class WorldGuardPlayerListener implements Listener {
                         for (String line : replacedGreeting.split("\n")) {
                             player.sendMessage(ChatColor.AQUA + " ** " + line);
                         }
+                    }
+
+                    if (texture != null && (state.lastTexture == null
+                            || !state.lastTexture.equals(texture))) {
+                        player.setTexturePack(texture);
                     }
 
                     if ((notifyLeave == null || !notifyLeave)
@@ -278,6 +284,7 @@ public class WorldGuardPlayerListener implements Listener {
 
                     state.lastGreeting = greeting;
                     state.lastFarewell = farewell;
+                    state.lastTexture = texture;
                     state.notifiedForEnter = notifyEnter;
                     state.notifiedForLeave = notifyLeave;
                     state.lastExitAllowed = exitAllowed;
