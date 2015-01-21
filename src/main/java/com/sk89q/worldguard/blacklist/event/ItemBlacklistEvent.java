@@ -19,6 +19,7 @@
 
 package com.sk89q.worldguard.blacklist.event;
 
+import com.flowpowered.math.vector.Vector3d;
 import com.sk89q.worldedit.Vector;
 import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.blacklist.target.Target;
@@ -45,7 +46,9 @@ abstract class ItemBlacklistEvent extends AbstractBlacklistEvent {
 
     @Override
     public Vector getLoggedPosition() {
-        return getPlayer() != null ? getPlayer().getPosition() : getPosition();
+        if (getPlayer() == null) return getPosition();
+        Vector3d flow = getPlayer().getPosition();
+        return new Vector(flow.getX(), flow.getY(), flow.getZ());
     }
 
 }

@@ -23,8 +23,9 @@ import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.session.Session;
-import org.bukkit.GameMode;
-import org.bukkit.entity.Player;
+import org.spongepowered.api.data.manipulator.mutable.entity.HealthData;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 
 public class HealFlag extends Handler {
 
@@ -38,8 +39,8 @@ public class HealFlag extends Handler {
     public void tick(Player player, ApplicableRegionSet set) {
         LocalPlayer localPlayer = getPlugin().wrapPlayer(player);
 
-        if (!getSession().isInvincible(player) && player.getGameMode() != GameMode.CREATIVE) {
-            if (player.getHealth() <= 0) {
+        if (!getSession().isInvincible(player) && player.getGameModeData().type().get().equals(GameModes.SURVIVAL)) {
+            if (player.getHealthData().health().get() <= 0) {
                 return;
             }
 
@@ -54,28 +55,25 @@ public class HealFlag extends Handler {
                 return;
             }
 
+            HealthData data = player.getHealthData();
             if (minHealth == null) {
-                minHealth = 0.0;
+                minHealth = data.maxHealth().getMinValue();
             }
 
             if (maxHealth == null) {
-                maxHealth = player.getMaxHealth();
+                maxHealth = data.maxHealth().getMaxValue();
             }
 
-            // Apply a cap to prevent possible exceptions
-            minHealth = Math.min(player.getMaxHealth(), minHealth);
-            maxHealth = Math.min(player.getMaxHealth(), maxHealth);
-
-            if (player.getHealth() >= maxHealth && healAmount > 0) {
+            if (data.health().get() >= maxHealth && healAmount > 0) {
                 return;
             }
 
             if (healDelay <= 0) {
-                player.setHealth(healAmount > 0 ? maxHealth : minHealth); // this will insta-kill if the flag is unset
+                player.offer(data.health().set(healAmount > 0 ? maxHealth : minHealth)); // this will insta-kill if the flag is unset
                 lastHeal = now;
             } else if (now - lastHeal > healDelay * 1000) {
                 // clamp health between minimum and maximum
-                player.setHealth(Math.min(maxHealth, Math.max(minHealth, player.getHealth() + healAmount)));
+                player.offer(data.health().set(Math.min(maxHealth, Math.max(minHealth, data.health().get() + healAmount))));
                 lastHeal = now;
             }
         }

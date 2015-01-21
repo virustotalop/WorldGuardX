@@ -19,12 +19,14 @@
 
 package com.sk89q.worldguard.chest;
 
-import com.sk89q.worldedit.blocks.BlockID;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.Sign;
-import org.bukkit.entity.Player;
+import com.google.common.base.Optional;
+import org.spongepowered.api.block.BlockType;
+import org.spongepowered.api.block.BlockTypes;
+import org.spongepowered.api.data.manipulator.mutable.tileentity.SignData;
+import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.util.Direction;
+import org.spongepowered.api.world.Location;
 
 /**
  * Sign-based chest protection.
@@ -33,61 +35,61 @@ import org.bukkit.entity.Player;
  */
 public class SignChestProtection implements ChestProtection {
     
-    public boolean isProtected(Block block, Player player) {
-        if (isChest(block.getTypeId())) {
-            Block below = block.getRelative(0, -1, 0);
+    public boolean isProtected(Location block, Player player) {
+        if (isChest(block.getBlockType())) {
+            Location below = block.getRelative(Direction.DOWN);
             return isProtectedSignAround(below, player);
-        } else if (block.getTypeId() == BlockID.SIGN_POST) {
+        } else if (block.getBlockType().equals(BlockTypes.STANDING_SIGN)) {
             return isProtectedSignAndChestBinary(block, player);
         } else {
-            Block above = block.getRelative(0, 1, 0);
+            Location above = block.getRelative(Direction.UP);
             Boolean res = isProtectedSign(above, player);
             if (res != null) return res;
             return false;
         }
     }
     
-    public boolean isProtectedPlacement(Block block, Player player) {
+    public boolean isProtectedPlacement(Location block, Player player) {
         return isProtectedSignAround(block, player);
     }
     
-    private boolean isProtectedSignAround(Block searchBlock, Player player) {
-        Block side;
+    private boolean isProtectedSignAround(Location searchBlock, Player player) {
+        Location side;
         Boolean res;
         
         side = searchBlock;
         res = isProtectedSign(side, player);
         if (res != null && res) return res;
         
-        side = searchBlock.getRelative(-1, 0, 0);
+        side = searchBlock.getRelative(Direction.EAST);
         res = isProtectedSignAndChest(side, player);
         if (res != null && res) return res;
         
-        side = searchBlock.getRelative(1, 0, 0);
+        side = searchBlock.getRelative(Direction.WEST);
         res = isProtectedSignAndChest(side, player);
         if (res != null && res) return res;
         
-        side = searchBlock.getRelative(0, 0, -1);
+        side = searchBlock.getRelative(Direction.DOWN);
         res = isProtectedSignAndChest(side, player);
         if (res != null && res) return res;
         
-        side = searchBlock.getRelative(0, 0, 1);
+        side = searchBlock.getRelative(Direction.UP);
         res = isProtectedSignAndChest(side, player);
         if (res != null && res) return res;
         
         return false;
     }
     
-    private Boolean isProtectedSign(Sign sign, Player player) {
-        if (sign.getLine(0).equalsIgnoreCase("[Lock]")) {
+    private Boolean isProtectedSign(SignData sign, Player player) {
+        if (Texts.toPlain(sign.lines().get(0)).equalsIgnoreCase("[Lock]")) {
             if (player == null) { // No player, no access
                 return true;
             }
             
             String name = player.getName();
-            if (name.equalsIgnoreCase(sign.getLine(1).trim())
-                    || name.equalsIgnoreCase(sign.getLine(2).trim())
-                    || name.equalsIgnoreCase(sign.getLine(3).trim())) {
+            if (name.equalsIgnoreCase(Texts.toPlain(sign.lines().get(1)))
+                    || name.equalsIgnoreCase(Texts.toPlain(sign.lines().get(2)))
+                    || name.equalsIgnoreCase(Texts.toPlain(sign.lines().get(3)))) {
                 return false;
             }
             
@@ -98,62 +100,58 @@ public class SignChestProtection implements ChestProtection {
         return null;
     }
     
-    private Boolean isProtectedSign(Block block, Player player) {
-        BlockState state = block.getState();
-        if (state == null || !(state instanceof Sign)) {
+    private Boolean isProtectedSign(Location block, Player player) {
+        Optional<SignData> data = block.get(SignData.class);
+        if (!data.isPresent()) {
             return null;
         }
-        return isProtectedSign((Sign) state, player);
+        return isProtectedSign(data.get(), player);
     }
     
-    private Boolean isProtectedSignAndChest(Block block, Player player) {
-        if (!isChest(block.getRelative(0, 1, 0).getTypeId())) {
+    private Boolean isProtectedSignAndChest(Location block, Player player) {
+        if (!isChest(block.getRelative(Direction.UP).getBlockType())) {
             return null;
         }
         return isProtectedSign(block, player);
     }
     
-    private boolean isProtectedSignAndChestBinary(Block block, Player player) {
+    private boolean isProtectedSignAndChestBinary(Location block, Player player) {
         Boolean res = isProtectedSignAndChest(block, player);
         return !(res == null || !res);
     }
 
-    public boolean isAdjacentChestProtected(Block searchBlock, Player player) {
-        Block side;
+    public boolean isAdjacentChestProtected(Location searchBlock, Player player) {
+        Location side;
         Boolean res;
         
         side = searchBlock;
         res = isProtected(side, player);
         if (res != null && res) return res;
         
-        side = searchBlock.getRelative(-1, 0, 0);
+        side = searchBlock.getRelative(Direction.WEST);
         res = isProtected(side, player);
         if (res != null && res) return res;
         
-        side = searchBlock.getRelative(1, 0, 0);
+        side = searchBlock.getRelative(Direction.EAST);
         res = isProtected(side, player);
         if (res != null && res) return res;
         
-        side = searchBlock.getRelative(0, 0, -1);
+        side = searchBlock.getRelative(Direction.DOWN);
         res = isProtected(side, player);
         if (res != null && res) return res;
         
-        side = searchBlock.getRelative(0, 0, 1);
+        side = searchBlock.getRelative(Direction.UP);
         res = isProtected(side, player);
         if (res != null && res) return res;
         
         return false;
     }
 
-    @Deprecated
-    public boolean isChest(Material material) {
-        return isChest(material.getId());
-    }
-
-    public boolean isChest(int type) {
-        return type == BlockID.CHEST
-                || type == BlockID.DISPENSER
-                || type == BlockID.FURNACE
-                || type == BlockID.BURNING_FURNACE;
+    @Override
+    public boolean isChest(BlockType type) {
+        return type.equals(BlockTypes.CHEST)
+                || type.equals(BlockTypes.DISPENSER)
+                || type.equals(BlockTypes.FURNACE)
+                || type.equals(BlockTypes.LIT_FURNACE);
     }
 }

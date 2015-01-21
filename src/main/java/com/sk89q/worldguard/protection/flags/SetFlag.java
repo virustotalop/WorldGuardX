@@ -19,7 +19,7 @@
 
 package com.sk89q.worldguard.protection.flags;
 
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;

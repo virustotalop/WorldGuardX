@@ -20,7 +20,7 @@
 package com.sk89q.worldguard.protection;
 
 import com.sk89q.worldguard.LocalPlayer;
-import com.sk89q.worldguard.bukkit.RegionQuery;
+import com.sk89q.worldguard.sponge.RegionQuery;
 import com.sk89q.worldguard.protection.association.RegionAssociable;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.flags.Flag;
@@ -148,17 +148,6 @@ public interface ApplicableRegionSet extends Iterable<ProtectedRegion> {
      * @return a collection of values
      */
     <V> Collection<V> queryAllValues(@Nullable RegionAssociable subject, Flag<V> flag);
-
-    /**
-     * Test whether the construct flag evaluates true for the given player.
-     *
-     * @param player the player
-     * @return true if true
-     * @deprecated The {@code CONSTRUCT} flag is being removed and is no longer
-     *             needed because flags now support groups assigned to them.
-     */
-    @Deprecated
-    boolean canConstruct(LocalPlayer player);
 
     /**
      * Gets the state of a state flag. This cannot be used for the build flag.

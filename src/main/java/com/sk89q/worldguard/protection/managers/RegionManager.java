@@ -19,11 +19,11 @@
 
 package com.sk89q.worldguard.protection.managers;
 
+import com.flowpowered.math.vector.Vector3d;
+import com.flowpowered.math.vector.Vector3i;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Sets;
-import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.Vector2D;
 import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.RegionResultSet;
@@ -35,6 +35,7 @@ import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.util.RegionCollectionConsumer;
 import com.sk89q.worldguard.util.Normal;
+import org.spongepowered.api.world.Location;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -149,7 +150,7 @@ public final class RegionManager {
      *
      * @param position the position
      */
-    public void loadChunk(Vector2D position) {
+    public void loadChunk(Vector3i position) {
         index.bias(position);
     }
 
@@ -158,7 +159,7 @@ public final class RegionManager {
      *
      * @param positions a collection of positions
      */
-    public void loadChunks(Collection<Vector2D> positions) {
+    public void loadChunks(Collection<Vector3i> positions) {
         index.biasAll(positions);
     }
 
@@ -167,7 +168,7 @@ public final class RegionManager {
      *
      * @param position the position
      */
-    public void unloadChunk(Vector2D position) {
+    public void unloadChunk(Vector3i position) {
         index.forget(position);
     }
 
@@ -315,7 +316,7 @@ public final class RegionManager {
      * @param position the position
      * @return the query object
      */
-    public ApplicableRegionSet getApplicableRegions(Vector position) {
+    public ApplicableRegionSet getApplicableRegions(Vector3d position) {
         checkNotNull(position);
 
         Set<ProtectedRegion> regions = Sets.newHashSet();
@@ -344,7 +345,7 @@ public final class RegionManager {
      * @param position the position
      * @return a list of names
      */
-    public List<String> getApplicableRegionsIDs(Vector position) {
+    public List<String> getApplicableRegionsIDs(Vector3d position) {
         checkNotNull(position);
 
         final List<String> names = new ArrayList<String>();
@@ -435,14 +436,14 @@ public final class RegionManager {
     // =============== HELPER METHODS ===============
 
     /**
-     * Helper method for {@link #getApplicableRegions(Vector)} using Bukkit
+     * Helper method for {@link #getApplicableRegions(Vector3d)} using Bukkit
      * locations.
      *
      * @param loc the location
      * @return an {@code ApplicableRegionSet}
      */
-    public ApplicableRegionSet getApplicableRegions(org.bukkit.Location loc) {
-        return getApplicableRegions(com.sk89q.worldedit.bukkit.BukkitUtil.toVector(loc).floor());
+    public ApplicableRegionSet getApplicableRegions(Location loc) {
+        return getApplicableRegions(loc.getPosition());
     }
 
 }

@@ -21,8 +21,8 @@ package com.sk89q.worldguard.protection.flags;
 
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.worldedit.Vector;
-import com.sk89q.worldguard.bukkit.BukkitUtil;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.sponge.BukkitUtil;
+import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import org.bukkit.command.CommandSender;
 
 import java.util.HashMap;

@@ -19,6 +19,9 @@
 
 package com.sk89q.worldguard.blacklist;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.sk89q.worldguard.blacklist.action.Action;
 import com.sk89q.worldguard.blacklist.action.ActionType;
 import com.sk89q.worldguard.blacklist.event.BlacklistEvent;
@@ -26,11 +29,9 @@ import com.sk89q.worldguard.blacklist.event.EventType;
 import com.sk89q.worldguard.blacklist.target.TargetMatcher;
 import com.sk89q.worldguard.blacklist.target.TargetMatcherParseException;
 import com.sk89q.worldguard.blacklist.target.TargetMatcherParser;
-import com.sk89q.guavabackport.cache.CacheBuilder;
-import com.sk89q.guavabackport.cache.CacheLoader;
-import com.sk89q.guavabackport.cache.LoadingCache;
-import com.sk89q.worldguard.bukkit.commands.CommandUtils;
-import org.bukkit.ChatColor;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.format.TextColors;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -185,10 +186,10 @@ public abstract class Blacklist {
                             entry.setIgnorePermissions(parts[1].split(","));
 
                         } else if (parts[0].equalsIgnoreCase("message")) {
-                            entry.setMessage(CommandUtils.replaceColorMacros(parts[1].trim()));
+                            entry.setMessage(parts[1].trim());
 
                         } else if (parts[0].equalsIgnoreCase("comment")) {
-                            entry.setComment(CommandUtils.replaceColorMacros(parts[1].trim()));
+                            entry.setComment(parts[1].trim());
 
                         } else {
                             boolean found = false;
@@ -270,12 +271,12 @@ public abstract class Blacklist {
     public void notify(BlacklistEvent event, String comment) {
         lastEvent = event;
 
-        broadcastNotification(ChatColor.GRAY + "WG: "
-                + ChatColor.LIGHT_PURPLE + event.getCauseName()
-                + ChatColor.GOLD + " (" + event.getDescription() + ") "
-                + ChatColor.WHITE
-                + event.getTarget().getFriendlyName()
-                + (comment != null ? " (" + comment + ")" : "") + ".");
+        broadcastNotification(Texts.builder().append(
+                Texts.of(TextColors.GRAY, "WG: "),
+                Texts.of(TextColors.LIGHT_PURPLE, event.getCauseName()),
+                Texts.of(TextColors.GOLD, " (" + event.getDescription() + ") "),
+                Texts.of(TextColors.WHITE, event.getTarget().getFriendlyName(),
+                        (comment != null ? " (" + comment + ")" : ""), ".")).build());
     }
 
     /**
@@ -283,7 +284,7 @@ public abstract class Blacklist {
      *
      * @param msg The message to broadcast
      */
-    public abstract void broadcastNotification(String msg);
+    public abstract void broadcastNotification(Text msg);
 
     public LoadingCache<String, TrackedEvent> getRepeatingEventCache() {
         return repeatingEventCache;

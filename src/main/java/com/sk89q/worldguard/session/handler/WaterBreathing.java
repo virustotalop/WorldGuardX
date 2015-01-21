@@ -20,7 +20,7 @@
 package com.sk89q.worldguard.session.handler;
 
 import com.sk89q.worldguard.session.Session;
-import org.bukkit.entity.Player;
+import org.spongepowered.api.entity.living.player.Player;
 
 public class WaterBreathing extends Handler {
 

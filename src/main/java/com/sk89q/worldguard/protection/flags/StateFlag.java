@@ -19,8 +19,8 @@
 
 package com.sk89q.worldguard.protection.flags;
 
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import org.bukkit.command.CommandSender;
+import com.sk89q.worldguard.sponge.WorldGuardPlugin;
+import org.spongepowered.api.util.command.CommandSource;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -81,7 +81,7 @@ public class StateFlag extends Flag<StateFlag.State> {
     }
 
     @Override
-    public State parseInput(WorldGuardPlugin plugin, CommandSender sender, String input) throws InvalidFlagFormat {
+    public State parseInput(WorldGuardPlugin plugin, CommandSource sender, String input) throws InvalidFlagFormat {
         input = input.trim();
 
         if (input.equalsIgnoreCase("allow")) {

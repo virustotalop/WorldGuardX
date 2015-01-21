@@ -19,11 +19,13 @@
 
 package com.sk89q.worldguard.session.handler;
 
+import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.session.Session;
-import org.bukkit.GameMode;
-import org.bukkit.entity.Player;
+import org.spongepowered.api.data.manipulator.mutable.entity.FoodData;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 
 public class FeedFlag extends Handler {
 
@@ -35,42 +37,44 @@ public class FeedFlag extends Handler {
 
     @Override
     public void tick(Player player, ApplicableRegionSet set) {
-        if (!getSession().isInvincible(player) && player.getGameMode() != GameMode.CREATIVE) {
+        if (!getSession().isInvincible(player) && player.getGameModeData().type().get().equals(GameModes.SURVIVAL)) {
             long now = System.currentTimeMillis();
 
-            Integer feedAmount = set.getFlag(DefaultFlag.FEED_AMOUNT);
-            Integer feedDelay = set.getFlag(DefaultFlag.FEED_DELAY);
-            Integer minHunger = set.getFlag(DefaultFlag.MIN_FOOD);
-            Integer maxHunger = set.getFlag(DefaultFlag.MAX_FOOD);
+            LocalPlayer localPlayer = getPlugin().wrapPlayer(player);
+            Integer feedAmount = set.queryValue(localPlayer, DefaultFlag.FEED_AMOUNT);
+            Integer feedDelay = set.queryValue(localPlayer, DefaultFlag.FEED_DELAY);
+            Integer minHunger = set.queryValue(localPlayer, DefaultFlag.MIN_FOOD);
+            Integer maxHunger = set.queryValue(localPlayer, DefaultFlag.MAX_FOOD);
 
+            FoodData data = player.get(FoodData.class).orNull();
+            if (data == null) return;
             if (feedAmount == null || feedDelay == null || feedAmount == 0 || feedDelay < 0) {
                 return;
             }
             if (minHunger == null) {
-                minHunger = 0;
+                minHunger = data.foodLevel().getMinValue();
             }
             if (maxHunger == null) {
-                maxHunger = 20;
+                maxHunger = data.foodLevel().getMaxValue();
             }
 
-            // Apply a cap to prevent possible exceptions
-            minHunger = Math.min(20, minHunger);
-            maxHunger = Math.min(20, maxHunger);
-
-            if (player.getFoodLevel() >= maxHunger && feedAmount > 0) {
+            if (data.foodLevel().get() >= maxHunger && feedAmount > 0) {
                 return;
             }
 
             if (feedDelay <= 0) {
-                player.setFoodLevel(feedAmount > 0 ? maxHunger : minHunger);
-                player.setSaturation(player.getFoodLevel());
+                data.foodLevel().set(feedAmount > 0 ? maxHunger : minHunger);
+                data.saturation().set(feedAmount > 0 ? data.saturation().getMaxValue() : data.saturation().getMinValue());
+                data.exhaustion().set(feedAmount > 0 ? data.exhaustion().getMaxValue() : data.exhaustion().getMinValue());
                 lastFeed = now;
             } else if (now - lastFeed > feedDelay * 1000) {
                 // clamp health between minimum and maximum
-                player.setFoodLevel(Math.min(maxHunger, Math.max(minHunger, player.getFoodLevel() + feedAmount)));
-                player.setSaturation(player.getFoodLevel());
+                data.foodLevel().set(Math.min(maxHunger, Math.max(minHunger, data.foodLevel().get() + feedAmount)));
+                data.saturation().set(feedAmount > 0 ? data.saturation().getMaxValue() : data.saturation().getMinValue());
+                data.exhaustion().set(feedAmount > 0 ? data.exhaustion().getMaxValue() : data.exhaustion().getMinValue());
                 lastFeed = now;
             }
+            player.offer(data);
         }
     }
 

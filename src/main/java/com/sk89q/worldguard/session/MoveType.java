@@ -19,12 +19,12 @@
 
 package com.sk89q.worldguard.session;
 
-import org.bukkit.Location;
+import org.spongepowered.api.entity.Transform;
 
 /**
  * Types of movements.
  *
- * <p>Used with {@link Session#testMoveTo(Location, MoveType)}.</p>
+ * <p>Used with {@link Session#testMoveTo(org.spongepowered.api.entity.living.player.Player, Transform, MoveType)}.</p>
  */
 public enum MoveType {
 

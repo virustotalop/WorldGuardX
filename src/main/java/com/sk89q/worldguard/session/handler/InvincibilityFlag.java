@@ -24,8 +24,8 @@ import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.session.MoveType;
 import com.sk89q.worldguard.session.Session;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
+import org.spongepowered.api.entity.Transform;
+import org.spongepowered.api.entity.living.player.Player;
 
 import javax.annotation.Nullable;
 
@@ -44,13 +44,13 @@ public class InvincibilityFlag extends FlagValueChangeHandler<State> {
     }
 
     @Override
-    protected boolean onSetValue(Player player, Location from, Location to, ApplicableRegionSet toSet, State currentValue, State lastValue, MoveType moveType) {
+    protected boolean onSetValue(Player player, Transform from, Transform to, ApplicableRegionSet toSet, State currentValue, State lastValue, MoveType moveType) {
         invincibility = currentValue;
         return true;
     }
 
     @Override
-    protected boolean onAbsentValue(Player player, Location from, Location to, ApplicableRegionSet toSet, State lastValue, MoveType moveType) {
+    protected boolean onAbsentValue(Player player, Transform from, Transform to, ApplicableRegionSet toSet, State lastValue, MoveType moveType) {
         invincibility = null;
         return true;
     }

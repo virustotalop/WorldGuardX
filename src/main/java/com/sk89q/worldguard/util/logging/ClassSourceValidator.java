@@ -21,7 +21,7 @@ package com.sk89q.worldguard.util.logging;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import org.bukkit.plugin.Plugin;
+import org.spongepowered.api.plugin.PluginContainer;
 
 import javax.annotation.Nullable;
 import java.security.CodeSource;
@@ -41,7 +41,7 @@ public class ClassSourceValidator {
     private static final Logger log = Logger.getLogger(ClassSourceValidator.class.getCanonicalName());
     private static final String separatorLine = Strings.repeat("*", 46);
 
-    private final Plugin plugin;
+    private final PluginContainer plugin;
     @Nullable
     private final CodeSource expectedCodeSource;
 
@@ -50,7 +50,7 @@ public class ClassSourceValidator {
      *
      * @param plugin The plugin
      */
-    public ClassSourceValidator(Plugin plugin) {
+    public ClassSourceValidator(PluginContainer plugin) {
         checkNotNull(plugin, "plugin");
         this.plugin = plugin;
         this.expectedCodeSource = plugin.getClass().getProtectionDomain().getCodeSource();

@@ -19,9 +19,9 @@
 
 package com.sk89q.worldguard.protection.flags;
 
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.FlagValueCalculator;
-import org.bukkit.command.CommandSender;
+import com.sk89q.worldguard.sponge.WorldGuardPlugin;
+import org.spongepowered.api.util.command.CommandSource;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -158,7 +158,7 @@ public abstract class Flag<T> {
      * @return The coerced type
      * @throws InvalidFlagFormat Raised if the input is invalid
      */
-    public abstract T parseInput(WorldGuardPlugin plugin, CommandSender sender, String input) throws InvalidFlagFormat;
+    public abstract T parseInput(WorldGuardPlugin plugin, CommandSource sender, String input) throws InvalidFlagFormat;
 
     /**
      * Convert a raw type that was loaded (from a YAML file, for example)

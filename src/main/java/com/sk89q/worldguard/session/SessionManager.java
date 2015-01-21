@@ -19,21 +19,30 @@
 
 package com.sk89q.worldguard.session;
 
-import com.sk89q.guavabackport.cache.CacheBuilder;
-import com.sk89q.guavabackport.cache.CacheLoader;
-import com.sk89q.guavabackport.cache.LoadingCache;
-import com.sk89q.worldguard.bukkit.BukkitUtil;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.sk89q.worldguard.session.handler.*;
-import org.bukkit.World;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.sk89q.worldguard.session.handler.EntryFlag;
+import com.sk89q.worldguard.session.handler.ExitFlag;
+import com.sk89q.worldguard.session.handler.FarewellFlag;
+import com.sk89q.worldguard.session.handler.FeedFlag;
+import com.sk89q.worldguard.session.handler.GameModeFlag;
+import com.sk89q.worldguard.session.handler.GodMode;
+import com.sk89q.worldguard.session.handler.GreetingFlag;
+import com.sk89q.worldguard.session.handler.HealFlag;
+import com.sk89q.worldguard.session.handler.InvincibilityFlag;
+import com.sk89q.worldguard.session.handler.NotifyEntryFlag;
+import com.sk89q.worldguard.session.handler.NotifyExitFlag;
+import com.sk89q.worldguard.session.handler.WaterBreathing;
+import com.sk89q.worldguard.sponge.WorldGuardPlugin;
+import com.sk89q.worldguard.sponge.permission.RegionPermissionModel;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.entity.living.player.PlayerJoinEvent;
+import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
-import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -43,7 +52,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Keeps tracks of sessions and also does session-related handling
  * (flags, etc.).
  */
-public class SessionManager implements Runnable, Listener {
+public class SessionManager implements Runnable {
 
     public static final int RUN_DELAY = 20;
     public static final long SESSION_LIFETIME = 10;
@@ -56,7 +65,7 @@ public class SessionManager implements Runnable, Listener {
             .build(new CacheLoader<WorldPlayerTuple, Boolean>() {
                 @Override
                 public Boolean load(WorldPlayerTuple tuple) throws Exception {
-                    return plugin.getGlobalRegionManager().hasBypass(tuple.player, tuple.world);
+                    return (new RegionPermissionModel(plugin, tuple.player).mayIgnoreRegionProtection(tuple.world));
                 }
             });
 
@@ -106,8 +115,7 @@ public class SessionManager implements Runnable, Listener {
      * information for all players.
      */
     public void resetAllStates() {
-        Collection<? extends Player> players = BukkitUtil.getOnlinePlayers();
-        for (Player player : players) {
+        for (Player player : plugin.getGame().getServer().getOnlinePlayers()) {
             Session session = sessions.getIfPresent(new CacheKey(player));
             if (session != null) {
                 session.resetState(player);
@@ -179,15 +187,15 @@ public class SessionManager implements Runnable, Listener {
         return sessions.getUnchecked(new CacheKey(player));
     }
 
-    @EventHandler
+    @Listener
     public void onPlayerJoin(PlayerJoinEvent event) {
         // Pre-load a session
-        get(event.getPlayer());
+        get(event.getSource());
     }
 
     @Override
     public void run() {
-        for (Player player : BukkitUtil.getOnlinePlayers()) {
+        for (Player player : plugin.getGame().getServer().getOnlinePlayers()) {
             get(player).tick(player);
         }
     }

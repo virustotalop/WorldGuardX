@@ -19,9 +19,11 @@
 
 package com.sk89q.worldguard.protection.flags;
 
-import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.entity.EntityType;
+import org.spongepowered.api.entity.EntityType;
+import org.spongepowered.api.entity.living.player.gamemode.GameMode;
+import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.text.format.TextStyles;
 
 /**
  * The flags that are used in WorldGuard.
@@ -30,13 +32,6 @@ public final class DefaultFlag {
 
     // Overrides membership check
     public static final StateFlag PASSTHROUGH = new StateFlag("passthrough", false);
-
-    /**
-     * @deprecated This flag is being removed because group flags can now be
-     *             set on all flags.
-     */
-    @Deprecated
-    public static final RegionGroupFlag CONSTRUCT = new RegionGroupFlag("construct", RegionGroup.MEMBERS);
 
     // This flag is unlike the others. It forces the checking of region membership
     public static final StateFlag BUILD = new BuildFlag("build", true);
@@ -103,11 +98,17 @@ public final class DefaultFlag {
 
     // Flags that adjust behaviors that aren't state flags
     public static final StringFlag DENY_MESSAGE = new StringFlag("deny-message",
-            "" + ChatColor.RED + ChatColor.BOLD + "Hey!" + ChatColor.GRAY + " Sorry, but you can't %what% here.");
+            Texts.builder().append(Texts.of(
+                    TextColors.RED, TextStyles.BOLD, "Hey!"),
+                    Texts.of(TextColors.GRAY, " Sorry, but you can't %what% here.")).build());
     public static final StringFlag ENTRY_DENY_MESSAGE = new StringFlag("entry-deny-message",
-            "" + ChatColor.RED + ChatColor.BOLD + "Hey!" + ChatColor.GRAY + " You are not permitted to enter this area.");
+            Texts.builder().append(Texts.of(
+                            TextColors.RED, TextStyles.BOLD, "Hey!"),
+                    Texts.of(TextColors.GRAY, " You are not permitted to enter this area.")).build());
     public static final StringFlag EXIT_DENY_MESSAGE = new StringFlag("exit-deny-message",
-            "" + ChatColor.RED + ChatColor.BOLD + "Hey!" + ChatColor.GRAY + " You are not permitted to leave this area.");
+            Texts.builder().append(Texts.of(
+                            TextColors.RED, TextStyles.BOLD, "Hey!"),
+                    Texts.of(TextColors.GRAY, " You are not permitted to leave this area.")).build());
     public static final BooleanFlag EXIT_OVERRIDE = new BooleanFlag("exit-override");
     public static final StringFlag GREET_MESSAGE = new StringFlag("greeting");
     public static final StringFlag FAREWELL_MESSAGE = new StringFlag("farewell");
@@ -134,7 +135,7 @@ public final class DefaultFlag {
     public static final SetFlag<String> ALLOWED_CMDS = new SetFlag<String>("allowed-cmds", new CommandStringFlag(null));
 
     public static final Flag<?>[] flagsList = new Flag<?>[] {
-            PASSTHROUGH, BUILD, CONSTRUCT, BLOCK_BREAK, BLOCK_PLACE, PVP, CHEST_ACCESS, PISTONS,
+            PASSTHROUGH, BUILD, BLOCK_BREAK, BLOCK_PLACE, PVP, CHEST_ACCESS, PISTONS,
             TNT, LIGHTER, RIDE, USE, INTERACT, PLACE_VEHICLE, DESTROY_VEHICLE, SLEEP,
             MOB_DAMAGE, MOB_SPAWNING, DENY_SPAWN, INVINCIBILITY, EXP_DROPS,
             CREEPER_EXPLOSION, OTHER_EXPLOSION, ENDERDRAGON_BLOCK_DAMAGE, GHAST_FIREBALL, ENDER_BUILD,
@@ -165,7 +166,7 @@ public final class DefaultFlag {
      * @return a flag, or null
      */
     public static Flag<?> fuzzyMatchFlag(String id) {
-        for (Flag<?> flag : DefaultFlag.getFlags()) {
+        for (Flag<?> flag : getFlags()) {
             if (flag.getName().replace("-", "").equalsIgnoreCase(id.replace("-", ""))) {
                 return flag;
             }

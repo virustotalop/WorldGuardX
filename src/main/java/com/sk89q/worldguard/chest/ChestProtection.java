@@ -19,9 +19,9 @@
 
 package com.sk89q.worldguard.chest;
 
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
+import org.spongepowered.api.block.BlockType;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.world.Location;
 
 /**
  * Interface for chest protection.
@@ -35,7 +35,7 @@ public interface ChestProtection {
      * @param player The player to check
      * @return Whether the block is protected for player
      */
-    public boolean isProtected(Block block, Player player);
+    public boolean isProtected(Location block, Player player);
 
     /**
      * Returns whether a location where a chest block is trying to be created 
@@ -45,7 +45,7 @@ public interface ChestProtection {
      * @param player The player to check
      * @return Whether {@code player} can place a block at the specified block
      */
-    public boolean isProtectedPlacement(Block block, Player player);
+    public boolean isProtectedPlacement(Location block, Player player);
 
     /**
      * Returns whether an adjacent chest is protected.
@@ -54,24 +54,14 @@ public interface ChestProtection {
      * @param player The player to check
      * @return Whether {@code searchBlock} is protected from access by {@code player}
      */
-    public boolean isAdjacentChestProtected(Block searchBlock, Player player);
+    public boolean isAdjacentChestProtected(Location searchBlock, Player player);
 
     /**
      * Returns whether a material is a chest.
      *
      * @param material The material to check
-     * @deprecated see {@link #isChest(int)}
-     * @return {@link #isChest(int)}
+     * return whether the block is protectable
      */
-    @Deprecated
-    public boolean isChest(Material material);
-
-    /**
-     * Returns whether a material is a chest.
-     *
-     * @param type The type to check
-     * @return Whether type is a 'chest' (block that can be protected)
-     */
-    public boolean isChest(int type);
+    public boolean isChest(BlockType material);
 
 }

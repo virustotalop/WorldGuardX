@@ -24,8 +24,9 @@ import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.session.MoveType;
 import com.sk89q.worldguard.session.Session;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
+import org.spongepowered.api.entity.Transform;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.world.World;
 
 import java.util.Set;
 
@@ -40,13 +41,13 @@ public abstract class FlagValueChangeHandler<T> extends Handler {
     }
 
     @Override
-    public final void initialize(Player player, Location current, ApplicableRegionSet set) {
+    public final void initialize(Player player, Transform<World> current, ApplicableRegionSet set) {
         lastValue = set.queryValue(getPlugin().wrapPlayer(player), flag);
         onInitialValue(player, set, lastValue);
     }
 
     @Override
-    public boolean onCrossBoundary(Player player, Location from, Location to, ApplicableRegionSet toSet, Set<ProtectedRegion> entered, Set<ProtectedRegion> exited, MoveType moveType) {
+    public boolean onCrossBoundary(Player player, Transform<World> from, Transform<World> to, ApplicableRegionSet toSet, Set<ProtectedRegion> entered, Set<ProtectedRegion> exited, MoveType moveType) {
         T currentValue = toSet.queryValue(getPlugin().wrapPlayer(player), flag);
         boolean allowed = true;
 
@@ -65,8 +66,8 @@ public abstract class FlagValueChangeHandler<T> extends Handler {
 
     protected abstract void onInitialValue(Player player, ApplicableRegionSet set, T value);
 
-    protected abstract boolean onSetValue(Player player, Location from, Location to, ApplicableRegionSet toSet, T currentValue, T lastValue, MoveType moveType);
+    protected abstract boolean onSetValue(Player player, Transform<World> from, Transform<World> to, ApplicableRegionSet toSet, T currentValue, T lastValue, MoveType moveType);
 
-    protected abstract boolean onAbsentValue(Player player, Location from, Location to, ApplicableRegionSet toSet, T lastValue, MoveType moveType);
+    protected abstract boolean onAbsentValue(Player player, Transform<World> from, Transform<World> to, ApplicableRegionSet toSet, T lastValue, MoveType moveType);
 
 }

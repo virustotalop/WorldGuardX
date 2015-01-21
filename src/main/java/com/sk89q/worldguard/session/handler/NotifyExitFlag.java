@@ -23,9 +23,11 @@ import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.session.MoveType;
 import com.sk89q.worldguard.session.Session;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
+import org.spongepowered.api.entity.Transform;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.World;
 
 public class NotifyExitFlag extends FlagValueChangeHandler<Boolean> {
 
@@ -41,15 +43,16 @@ public class NotifyExitFlag extends FlagValueChangeHandler<Boolean> {
     }
 
     @Override
-    protected boolean onSetValue(Player player, Location from, Location to, ApplicableRegionSet toSet, Boolean currentValue, Boolean lastValue, MoveType moveType) {
+    protected boolean onSetValue(Player player, Transform<World> from, Transform<World> to, ApplicableRegionSet toSet, Boolean currentValue, Boolean lastValue, MoveType moveType) {
         return true;
     }
 
     @Override
-    protected boolean onAbsentValue(Player player, Location from, Location to, ApplicableRegionSet toSet, Boolean lastValue, MoveType moveType) {
-        getPlugin().broadcastNotification(ChatColor.GRAY + "WG: "
-                + ChatColor.LIGHT_PURPLE + player.getName()
-                + ChatColor.GOLD + " left NOTIFY region");
+    protected boolean onAbsentValue(Player player, Transform<World> from, Transform<World> to, ApplicableRegionSet toSet, Boolean lastValue, MoveType moveType) {
+        getPlugin().broadcastNotification(Texts.builder().append(
+                Texts.of(TextColors.GRAY, "WG: "),
+                Texts.of(TextColors.LIGHT_PURPLE, player.getName()),
+                Texts.of(TextColors.GOLD, " left NOTIFY region")).build());
         return true;
     }
 }

@@ -32,13 +32,6 @@ public interface Target {
     int getTypeId();
 
     /**
-     * Get the data value.
-     *
-     * @return the data value
-     */
-    short getData();
-
-    /**
      * Get a friendly name to be printed.
      *
      * @return a friendly name

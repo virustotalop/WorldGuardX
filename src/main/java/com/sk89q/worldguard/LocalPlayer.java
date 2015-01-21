@@ -19,7 +19,7 @@
 
 package com.sk89q.worldguard;
 
-import com.sk89q.worldedit.Vector;
+import com.flowpowered.math.vector.Vector3d;
 import com.sk89q.worldguard.domains.Association;
 import com.sk89q.worldguard.protection.association.RegionAssociable;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -56,7 +56,7 @@ public abstract class LocalPlayer implements RegionAssociable {
      * 
      * @return The player's position
      */
-    public abstract Vector getPosition();
+    public abstract Vector3d getPosition();
     
     /**
      * Kick this player.

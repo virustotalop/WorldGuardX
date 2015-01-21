@@ -24,9 +24,11 @@ import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.session.MoveType;
 import com.sk89q.worldguard.session.Session;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
+import org.spongepowered.api.entity.Transform;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.World;
 
 public class NotifyEntryFlag extends FlagValueChangeHandler<Boolean> {
 
@@ -40,7 +42,7 @@ public class NotifyEntryFlag extends FlagValueChangeHandler<Boolean> {
     }
 
     @Override
-    protected boolean onSetValue(Player player, Location from, Location to, ApplicableRegionSet toSet, Boolean currentValue, Boolean lastValue, MoveType moveType) {
+    protected boolean onSetValue(Player player, Transform<World> from, Transform<World> to, ApplicableRegionSet toSet, Boolean currentValue, Boolean lastValue, MoveType moveType) {
         StringBuilder regionList = new StringBuilder();
 
         for (ProtectedRegion region : toSet) {
@@ -51,17 +53,16 @@ public class NotifyEntryFlag extends FlagValueChangeHandler<Boolean> {
             regionList.append(region.getId());
         }
 
-        getPlugin().broadcastNotification(ChatColor.GRAY + "WG: "
-                + ChatColor.LIGHT_PURPLE + player.getName()
-                + ChatColor.GOLD + " entered NOTIFY region: "
-                + ChatColor.WHITE
-                + regionList);
-
+        getPlugin().broadcastNotification(Texts.builder().append(
+                Texts.of(TextColors.GRAY, "WG: "),
+                Texts.of(TextColors.LIGHT_PURPLE, player.getName()),
+                Texts.of(TextColors.GOLD, " entered NOTIFY region:"),
+                Texts.of(TextColors.WHITE, regionList.toString())).build());
         return true;
     }
 
     @Override
-    protected boolean onAbsentValue(Player player, Location from, Location to, ApplicableRegionSet toSet, Boolean lastValue, MoveType moveType) {
+    protected boolean onAbsentValue(Player player, Transform<World> from, Transform<World> to, ApplicableRegionSet toSet, Boolean lastValue, MoveType moveType) {
         return true;
     }
 

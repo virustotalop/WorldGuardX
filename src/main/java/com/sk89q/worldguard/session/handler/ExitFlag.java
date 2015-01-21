@@ -20,20 +20,23 @@
 package com.sk89q.worldguard.session.handler;
 
 import com.sk89q.worldguard.LocalPlayer;
-import com.sk89q.worldguard.bukkit.commands.CommandUtils;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.session.MoveType;
 import com.sk89q.worldguard.session.Session;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
+import com.sk89q.worldguard.sponge.commands.CommandUtils;
+import org.spongepowered.api.entity.Transform;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.world.World;
 
 public class ExitFlag extends FlagValueChangeHandler<State> {
 
     private static final long MESSAGE_THRESHOLD = 1000 * 2;
-    private String storedMessage;
+    private Text storedMessage;
     private long lastMessage;
 
     public ExitFlag(Session session) {
@@ -49,8 +52,8 @@ public class ExitFlag extends FlagValueChangeHandler<State> {
     private void sendMessage(Player player) {
         long now = System.currentTimeMillis();
 
-        if ((now - lastMessage) > MESSAGE_THRESHOLD && storedMessage != null && !storedMessage.isEmpty()) {
-            player.sendMessage(CommandUtils.replaceColorMacros(storedMessage));
+        if ((now - lastMessage) > MESSAGE_THRESHOLD && storedMessage != null) {
+            player.sendMessage(CommandUtils.replaceColorMacros(Texts.toPlain(storedMessage)));
             lastMessage = now;
         }
     }
@@ -61,8 +64,8 @@ public class ExitFlag extends FlagValueChangeHandler<State> {
     }
 
     @Override
-    protected boolean onSetValue(Player player, Location from, Location to, ApplicableRegionSet toSet, State currentValue, State lastValue, MoveType moveType) {
-        if (getSession().getManager().hasBypass(player, from.getWorld())) {
+    protected boolean onSetValue(Player player, Transform<World> from, Transform<World> to, ApplicableRegionSet toSet, State currentValue, State lastValue, MoveType moveType) {
+        if (getSession().getManager().hasBypass(player, from.getExtent())) {
             return true;
         }
 
@@ -84,8 +87,8 @@ public class ExitFlag extends FlagValueChangeHandler<State> {
     }
 
     @Override
-    protected boolean onAbsentValue(Player player, Location from, Location to, ApplicableRegionSet toSet, State lastValue, MoveType moveType) {
-        if (getSession().getManager().hasBypass(player, from.getWorld())) {
+    protected boolean onAbsentValue(Player player, Transform<World> from, Transform<World> to, ApplicableRegionSet toSet, State lastValue, MoveType moveType) {
+        if (getSession().getManager().hasBypass(player, from.getExtent())) {
             return true;
         }
 

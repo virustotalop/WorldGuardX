@@ -19,54 +19,54 @@
 
 package com.sk89q.worldguard.protection.flags;
 
-import com.sk89q.worldedit.LocalWorld;
-import com.sk89q.worldedit.Location;
-import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.bukkit.BukkitUtil;
-import org.bukkit.Bukkit;
+import com.flowpowered.math.vector.Vector3d;
+import com.google.common.base.Optional;
+import com.sk89q.worldguard.sponge.WorldGuardPlugin;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 
 /**
  * A location that stores the name of the world in case the world is unloaded.
  */
-class LazyLocation extends Location {
+public class LazyLocation {
 
-    private final String worldName;
+    private String worldName;
+    private Vector3d position;
+    private Vector3d rotation;
 
     @Nullable
-    private static LocalWorld findWorld(String worldName) {
-        return BukkitUtil.getLocalWorld(Bukkit.getServer().getWorld(worldName));
+    private static World findWorld(String worldName) {
+        Optional<World> world = WorldGuardPlugin.inst().getGame().getServer().getWorld(worldName);
+        return world.isPresent() ? world.get() : null;
     }
 
-    public LazyLocation(String worldName, Vector position, float yaw, float pitch) {
-        super(findWorld(worldName), position, yaw, pitch);
-        this.worldName = worldName;
+    public LazyLocation(String worldName, Vector3d position, Vector3d rotation) {
+        this(worldName, position);
+        this.rotation = rotation;
     }
 
-    public LazyLocation(String worldName, Vector position) {
-        super(findWorld(worldName), position);
+    public LazyLocation(String worldName, Vector3d position) {
         this.worldName = worldName;
+        this.position = position;
     }
 
     public String getWorldName() {
         return worldName;
     }
 
-    public LazyLocation setAngles(float yaw, float pitch) {
-        return new LazyLocation(worldName, getPosition(), yaw, pitch);
+    public Vector3d getPosition() {
+        return position;
     }
 
-    public LazyLocation setPosition(Vector position) {
-        return new LazyLocation(worldName, position, getYaw(), getPitch());
+    public Vector3d getRotation() {
+        return rotation;
     }
-
-    public LazyLocation add(Vector other) {
-        return this.setPosition(getPosition().add(other));
-    }
-
-    public LazyLocation add(double x, double y, double z) {
-        return this.setPosition(getPosition().add(x, y, z));
+    public Location getLocation() {
+        World world = findWorld(worldName);
+        if (world == null) return null;
+        return new Location(world, position);
     }
 
 }

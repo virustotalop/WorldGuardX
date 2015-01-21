@@ -19,14 +19,17 @@
 
 package com.sk89q.worldguard.protection.flags;
 
-import org.bukkit.command.CommandSender;
+import com.google.common.base.Optional;
+import com.sk89q.worldguard.sponge.WorldGuardPlugin;
+import org.spongepowered.api.CatalogType;
+import org.spongepowered.api.util.command.CommandSource;
 
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import java.util.Collection;
 
 /**
  * Stores an enum value.
  */
-public class EnumFlag<T extends Enum<T>> extends Flag<T> {
+public class EnumFlag<T extends CatalogType> extends Flag<T> {
 
     private Class<T> enumClass;
 
@@ -55,7 +58,13 @@ public class EnumFlag<T extends Enum<T>> extends Flag<T> {
         }
 
         try {
-            return Enum.valueOf(enumClass, input);
+            Collection<T> allTypes = WorldGuardPlugin.inst().getGame().getRegistry().getAllOf(enumClass);
+            for (T type : allTypes) {
+                if (type.getName().equalsIgnoreCase(input)) {
+                    return type;
+                }
+            }
+            throw new IllegalArgumentException();
         } catch (IllegalArgumentException e) {
             T val = detectValue(input);
 
@@ -78,7 +87,7 @@ public class EnumFlag<T extends Enum<T>> extends Flag<T> {
     }
 
     @Override
-    public T parseInput(WorldGuardPlugin plugin, CommandSender sender, String input) throws InvalidFlagFormat {
+    public T parseInput(WorldGuardPlugin plugin, CommandSource sender, String input) throws InvalidFlagFormat {
         try {
             return findValue(input);
         } catch (IllegalArgumentException e) {
@@ -89,16 +98,13 @@ public class EnumFlag<T extends Enum<T>> extends Flag<T> {
 
     @Override
     public T unmarshal(Object o) {
-        try {
-            return Enum.valueOf(enumClass, String.valueOf(o));
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
+        Optional<T> opt = WorldGuardPlugin.inst().getGame().getRegistry().getType(enumClass, String.valueOf(o));
+        return opt.isPresent() ? opt.get() : null;
     }
 
     @Override
     public Object marshal(T o) {
-        return o.name();
+        return o.getName();
     }
 
 }

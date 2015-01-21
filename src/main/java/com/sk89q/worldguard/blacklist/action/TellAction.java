@@ -21,7 +21,6 @@ package com.sk89q.worldguard.blacklist.action;
 
 import com.sk89q.worldguard.blacklist.BlacklistEntry;
 import com.sk89q.worldguard.blacklist.event.BlacklistEvent;
-import org.bukkit.ChatColor;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -44,9 +43,9 @@ public class TellAction extends RepeatGuardedAction {
 
         if (event.getPlayer() != null) {
             if (message != null) {
-                event.getPlayer().printRaw(ChatColor.YELLOW + String.format(message, event.getTarget().getFriendlyName()) + ".");
+                event.getPlayer().printRaw(String.format(message, event.getTarget().getFriendlyName()) + ".");
             } else {
-                event.getPlayer().printRaw(ChatColor.YELLOW + "You're not allowed to " + event.getDescription() + " " +
+                event.getPlayer().printRaw("You're not allowed to " + event.getDescription() + " " +
                         event.getTarget().getFriendlyName() + ".");
             }
         }

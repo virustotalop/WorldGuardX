@@ -23,10 +23,10 @@ import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.session.MoveType;
 import com.sk89q.worldguard.session.Session;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.entity.Player;
+import org.spongepowered.api.entity.Transform;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.gamemode.GameMode;
+import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 
@@ -49,17 +49,17 @@ public class GameModeFlag extends FlagValueChangeHandler<GameMode> {
 
     private void updateGameMode(Player player, @Nullable GameMode newValue, World world) {
         if (!getSession().getManager().hasBypass(player, world) && newValue != null) {
-            if (player.getGameMode() != newValue) {
-                originalGameMode = player.getGameMode();
-                player.setGameMode(newValue);
+            if (player.getGameModeData().type().get() != newValue) {
+                originalGameMode = player.getGameModeData().type().get();
+                player.getGameModeData().type().set(newValue);
             } else if (originalGameMode == null) {
-                originalGameMode = player.getServer().getDefaultGameMode();
+                originalGameMode = player.getWorld().getProperties().getGameMode();
             }
         } else {
             if (originalGameMode != null) {
                 GameMode mode = originalGameMode;
                 originalGameMode = null;
-                player.setGameMode(mode);
+                player.getGameModeData().type().set(mode);
             }
         }
     }
@@ -70,13 +70,13 @@ public class GameModeFlag extends FlagValueChangeHandler<GameMode> {
     }
 
     @Override
-    protected boolean onSetValue(Player player, Location from, Location to, ApplicableRegionSet toSet, GameMode currentValue, GameMode lastValue, MoveType moveType) {
-        updateGameMode(player, currentValue, to.getWorld());
+    protected boolean onSetValue(Player player, Transform<World> from, Transform<World> to, ApplicableRegionSet toSet, GameMode currentValue, GameMode lastValue, MoveType moveType) {
+        updateGameMode(player, currentValue, to.getExtent());
         return true;
     }
 
     @Override
-    protected boolean onAbsentValue(Player player, Location from, Location to, ApplicableRegionSet toSet, GameMode lastValue, MoveType moveType) {
+    protected boolean onAbsentValue(Player player, Transform<World> from, Transform<World> to, ApplicableRegionSet toSet, GameMode lastValue, MoveType moveType) {
         updateGameMode(player, null, player.getWorld());
         return true;
     }

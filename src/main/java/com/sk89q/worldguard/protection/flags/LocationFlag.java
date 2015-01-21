@@ -19,19 +19,18 @@
 
 package com.sk89q.worldguard.protection.flags;
 
+import com.flowpowered.math.vector.Vector3d;
 import com.sk89q.minecraft.util.commands.CommandException;
-import com.sk89q.worldedit.Location;
-import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.bukkit.BukkitUtil;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import org.bukkit.World;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import com.sk89q.worldguard.sponge.WorldGuardPlugin;
+import org.spongepowered.api.entity.Transform;
+import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.util.command.CommandSource;
+import org.spongepowered.api.world.World;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class LocationFlag extends Flag<Location> {
+public class LocationFlag extends Flag<LazyLocation> {
 
     public LocationFlag(String name, RegionGroup defaultGroup) {
         super(name, defaultGroup);
@@ -42,7 +41,7 @@ public class LocationFlag extends Flag<Location> {
     }
 
     @Override
-    public Location parseInput(WorldGuardPlugin plugin, CommandSender sender, String input) throws InvalidFlagFormat {
+    public LazyLocation parseInput(WorldGuardPlugin plugin, CommandSource sender, String input) throws InvalidFlagFormat {
         input = input.trim();
 
         final Player player;
@@ -53,7 +52,7 @@ public class LocationFlag extends Flag<Location> {
         }
 
         if ("here".equalsIgnoreCase(input)) {
-            return toLazyLocation(player.getLocation());
+            return toLazyLocation(player.getTransform());
         } else if ("none".equalsIgnoreCase(input)) {
             return null;
         } else {
@@ -64,10 +63,11 @@ public class LocationFlag extends Flag<Location> {
                     final double x = Double.parseDouble(split[0]);
                     final double y = Double.parseDouble(split[1]);
                     final double z = Double.parseDouble(split[2]);
-                    final float yaw = split.length < 4 ? 0 : Float.parseFloat(split[3]);
-                    final float pitch = split.length < 5 ? 0 : Float.parseFloat(split[4]);
+                    final double yaw = split.length < 4 ? 0 : Float.parseFloat(split[3]);
+                    final double pitch = split.length < 5 ? 0 : Float.parseFloat(split[4]);
+                    final double roll = 0.0D;
 
-                    return new LazyLocation(world.getName(), new Vector(x, y, z), yaw, pitch);
+                    return new LazyLocation(world.getName(), new Vector3d(x, y, z), new Vector3d(pitch, yaw, roll));
                 } catch (NumberFormatException ignored) {
                 }
             }
@@ -76,12 +76,12 @@ public class LocationFlag extends Flag<Location> {
         }
     }
 
-    private Location toLazyLocation(org.bukkit.Location location) {
-        return new LazyLocation(location.getWorld().getName(), BukkitUtil.toVector(location), location.getYaw(), location.getPitch());
+    private LazyLocation toLazyLocation(Transform transform) {
+        return new LazyLocation(((World) transform.getExtent()).getName(), transform.getPosition(), transform.getRotation());
     }
 
     @Override
-    public Location unmarshal(Object o) {
+    public LazyLocation unmarshal(Object o) {
         if (o instanceof Map<?, ?>) {
             Map<?, ?> map = (Map<?, ?>) o;
 
@@ -103,34 +103,32 @@ public class LocationFlag extends Flag<Location> {
             Object rawPitch = map.get("pitch");
             if (rawPitch == null) return null;
 
-            Vector position = new Vector(toNumber(rawX), toNumber(rawY), toNumber(rawZ));
-            float yaw = (float) toNumber(rawYaw);
-            float pitch = (float) toNumber(rawPitch);
+            Object rawRoll = map.get("roll");
+            if (rawRoll == null) return null;
 
-            return new LazyLocation(String.valueOf(rawWorld), position, yaw, pitch);
+            Vector3d position = new Vector3d(toNumber(rawX), toNumber(rawY), toNumber(rawZ));
+            double yaw = toNumber(rawYaw);
+            double pitch = toNumber(rawPitch);
+            Vector3d rotation = new Vector3d(pitch, yaw, 0.0D);
+
+            return new LazyLocation(String.valueOf(rawWorld), position, rotation);
         }
 
         return null;
     }
 
     @Override
-    public Object marshal(Location o) {
-        Vector position = o.getPosition();
+    public Object marshal(LazyLocation o) {
+        Vector3d position = o.getPosition();
+        Vector3d rotation = o.getRotation();
         Map<String, Object> vec = new HashMap<String, Object>();
-        if (o instanceof LazyLocation) {
-            vec.put("world", ((LazyLocation) o).getWorldName());
-        } else {
-            try {
-                vec.put("world", o.getWorld().getName());
-            } catch (NullPointerException e) {
-                return null;
-            }
-        }
+        vec.put("world", o.getWorldName());
         vec.put("x", position.getX());
         vec.put("y", position.getY());
         vec.put("z", position.getZ());
-        vec.put("yaw", o.getYaw());
-        vec.put("pitch", o.getPitch());
+        vec.put("pitch", rotation.getX());
+        vec.put("yaw", rotation.getY());
+        vec.put("roll", rotation.getZ());
         return vec;
     }
 

@@ -19,11 +19,11 @@
 
 package com.sk89q.worldguard.util.report;
 
-import com.sk89q.worldguard.bukkit.event.debug.CancelAttempt;
-import com.sk89q.worldguard.bukkit.util.HandlerTracer;
-import org.bukkit.event.Cancellable;
-import org.bukkit.event.Event;
-import org.bukkit.plugin.Plugin;
+import com.sk89q.worldguard.sponge.event.debug.CancelAttempt;
+import com.sk89q.worldguard.sponge.util.HandlerTracer;
+import org.spongepowered.api.event.Cancellable;
+import org.spongepowered.api.event.Event;
+import org.spongepowered.api.plugin.PluginContainer;
 
 import java.util.Arrays;
 import java.util.List;
@@ -81,7 +81,7 @@ public class CancelReport implements Report {
                 int index = cancels.size() - i;
 
                 StackTraceElement[] stackTrace = truncateStackTrace(cancel.getStackTrace());
-                Plugin cause = tracer.detectPlugin(stackTrace);
+                PluginContainer cause = tracer.detectPlugin(stackTrace);
 
                 builder.append("#").append(index).append(" ");
                 builder.append(getCancelText(cancel.getAfter()));
@@ -101,7 +101,7 @@ public class CancelReport implements Report {
             return builder.toString();
         } else {
             return "No plugins cancelled the event. Other causes for cancellation: " +
-                    "(1) Bukkit may be using a different event for the action " +
+                    "(1) Sponge may be using a different event for the action " +
                     " (example: buckets have their own bucket events); or " +
                     "(2) Minecraft's spawn protection has not been disabled.";
         }

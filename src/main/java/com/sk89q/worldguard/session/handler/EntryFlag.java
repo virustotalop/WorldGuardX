@@ -20,14 +20,17 @@
 package com.sk89q.worldguard.session.handler;
 
 import com.sk89q.worldguard.LocalPlayer;
-import com.sk89q.worldguard.bukkit.commands.CommandUtils;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.session.MoveType;
 import com.sk89q.worldguard.session.Session;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
+import com.sk89q.worldguard.sponge.commands.CommandUtils;
+import org.spongepowered.api.entity.Transform;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.world.World;
 
 import java.util.Set;
 
@@ -41,16 +44,16 @@ public class EntryFlag extends Handler {
     }
 
     @Override
-    public boolean onCrossBoundary(Player player, Location from, Location to, ApplicableRegionSet toSet, Set<ProtectedRegion> entered, Set<ProtectedRegion> exited, MoveType moveType) {
+    public boolean onCrossBoundary(Player player, Transform<World> from, Transform<World> to, ApplicableRegionSet toSet, Set<ProtectedRegion> entered, Set<ProtectedRegion> exited, MoveType moveType) {
         LocalPlayer localPlayer = getPlugin().wrapPlayer(player);
         boolean allowed = toSet.testState(localPlayer, DefaultFlag.ENTRY);
 
-        if (!getSession().getManager().hasBypass(player, to.getWorld()) && !allowed && moveType.isCancellable()) {
-            String message = toSet.queryValue(localPlayer, DefaultFlag.ENTRY_DENY_MESSAGE);
+        if (!getSession().getManager().hasBypass(player, ((World) to.getExtent())) && !allowed && moveType.isCancellable()) {
+            Text message = toSet.queryValue(localPlayer, DefaultFlag.ENTRY_DENY_MESSAGE);
             long now = System.currentTimeMillis();
 
-            if ((now - lastMessage) > MESSAGE_THRESHOLD && message != null && !message.isEmpty()) {
-                player.sendMessage(CommandUtils.replaceColorMacros(message));
+            if ((now - lastMessage) > MESSAGE_THRESHOLD && message != null) {
+                player.sendMessage(CommandUtils.replaceColorMacros(Texts.toPlain(message)));
                 lastMessage = now;
             }
 

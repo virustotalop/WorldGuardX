@@ -19,15 +19,16 @@
 
 package com.sk89q.worldguard.session.handler;
 
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.session.MoveType;
 import com.sk89q.worldguard.session.Session;
 import com.sk89q.worldguard.session.SessionManager;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
+import com.sk89q.worldguard.sponge.WorldGuardPlugin;
+import org.spongepowered.api.entity.Transform;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 import java.util.Set;
@@ -77,11 +78,11 @@ public abstract class Handler {
      * @param current The player's current location
      * @param set The regions for the current location
      */
-    public void initialize(Player player, Location current, ApplicableRegionSet set) {
+    public void initialize(Player player, Transform<World> current, ApplicableRegionSet set) {
     }
 
     /**
-     * Called when {@link Session#testMoveTo(Player, Location, MoveType)} is called.
+     * Called when {@link Session#testMoveTo(Player, Transform, MoveType)} is called.
      *
      * <p>If this method returns {@code false}, then no other handlers
      * will be run (for this move attempt).</p>
@@ -93,7 +94,7 @@ public abstract class Handler {
      * @param moveType The type of movement
      * @return Whether the movement should be allowed
      */
-    public boolean testMoveTo(Player player, Location from, Location to, ApplicableRegionSet toSet, MoveType moveType) {
+    public boolean testMoveTo(Player player, Transform<World> from, Transform<World> to, ApplicableRegionSet toSet, MoveType moveType) {
         return true;
     }
 
@@ -102,7 +103,7 @@ public abstract class Handler {
      * there are fewer regions or more regions.
      *
      * <p>This is called only if the move test
-     * ({@link Session#testMoveTo(Player, Location, MoveType)}) was successful.</p>
+     * ({@link Session#testMoveTo(Player, Transform, MoveType)}) was successful.</p>
      *
      * <p>If this method returns {@code false}, then no other handlers
      * will be run (for this move attempt).</p>
@@ -116,7 +117,7 @@ public abstract class Handler {
      * @param moveType The type of move
      * @return Whether the movement should be allowed
      */
-    public boolean onCrossBoundary(Player player, Location from, Location to, ApplicableRegionSet toSet,
+    public boolean onCrossBoundary(Player player, Transform<World> from, Transform<World> to, ApplicableRegionSet toSet,
                                    Set<ProtectedRegion> entered, Set<ProtectedRegion> exited, MoveType moveType) {
         return true;
     }

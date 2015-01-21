@@ -30,7 +30,9 @@
   <allow pkg="org.hamcrest"/>
   <allow pkg="com.sk89q"/>
   <allow pkg="org.enginehub"/>
-  <allow pkg="org.bukkit"/>
+  <allow pkg="org.spongepowered.api"/>
+  <allow pkg="com.flowpowered.math"/>
+  <allow pkg="com.google.inject"/>
   <allow pkg="org.yaml.snakeyaml"/>
   <allow pkg="au.com.bytecode.opencsv"/>
   <allow pkg="org.khelekore.prtree"/>

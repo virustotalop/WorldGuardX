@@ -20,14 +20,17 @@
 package com.sk89q.worldguard.session.handler;
 
 import com.google.common.collect.Sets;
-import com.sk89q.worldguard.bukkit.commands.CommandUtils;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.session.MoveType;
 import com.sk89q.worldguard.session.Session;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
+import com.sk89q.worldguard.sponge.commands.CommandUtils;
+import org.spongepowered.api.entity.Transform;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.world.World;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -35,21 +38,22 @@ import java.util.Set;
 
 public class GreetingFlag extends Handler {
 
-    private Set<String> lastMessageStack = Collections.emptySet();
+    private Set<Text> lastMessageStack = Collections.emptySet();
 
     public GreetingFlag(Session session) {
         super(session);
     }
 
     @Override
-    public boolean onCrossBoundary(Player player, Location from, Location to, ApplicableRegionSet toSet, Set<ProtectedRegion> entered, Set<ProtectedRegion> exited, MoveType moveType) {
-        Collection<String> messages = toSet.queryAllValues(getPlugin().wrapPlayer(player), DefaultFlag.GREET_MESSAGE);
+    public boolean onCrossBoundary(Player player, Transform<World> from, Transform<World> to, ApplicableRegionSet toSet, Set<ProtectedRegion> entered, Set<ProtectedRegion> exited, MoveType moveType) {
+        Collection<Text> messages = toSet.queryAllValues(getPlugin().wrapPlayer(player), DefaultFlag.GREET_MESSAGE);
 
-        for (String message : messages) {
+        for (Text message : messages) {
             if (!lastMessageStack.contains(message)) {
-                String effective = CommandUtils.replaceColorMacros(message);
-                effective = getPlugin().replaceMacros(player, effective);
-                player.sendMessage(effective.replaceAll("\\\\n", "\n").split("\\n"));
+                String plain = Texts.toPlain(message);
+                plain = getPlugin().replaceMacros(player, plain);
+                plain = plain.replaceAll("\\\\n", "\n");
+                player.sendMessage(CommandUtils.replaceColorMacros(plain));
                 break;
             }
         }
@@ -60,7 +64,7 @@ public class GreetingFlag extends Handler {
             // Due to flag priorities, we have to collect the lower
             // priority flag values separately
             for (ProtectedRegion region : toSet) {
-                String message = region.getFlag(DefaultFlag.GREET_MESSAGE);
+                Text message = region.getFlag(DefaultFlag.GREET_MESSAGE);
                 if (message != null) {
                     lastMessageStack.add(message);
                 }

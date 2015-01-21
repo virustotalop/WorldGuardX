@@ -19,8 +19,8 @@
 
 package com.sk89q.worldguard.session;
 
-import org.bukkit.World;
-import org.bukkit.entity.Player;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.world.World;
 
 class WorldPlayerTuple {
 

@@ -19,7 +19,8 @@
 
 package com.sk89q.worldguard.protection.flags;
 
-import org.bukkit.entity.EntityType;
+import com.sk89q.worldguard.sponge.WorldGuardPlugin;
+import org.spongepowered.api.entity.EntityType;
 
 /**
  * Stores an entity type.
@@ -38,12 +39,12 @@ public class EntityTypeFlag extends EnumFlag<EntityType> {
     public EntityType detectValue(String input) {
         EntityType lowMatch = null;
 
-        for (EntityType type : EntityType.values()) {
-            if (type.name().equalsIgnoreCase(input.trim())) {
+        for (EntityType type : WorldGuardPlugin.inst().getGame().getRegistry().getAllOf(EntityType.class)) {
+            if (type.getName().equalsIgnoreCase(input.trim())) {
                 return type;
             }
 
-            if (type.name().toLowerCase().startsWith(input.toLowerCase().trim())) {
+            if (type.getName().toLowerCase().startsWith(input.toLowerCase().trim())) {
                 lowMatch = type;
             }
         }

@@ -19,25 +19,27 @@
 
 package com.sk89q.worldguard.protection.flags;
 
-import org.bukkit.command.CommandSender;
-
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.sponge.WorldGuardPlugin;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.util.TextMessageException;
+import org.spongepowered.api.util.command.CommandSource;
 
 import javax.annotation.Nullable;
 
 /**
  * Stores a string.
  */
-public class StringFlag extends Flag<String> {
+public class StringFlag extends Flag<Text> {
 
-    private final String defaultValue;
+    private final Text defaultValue;
 
     public StringFlag(String name) {
         super(name);
         this.defaultValue = null;
     }
 
-    public StringFlag(String name, String defaultValue) {
+    public StringFlag(String name, Text defaultValue) {
         super(name);
         this.defaultValue = defaultValue;
     }
@@ -47,34 +49,41 @@ public class StringFlag extends Flag<String> {
         this.defaultValue = null;
     }
 
-    public StringFlag(String name, RegionGroup defaultGroup, String defaultValue) {
+    public StringFlag(String name, RegionGroup defaultGroup, Text defaultValue) {
         super(name, defaultGroup);
         this.defaultValue = defaultValue;
     }
 
     @Nullable
     @Override
-    public String getDefault() {
+    public Text getDefault() {
         return defaultValue;
     }
 
     @Override
-    public String parseInput(WorldGuardPlugin plugin, CommandSender sender, String input) throws InvalidFlagFormat {
-        return input.replaceAll("(?!\\\\)\\\\n", "\n").replaceAll("\\\\\\\\n", "\\n");
+    public Text parseInput(WorldGuardPlugin plugin, CommandSource sender, String input) throws InvalidFlagFormat {
+        return Texts.of(input.replaceAll("(?!\\\\)\\\\n", "\n").replaceAll("\\\\\\\\n", "\\n"));
     }
 
     @Override
-    public String unmarshal(Object o) {
-        if (o instanceof String) {
-            return (String) o;
+    public Text unmarshal(Object o) {
+        if (o instanceof Text) {
+            return (Text) o;
+        } else if (o instanceof String) {
+            try {
+                return Texts.json().from((String) o);
+            } catch (TextMessageException e) {
+                e.printStackTrace();
+                return null;
+            }
         } else {
             return null;
         }
     }
 
     @Override
-    public Object marshal(String o) {
-        return o;
+    public Object marshal(Text o) {
+        return Texts.json().to(o);
     }
 
 }

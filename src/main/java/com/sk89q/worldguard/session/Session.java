@@ -21,15 +21,17 @@ package com.sk89q.worldguard.session;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.sk89q.worldguard.bukkit.RegionQuery;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.sk89q.worldguard.bukkit.util.Locations;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.session.handler.Handler;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
+import com.sk89q.worldguard.sponge.RegionQuery;
+import com.sk89q.worldguard.sponge.WorldGuardPlugin;
+import com.sk89q.worldguard.sponge.util.Locations;
+import org.spongepowered.api.entity.Transform;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -45,7 +47,7 @@ public class Session {
 
     private final SessionManager manager;
     private final HashMap<Class<?>, Handler> handlers = Maps.newLinkedHashMap();
-    private Location lastValid;
+    private Transform<World> lastValid;
     private Set<ProtectedRegion> lastRegionSet;
     private final AtomicBoolean needRefresh = new AtomicBoolean(false);
 
@@ -106,8 +108,8 @@ public class Session {
      */
     void initialize(Player player) {
         RegionQuery query = getManager().getPlugin().getRegionContainer().createQuery();
-        Location location = player.getLocation();
-        ApplicableRegionSet set = query.getApplicableRegions(location);
+        Transform<World> location = player.getTransform();
+        ApplicableRegionSet set = query.getApplicableRegions(location.getLocation());
 
         lastValid = location;
         lastRegionSet = set.getRegions();
@@ -124,7 +126,7 @@ public class Session {
      */
     void tick(Player player) {
         RegionQuery query = getManager().getPlugin().getRegionContainer().createQuery();
-        Location location = player.getLocation();
+        Location<World> location = player.getLocation();
         ApplicableRegionSet set = query.getApplicableRegions(location);
 
         for (Handler handler : handlers.values()) {
@@ -170,10 +172,10 @@ public class Session {
      * @param to The new location
      * @param moveType The type of move
      * @return The overridden location, if the location is being overridden
-     * @see #testMoveTo(Player, Location, MoveType, boolean) For an explanation
+     * @see #testMoveTo(Player, Transform, MoveType, boolean) For an explanation
      */
     @Nullable
-    public Location testMoveTo(Player player, Location to, MoveType moveType) {
+    public Transform testMoveTo(Player player, Transform to, MoveType moveType) {
         return testMoveTo(player, to, moveType, false);
     }
 
@@ -194,7 +196,7 @@ public class Session {
      * @return The overridden location, if the location is being overridden
      */
     @Nullable
-    public Location testMoveTo(Player player, Location to, MoveType moveType, boolean forced) {
+    public Transform testMoveTo(Player player, Transform to, MoveType moveType, boolean forced) {
         RegionQuery query = getManager().getPlugin().getRegionContainer().createQuery();
 
         if (!forced && needRefresh.getAndSet(false)) {
@@ -202,7 +204,7 @@ public class Session {
         }
 
         if (forced || Locations.isDifferentBlock(lastValid, to)) {
-            ApplicableRegionSet toSet = query.getApplicableRegions(to);
+            ApplicableRegionSet toSet = query.getApplicableRegions(to.getLocation());
 
             for (Handler handler : handlers.values()) {
                 if (!handler.testMoveTo(player, lastValid, to, toSet, moveType) && moveType.isCancellable()) {

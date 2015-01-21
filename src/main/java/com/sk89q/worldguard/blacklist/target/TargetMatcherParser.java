@@ -19,105 +19,70 @@
 
 package com.sk89q.worldguard.blacklist.target;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.sk89q.guavabackport.collect.Range;
-import com.sk89q.worldedit.blocks.ItemType;
-import com.sk89q.worldguard.util.Enums;
-import org.bukkit.Material;
+import com.sk89q.worldguard.sponge.WorldGuardPlugin;
+import org.spongepowered.api.block.BlockType;
+import org.spongepowered.api.item.ItemType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TargetMatcherParser {
 
-    private static final Pattern DATA_VALUE_PATTERN = Pattern.compile("^([^:]+):([^:]+)$");
-    private static final Pattern LESS_THAN_PATTERN = Pattern.compile("^<=\\s*([0-9]+)$");
-    private static final Pattern GREATER_THAN_PATTERN = Pattern.compile("^>=\\s*([0-9]+)$");
     private static final Pattern RANGE_PATTERN = Pattern.compile("^([0-9]+)\\s*-\\s*([0-9]+)$");
 
     public TargetMatcher fromInput(String input) throws TargetMatcherParseException {
-        Matcher matcher = DATA_VALUE_PATTERN.matcher(input.trim());
-        if (matcher.matches()) {
-            return new DataValueRangeMatcher(parseType(matcher.group(1)), parseDataValueRanges(matcher.group(2)));
-        } else {
-            return new WildcardDataMatcher(parseType(input));
-        }
-    }
-
-    private int parseType(String input) throws TargetMatcherParseException {
         input = input.trim();
+        final BlockType material = WorldGuardPlugin.inst().getGame().getRegistry().getType(BlockType.class, input).orNull();
+        if (material != null) {
+            return new BlockTargetMatcher(material);
+        }
+        final ItemType itemType = WorldGuardPlugin.inst().getGame().getRegistry().getType(ItemType.class, input).orNull();
+        if (itemType != null) {
+            return new ItemTargetMatcher(itemType);
+        }
+        throw new TargetMatcherParseException("Unknown block or item name: " + input);
+    }
 
-        try {
-            return Integer.parseInt(input);
-        } catch (NumberFormatException e) {
-            int id = getItemID(input);
-            if (id > 0) {
-                return id;
+    private static final class BlockTargetMatcher implements TargetMatcher {
+
+        private BlockTargetMatcher(BlockType material) {
+            this.material = material;
+        }
+
+        private BlockType material;
+
+        @Override
+        public int getMatchedTypeId() {
+            return material.getDefaultState().hashCode();
+        }
+
+        @Override
+        public boolean test(Target target) {
+            if (target instanceof BlockTarget) {
+                return ((BlockTarget) target).getState().getType().equals(material);
             }
-            
-            Material material = Enums.findFuzzyByValue(Material.class, input);
-            if (material != null) {
-                return material.getId();
+            return false;
+        }
+    }
+
+    private static final class ItemTargetMatcher implements TargetMatcher {
+
+        private ItemTargetMatcher(ItemType itemType) {
+            this.itemType = itemType;
+        }
+
+        private ItemType itemType;
+
+        @Override
+        public int getMatchedTypeId() {
+            return itemType.hashCode();
+        }
+
+        @Override
+        public boolean test(Target target) {
+            if (target instanceof ItemTarget) {
+                return ((ItemTarget) target).getStack().getItem().equals(itemType);
             }
-
-            throw new TargetMatcherParseException("Unknown block or item name: " + input);
+            return false;
         }
     }
-
-    private Predicate<Short> parseDataValueRanges(String input) throws TargetMatcherParseException {
-        List<Predicate<Short>> predicates = new ArrayList<Predicate<Short>>();
-
-        for (String part : input.split(";")) {
-            predicates.add(parseRange(part));
-        }
-
-        return Predicates.or(predicates);
-    }
-
-    private Predicate<Short> parseRange(String input) throws TargetMatcherParseException {
-        input = input.trim();
-
-        Matcher matcher;
-
-        matcher = LESS_THAN_PATTERN.matcher(input);
-        if (matcher.matches()) {
-            return Range.atMost(Short.parseShort(matcher.group(1)));
-        }
-
-        matcher = GREATER_THAN_PATTERN.matcher(input);
-        if (matcher.matches()) {
-            return Range.atLeast(Short.parseShort(matcher.group(1)));
-        }
-
-        matcher = RANGE_PATTERN.matcher(input);
-        if (matcher.matches()) {
-            return Range.closed(Short.parseShort(matcher.group(1)), Short.parseShort(matcher.group(2)));
-        }
-
-        try {
-            short s = Short.parseShort(input);
-            return Range.closed(s, s);
-        } catch (NumberFormatException e) {
-            throw new TargetMatcherParseException("Unknown data value range: " + input);
-        }
-    }
-
-    /**
-     * Get an item's ID from its name.
-     *
-     * @param name the name of the item to look up
-     * @return the id for name if contained in ItemId, else -1
-     */
-    private static int getItemID(String name) {
-        ItemType type = ItemType.lookup(name);
-        if (type != null) {
-            return type.getID();
-        } else {
-            return -1;
-        }
-    }
-
 }
