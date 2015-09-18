@@ -34,6 +34,7 @@ import com.sk89q.worldguard.sponge.commands.CommandUtils;
 import com.sk89q.worldguard.sponge.internal.BukkitBlacklist;
 import com.sk89q.worldguard.sponge.internal.TargetMatcherSet;
 import com.sk89q.worldguard.util.report.Unreported;
+import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.entity.EntityType;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
@@ -43,6 +44,7 @@ import org.spongepowered.api.potion.PotionEffectType;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 import org.yaml.snakeyaml.parser.ParserException;
 
 import java.io.File;
@@ -107,12 +109,12 @@ public class WorldConfiguration {
     public boolean noPhysicsSand;
     public boolean ropeLadders;
     public boolean allowPortalAnywhere;
-    public Set<Integer> preventWaterDamage;
+    public Set<BlockType> preventWaterDamage;
     public boolean blockLighter;
     public boolean disableFireSpread;
-    public Set<Integer> disableFireSpreadBlocks;
+    public Set<BlockType> disableFireSpreadBlocks;
     public boolean preventLavaFire;
-    public Set<Integer> allowedLavaSpreadOver;
+    public Set<BlockType> allowedLavaSpreadOver;
     public boolean blockTNTExplosions;
     public boolean blockTNTBlockDamage;
     public boolean blockCreeperExplosions;
@@ -252,6 +254,7 @@ public class WorldConfiguration {
             return plugin.getGame().getRegistry().getType(ItemType.class, val).or(def);
         }
     }
+
     private int getInt(String node, int def) {
         int val = parentConfig.getInt(node, def);
 
@@ -285,6 +288,18 @@ public class WorldConfiguration {
         }
 
         return res;
+    }
+
+    private Set<BlockType> getBlockTypes(String node) {
+        List<String> parentList = parentConfig.getStringList(node, null);
+        List<String> childList = config.getStringList(node, null);
+
+        Set<BlockType> types = new HashSet<BlockType>();
+        for (String s : (childList.isEmpty() ? parentList : childList)) {
+            BlockType type = plugin.getGame().getRegistry().getType(BlockType.class, s).orNull();
+            if (type != null) types.add(type);
+        }
+        return types;
     }
 
     private TargetMatcherSet getTargetMatchers(String node) {
@@ -403,7 +418,7 @@ public class WorldConfiguration {
         noPhysicsSand = getBoolean("physics.no-physics-sand", false);
         ropeLadders = getBoolean("physics.vine-like-rope-ladders", false);
         allowPortalAnywhere = getBoolean("physics.allow-portal-anywhere", false);
-        preventWaterDamage = new HashSet<Integer>(getIntList("physics.disable-water-damage-blocks", null));
+        preventWaterDamage = new HashSet<BlockType>(getBlockTypes("physics.disable-water-damage-blocks"));
 
         blockTNTExplosions = getBoolean("ignition.block-tnt", false);
         blockTNTBlockDamage = getBoolean("ignition.block-tnt-block-damage", false);
@@ -411,8 +426,8 @@ public class WorldConfiguration {
 
         preventLavaFire = getBoolean("fire.disable-lava-fire-spread", true);
         disableFireSpread = getBoolean("fire.disable-all-fire-spread", false);
-        disableFireSpreadBlocks = new HashSet<Integer>(getIntList("fire.disable-fire-spread-blocks", null));
-        allowedLavaSpreadOver = new HashSet<Integer>(getIntList("fire.lava-spread-blocks", null));
+        disableFireSpreadBlocks = new HashSet<BlockType>(getBlockTypes("fire.disable-fire-spread-blocks"));
+        allowedLavaSpreadOver = new HashSet<BlockType>(getBlockTypes("fire.lava-spread-blocks"));
 
         blockCreeperExplosions = getBoolean("mobs.block-creeper-explosions", false);
         blockCreeperBlockDamage = getBoolean("mobs.block-creeper-block-damage", false);
@@ -622,7 +637,7 @@ public class WorldConfiguration {
         return this.worldName;
     }
 
-    public boolean isChestProtected(Location block, Player player) {
+    public boolean isChestProtected(Location<World> block, Player player) {
         if (!signChestProtection) {
             return false;
         }
@@ -633,12 +648,12 @@ public class WorldConfiguration {
         return chestProtection.isProtected(block, player);
     }
 
-    public boolean isChestProtected(Location block) {
+    public boolean isChestProtected(Location<World> block) {
 
         return signChestProtection && chestProtection.isProtected(block, null);
     }
 
-    public boolean isChestProtectedPlacement(Location block, Player player) {
+    public boolean isChestProtectedPlacement(Location<World> block, Player player) {
         if (!signChestProtection) {
             return false;
         }
@@ -649,7 +664,7 @@ public class WorldConfiguration {
         return chestProtection.isProtectedPlacement(block, player);
     }
 
-    public boolean isAdjacentChestProtected(Location block, Player player) {
+    public boolean isAdjacentChestProtected(Location<World> block, Player player) {
         if (!signChestProtection) {
             return false;
         }

@@ -23,13 +23,13 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import com.sk89q.worldguard.sponge.internal.WGMetadata;
 import org.spongepowered.api.data.DataHolder;
+import org.spongepowered.api.data.manipulator.mutable.entity.PassengerData;
 import org.spongepowered.api.data.manipulator.mutable.entity.TameableData;
 import org.spongepowered.api.data.manipulator.mutable.entity.TargetLivingData;
-import org.spongepowered.api.data.manipulator.mutable.entity.VehicleData;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityType;
 import org.spongepowered.api.entity.explosive.PrimedTNT;
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.projectile.Projectile;
 import org.spongepowered.api.world.Location;
 
@@ -239,7 +239,7 @@ public final class Cause {
 
                     if (o instanceof Entity) {
                         Entity ent = ((Entity) o);
-                        VehicleData vd = ent.get(VehicleData.class).orNull();
+                        PassengerData vd = ent.get(PassengerData.class).orNull();
                         TargetLivingData tld = ent.get(TargetLivingData.class).orNull();
                         TameableData td = ent.get(TameableData.class).orNull();
                         if (o instanceof PrimedTNT) {

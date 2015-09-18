@@ -38,7 +38,7 @@ import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import com.sk89q.worldguard.sponge.permission.RegionPermissionModel;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.entity.living.player.PlayerJoinEvent;
+import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
@@ -188,9 +188,9 @@ public class SessionManager implements Runnable {
     }
 
     @Listener
-    public void onPlayerJoin(PlayerJoinEvent event) {
+    public void onPlayerJoin(ClientConnectionEvent.Join event) {
         // Pre-load a session
-        get(event.getSource());
+        get(event.getTargetEntity());
     }
 
     @Override

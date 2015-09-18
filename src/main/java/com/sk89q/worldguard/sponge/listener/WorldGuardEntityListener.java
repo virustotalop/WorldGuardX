@@ -20,6 +20,7 @@
 package com.sk89q.worldguard.sponge.listener;
 
 import com.flowpowered.math.vector.Vector3d;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.sk89q.worldguard.LocalPlayer;
@@ -33,6 +34,7 @@ import com.sk89q.worldguard.sponge.WorldConfiguration;
 import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import com.sk89q.worldguard.sponge.util.Causes;
 import com.sk89q.worldguard.sponge.util.Entities;
+import com.sk89q.worldguard.sponge.util.Materials;
 import org.spongepowered.api.block.BlockTransaction;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.data.key.Keys;
@@ -45,10 +47,13 @@ import org.spongepowered.api.entity.explosive.Explosive;
 import org.spongepowered.api.entity.explosive.PrimedTNT;
 import org.spongepowered.api.entity.hanging.ItemFrame;
 import org.spongepowered.api.entity.living.Living;
+import org.spongepowered.api.entity.living.animal.Pig;
 import org.spongepowered.api.entity.living.animal.Wolf;
 import org.spongepowered.api.entity.living.complex.EnderDragon;
 import org.spongepowered.api.entity.living.monster.Creeper;
+import org.spongepowered.api.entity.living.monster.Enderman;
 import org.spongepowered.api.entity.living.monster.Wither;
+import org.spongepowered.api.entity.living.monster.Zombie;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.projectile.Projectile;
 import org.spongepowered.api.entity.projectile.explosive.ExplosiveProjectile;
@@ -61,12 +66,18 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.event.entity.CreateEntityEvent;
+import org.spongepowered.api.event.cause.entity.health.HealTypes;
+import org.spongepowered.api.event.cause.entity.health.HealthModifier;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.DestructEntityEvent;
+import org.spongepowered.api.event.entity.HealEntityEvent;
+import org.spongepowered.api.event.entity.InteractEntityEvent;
+import org.spongepowered.api.event.entity.SpawnEntityEvent;
+import org.spongepowered.api.event.world.ConstructPortalEvent;
 import org.spongepowered.api.event.world.WorldExplosionEvent;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.util.Tuple;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -539,7 +550,7 @@ public class WorldGuardEntityListener extends AbstractListener {
     }
 
     @Listener
-    public void onCreatureSpawn(CreateEntityEvent event) {
+    public void onCreatureSpawn(SpawnEntityEvent event) {
         ConfigurationManager cfg = getPlugin().getGlobalStateManager();
 
         if (cfg.activityHaltToggle) {
@@ -565,7 +576,7 @@ public class WorldGuardEntityListener extends AbstractListener {
             return;
         }
 
-        Transform<World> eventLoc = event.getTargetTransform();
+        Transform<World> eventLoc = event.getTargetEntity().getTransform();
 
         if (wcfg.useRegions && cfg.useRegionsCreatureSpawnEvent) {
             ApplicableRegionSet set = getPlugin().getRegionContainer().createQuery().getApplicableRegions(eventLoc.getLocation());
@@ -582,7 +593,7 @@ public class WorldGuardEntityListener extends AbstractListener {
             }
         }
 
-        if (wcfg.blockGroundSlimes && entityType == EntityTypes.SLIME
+        if (wcfg.blockGroundSlimes && entityType.equals(EntityTypes.SLIME)
                 && eventLoc.getPosition().getFloorY() >= 60
                 && Causes.isNaturalSpawn(event.getCause())) {
             event.setCancelled(true);
@@ -591,49 +602,45 @@ public class WorldGuardEntityListener extends AbstractListener {
     }
 
     @Listener
-    public void onCreatePortal(EntityCreatePortalEvent event) {
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
-        WorldConfiguration wcfg = cfg.get(event.getEntity().getWorld());
+    public void onCreatePortal(ConstructPortalEvent event) {
+        ConfigurationManager cfg = getPlugin().getGlobalStateManager();
+        WorldConfiguration wcfg = cfg.get(event.getPortalLocation().getExtent());
 
-        switch (event.getEntityType()) {
-            case ENDER_DRAGON:
-                if (wcfg.blockEnderDragonPortalCreation) event.setCancelled(true);
-                break;
+        if (event.getCause().getFirst(Entity.class).orNull() instanceof EnderDragon) {
+            if (wcfg.blockEnderDragonPortalCreation) {
+                event.setCancelled(true);
+            }
         }
     }
 
     @Listener
-    public void onPigZap(PigZapEvent event) {
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
-        WorldConfiguration wcfg = cfg.get(event.getEntity().getWorld());
-
-        if (wcfg.disablePigZap) {
+    public void onEntityStruckByLightning(InteractEntityEvent.Attack.SourceLightning event) {
+        WorldConfiguration wcfg = getWorldConfig(event.getSourceEntity().getWorld());
+        if (wcfg.disablePigZap && event.getTargetEntity() instanceof Pig) {
             event.setCancelled(true);
+            return;
         }
-    }
-
-    @Listener
-    public void onCreeperPower(CreeperPowerEvent event) {
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
-        WorldConfiguration wcfg = cfg.get(event.getEntity().getWorld());
-
-        if (wcfg.disableCreeperPower) {
+        if (wcfg.disableCreeperPower && event.getTargetEntity() instanceof Creeper) {
             event.setCancelled(true);
+            return;
         }
     }
 
     @Listener
-    public void onEntityRegainHealth(EntityRegainHealthEvent event) {
-
-        Entity ent = event.getEntity();
+    public void onEntityRegainHealth(HealEntityEvent event) {
+        Entity ent = event.getTargetEntity();
         World world = ent.getWorld();
 
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
+        ConfigurationManager cfg = getPlugin().getGlobalStateManager();
         WorldConfiguration wcfg = cfg.get(world);
 
         if (wcfg.disableHealthRegain) {
-            event.setCancelled(true);
-            return;
+            for (Tuple<HealthModifier, Function<? super Double, Double>> func : event.getModifiers()) {
+                if (func.getFirst().getType().equals(HealTypes.FOOD)) {
+                    event.setCancelled(true);
+                    break;
+                }
+            }
         }
     }
 
@@ -645,10 +652,8 @@ public class WorldGuardEntityListener extends AbstractListener {
     @Listener
     public void onEntityChangeBlock(ChangeBlockEvent.SourceEntity event) {
         Entity ent = event.getSourceEntity();
-        Location block = event.();
-        Location location = block.getLocation();
 
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
+        ConfigurationManager cfg = getPlugin().getGlobalStateManager();
         WorldConfiguration wcfg = cfg.get(ent.getWorld());
         if (ent instanceof Enderman) {
             if (wcfg.disableEndermanGriefing) {
@@ -657,19 +662,27 @@ public class WorldGuardEntityListener extends AbstractListener {
             }
 
             if (wcfg.useRegions) {
-                if (!plugin.getGlobalRegionManager().allows(DefaultFlag.ENDER_BUILD, location)) {
-                    event.setCancelled(true);
-                    return;
-                }
+                final RegionQuery query = getPlugin().getRegionContainer().createQuery();
+                event.filter(new Predicate<Location<World>>() {
+                    @Override
+                    public boolean apply(Location<World> loc) {
+                         return query.testState(loc, (RegionAssociable) null, DefaultFlag.ENDER_BUILD);
+                    }
+                });
             }
-        } else if (ent.getType() == EntityType.WITHER) {
+        } else if (ent.getType().equals(EntityTypes.WITHER)) {
             if (wcfg.blockWitherBlockDamage || wcfg.blockWitherExplosions) {
                 event.setCancelled(true);
                 return;
             }
-        } else if (/*ent instanceof Zombie && */event instanceof EntityBreakDoorEvent) {
+        } else if (ent instanceof Zombie) {
             if (wcfg.blockZombieDoorDestruction) {
-                event.setCancelled(true);
+                event.filter(new Predicate<Location<World>>() {
+                    @Override
+                    public boolean apply(Location<World> loc) {
+                        return Materials.isWoodDoor(loc.getBlockType());
+                    }
+                });
                 return;
             }
         }

@@ -684,6 +684,15 @@ public final class Materials {
         return type.equals(BlockTypes.LIT_REDSTONE_ORE) || type.equals(BlockTypes.REDSTONE_ORE);
     }
 
+    public static boolean isWoodDoor(BlockType type) {
+        return type.equals(BlockTypes.ACACIA_DOOR)
+                || type.equals(BlockTypes.BIRCH_DOOR)
+                || type.equals(BlockTypes.DARK_OAK_DOOR)
+                || type.equals(BlockTypes.JUNGLE_DOOR)
+                || type.equals(BlockTypes.SPRUCE_DOOR)
+                || type.equals(BlockTypes.WOODEN_DOOR);
+    }
+
     /**
      * Test whether the given material is a block that is modified when it is
      * left or right clicked.

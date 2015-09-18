@@ -23,7 +23,7 @@ import com.sk89q.worldguard.sponge.WorldConfiguration;
 import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import com.sk89q.worldguard.sponge.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.entity.EntityTypes;
-import org.spongepowered.api.event.Subscribe;
+import org.spongepowered.api.event.Listener;
 
 public class WorldRulesListener extends AbstractListener {
 

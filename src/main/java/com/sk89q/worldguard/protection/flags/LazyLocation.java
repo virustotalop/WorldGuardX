@@ -22,6 +22,7 @@ package com.sk89q.worldguard.protection.flags;
 import com.flowpowered.math.vector.Vector3d;
 import com.google.common.base.Optional;
 import com.sk89q.worldguard.sponge.WorldGuardPlugin;
+import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -63,10 +64,17 @@ public class LazyLocation {
     public Vector3d getRotation() {
         return rotation;
     }
-    public Location getLocation() {
+
+    public Location<World> getLocation() {
         World world = findWorld(worldName);
         if (world == null) return null;
-        return new Location(world, position);
+        return new Location<World>(world, position);
     }
 
+    public Transform<World> getTransform() {
+        World world = findWorld(worldName);
+        if (world == null) return null;
+        return WorldGuardPlugin.inst().getGame().getRegistry()
+                .createTransform(world).setPosition(position).setRotation(rotation);
+    }
 }

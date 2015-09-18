@@ -19,7 +19,6 @@
 
 package com.sk89q.worldguard.sponge.listener;
 
-import com.flowpowered.math.vector.Vector3d;
 import com.google.common.base.Optional;
 import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
@@ -36,23 +35,19 @@ import com.sk89q.worldguard.sponge.permission.RegionPermissionModel;
 import com.sk89q.worldguard.sponge.util.Causes;
 import com.sk89q.worldguard.sponge.util.Entities;
 import com.sk89q.worldguard.sponge.util.Events;
-import com.sk89q.worldguard.sponge.util.Locations;
 import com.sk89q.worldguard.util.command.CommandFilter;
-import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.EntityInteractionTypes;
-import org.spongepowered.api.entity.player.Player;
-import org.spongepowered.api.entity.player.gamemode.GameMode;
-import org.spongepowered.api.event.Subscribe;
-import org.spongepowered.api.event.entity.EntityTeleportEvent;
-import org.spongepowered.api.event.entity.player.PlayerChangeGameModeEvent;
-import org.spongepowered.api.event.entity.player.PlayerChatEvent;
-import org.spongepowered.api.event.entity.player.PlayerInteractBlockEvent;
-import org.spongepowered.api.event.entity.player.PlayerInteractEvent;
-import org.spongepowered.api.event.entity.player.PlayerJoinEvent;
-import org.spongepowered.api.event.entity.player.PlayerRespawnEvent;
-import org.spongepowered.api.event.message.CommandEvent;
-import org.spongepowered.api.event.network.GameClientConnectEvent;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.gamemode.GameMode;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.event.command.MessageSinkEvent;
+import org.spongepowered.api.event.command.SendCommandEvent;
+import org.spongepowered.api.event.entity.DisplaceEntityEvent;
+import org.spongepowered.api.event.entity.InteractEntityEvent;
+import org.spongepowered.api.event.entity.living.human.ChangeHumanGameModeEvent;
+import org.spongepowered.api.event.entity.living.player.RespawnPlayerEvent;
+import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.Slot;
 import org.spongepowered.api.text.Texts;
@@ -86,13 +81,13 @@ public class WorldGuardPlayerListener extends AbstractListener {
     }
 
     @Listener
-    public void onPlayerGameModeChange(PlayerChangeGameModeEvent event) {
-        Player player = event.getUser();
+    public void onPlayerGameModeChange(ChangeHumanGameModeEvent.TargetPlayer event) {
+        Player player = event.getTargetEntity();
         WorldConfiguration wcfg = getWorldConfig(player);
         GameModeFlag handler = getPlugin().getSessionManager().get(player).getHandler(GameModeFlag.class);
         if (handler != null && wcfg.useRegions && !(new RegionPermissionModel(getPlugin(), player).mayIgnoreRegionProtection(player.getWorld()))) {
             GameMode expected = handler.getSetGameMode();
-            if (handler.getOriginalGameMode() != null && expected != null && expected != event.getNewGameMode()) {
+            if (handler.getOriginalGameMode() != null && expected != null && expected != event.getGameMode()) {
                 log.info("Game mode change on " + player.getName() + " has been blocked due to the region GAMEMODE flag");
                 event.setCancelled(true);
             }
@@ -100,8 +95,8 @@ public class WorldGuardPlayerListener extends AbstractListener {
     }
 
     @Listener
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getUser();
+    public void onPlayerJoin(ClientConnectionEvent.Join event) {
+        Player player = event.getTargetEntity();
         World world = player.getWorld();
 
         ConfigurationManager cfg = getPlugin().getGlobalStateManager();
@@ -136,8 +131,8 @@ public class WorldGuardPlayerListener extends AbstractListener {
     }
 
     @Listener
-    public void onPlayerChat(PlayerChatEvent event) {
-        Player player = event.getUser();
+    public void onPlayerChat(MessageSinkEvent.SourcePlayer event) {
+        Player player = event.getSource();
         WorldConfiguration wcfg = getPlugin().getGlobalStateManager().get(player.getWorld());
         if (wcfg.useRegions) {
             if (!getPlugin().getRegionContainer().createQuery().testState(player.getLocation(), player, DefaultFlag.SEND_CHAT)) {
@@ -159,7 +154,7 @@ public class WorldGuardPlayerListener extends AbstractListener {
     }
 
     @Listener
-    public void onPlayerLogin(GameClientConnectEvent event) {
+    public void onPlayerLogin(ClientConnectionEvent.Auth event) {
         ConfigurationManager cfg = getPlugin().getGlobalStateManager();
 
         String hostKey = cfg.hostKeys.get(event.getProfile().getName().toLowerCase());
@@ -172,7 +167,7 @@ public class WorldGuardPlayerListener extends AbstractListener {
 
             if (!hostname.equals(hostKey)) {
                 event.setCancelled(true);
-                event.setDisconnectMessage(Texts.of("You did not join with the valid host key!"));
+                event.setMessage(Texts.of("You did not join with the valid host key!"));
                 log.warning("WorldGuard host key check: " +
                         event.getProfile().getName() + " joined with '" + hostname +
                         "' but '" + hostKey + "' was expected. Kicked!");
@@ -187,9 +182,16 @@ public class WorldGuardPlayerListener extends AbstractListener {
     }
 
     @Listener
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getUser();
+    public void onPlayerInteract(InteractBlockEvent.SourcePlayer event) {
+        checkInfiniteStacks(event.getSourceEntity());
+    }
 
+    @Listener
+    public void onPlayerInteract(InteractEntityEvent.SourcePlayer event) {
+        checkInfiniteStacks(event.getSourceEntity());
+    }
+
+    private void checkInfiniteStacks(Player player) {
         if (getWorldConfig(player).removeInfiniteStacks
                 && !getPlugin().hasPermission(player, "worldguard.override.infinite-stack")) {
             Optional<ItemStack> item = player.getItemInHand();
@@ -207,64 +209,54 @@ public class WorldGuardPlayerListener extends AbstractListener {
             }
         }
     }
-
     /**
      * Called when a player right clicks a block.
      *
      * @param event Thrown event
      */
     @Listener
-    public void handleBlockRightClick(PlayerInteractBlockEvent event) {
+    public void handleBlockRightClick(InteractBlockEvent.Use.SourcePlayer event) {
         if (event.isCancelled()) {
             return;
         }
 
-        Player player = event.getUser();
+        Player player = event.getSourceEntity();
         World world = player.getWorld();
-        Optional<Vector3d> clickedPosition = event.getClickedPosition();
-        if (!clickedPosition.isPresent()) return; // TODO uuuuuuhmmmm
-        Location block = new Location(world, clickedPosition.get());
+        Location<World> block = event.getTargetLocation();
 
         WorldConfiguration wcfg = getWorldConfig(world);
 
-        if (event.getInteractionType().equals(EntityInteractionTypes.INDIRECT)) {
-            if (world.getBlockType(clickedPosition.get().toInt()).equals(BlockTypes.FARMLAND) && getWorldConfig(player).disablePlayerCropTrampling) {
-                event.setCancelled(true);
-                return;
-            }
-        } else if (event.getInteractionType().equals(EntityInteractionTypes.USE)) {
-            if (wcfg.useRegions) {
-                ApplicableRegionSet set = getPlugin().getRegionContainer().createQuery().getApplicableRegions(block);
-                LocalPlayer localPlayer = getPlugin().wrapPlayer(player);
+        if (wcfg.useRegions) {
+            ApplicableRegionSet set = getPlugin().getRegionContainer().createQuery().getApplicableRegions(block);
+            LocalPlayer localPlayer = getPlugin().wrapPlayer(player);
 
-                if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().equals(wcfg.regionWand)
-                        && getPlugin().hasPermission(player, "worldguard.region.wand")) {
-                    if (set.size() > 0) {
-                        player.sendMessage(Texts.of(TextColors.YELLOW, "Can you build? "
-                                + (set.testState(localPlayer, DefaultFlag.BUILD) ? "Yes" : "No")));
+            if (player.getItemInHand().isPresent() && player.getItemInHand().get().getItem().equals(wcfg.regionWand)
+                    && getPlugin().hasPermission(player, "worldguard.region.wand")) {
+                if (set.size() > 0) {
+                    player.sendMessage(Texts.of(TextColors.YELLOW, "Can you build? "
+                            + (set.testState(localPlayer, DefaultFlag.BUILD) ? "Yes" : "No")));
 
-                        StringBuilder str = new StringBuilder();
-                        for (Iterator<ProtectedRegion> it = set.iterator(); it.hasNext(); ) {
-                            str.append(it.next().getId());
-                            if (it.hasNext()) {
-                                str.append(", ");
-                            }
+                    StringBuilder str = new StringBuilder();
+                    for (Iterator<ProtectedRegion> it = set.iterator(); it.hasNext(); ) {
+                        str.append(it.next().getId());
+                        if (it.hasNext()) {
+                            str.append(", ");
                         }
-
-                        player.sendMessage(Texts.of(TextColors.YELLOW, "Applicable regions: " + str));
-                    } else {
-                        player.sendMessage(Texts.of(TextColors.YELLOW, "WorldGuard: No defined regions here!"));
                     }
 
-                    event.setCancelled(true);
+                    player.sendMessage(Texts.of(TextColors.YELLOW, "Applicable regions: " + str));
+                } else {
+                    player.sendMessage(Texts.of(TextColors.YELLOW, "WorldGuard: No defined regions here!"));
                 }
+
+                event.setCancelled(true);
             }
         }
     }
 
     @Listener
-    public void onPlayerRespawn(PlayerRespawnEvent event) {
-        Player player = event.getUser();
+    public void onPlayerRespawn(RespawnPlayerEvent event) {
+        Player player = event.getTargetEntity();
         Location location = player.getLocation();
 
         WorldConfiguration wcfg = getWorldConfig(player);
@@ -276,36 +268,38 @@ public class WorldGuardPlayerListener extends AbstractListener {
             LazyLocation spawn = set.queryValue(localPlayer, DefaultFlag.SPAWN_LOC);
 
             if (spawn != null) {
-                event.setNewRespawnLocation(spawn.getLocation());
-                player.setRotation(spawn.getRotation()); // TODO sponge double check if things change
+                event.setToTransform(spawn.getTransform());
             }
         }
     }
 
     @Listener
-    public void onPlayerTeleport(EntityTeleportEvent event) {
-        if (!(event.getEntity() instanceof Player)) {
+    public void onPlayerTeleport(DisplaceEntityEvent.Teleport event) {
+        if (!(event.getTargetEntity() instanceof Player)) {
             return;
         }
-        World world = ((World) event.getOldLocation().getExtent());
-        Player player = ((Player) event.getEntity());
+        World world = event.getFromTransform().getExtent();
+        Player player = ((Player) event.getTargetEntity());
         ConfigurationManager cfg = getPlugin().getGlobalStateManager();
         WorldConfiguration wcfg = cfg.get(world);
 
         if (wcfg.useRegions) {
-            ApplicableRegionSet set = getPlugin().getRegionContainer().createQuery().getApplicableRegions(event.getNewLocation());
-            ApplicableRegionSet setFrom = getPlugin().getRegionContainer().createQuery().getApplicableRegions(event.getOldLocation());
+            ApplicableRegionSet set = getPlugin().getRegionContainer().createQuery()
+                    .getApplicableRegions(event.getToTransform().getLocation());
+            ApplicableRegionSet setFrom = getPlugin().getRegionContainer().createQuery()
+                    .getApplicableRegions(event.getFromTransform().getLocation());
             LocalPlayer localPlayer = getPlugin().wrapPlayer(player);
 
             if (cfg.usePlayerTeleports) {
-                if (null != getPlugin().getSessionManager().get(player).testMoveTo(player, Locations.toTransform(event.getNewLocation()), MoveType.TELEPORT)) {
+                if (null != getPlugin().getSessionManager().get(player)
+                        .testMoveTo(player, event.getToTransform(), MoveType.TELEPORT)) {
                     event.setCancelled(true);
                     return;
                 }
             }
 
             // TODO sponge see what sponge does with cause when this gets thrown
-            if (Causes.isEnderPearlTeleport(event)) {
+            if (Causes.isEnderPearlTeleport(event.getCause())) {
                 if (!(new RegionPermissionModel(getPlugin(), player).mayIgnoreRegionProtection(world))
                         && !(set.testState(localPlayer, DefaultFlag.ENDERPEARL)
                                 && setFrom.testState(localPlayer, DefaultFlag.ENDERPEARL))) {
@@ -318,7 +312,7 @@ public class WorldGuardPlayerListener extends AbstractListener {
     }
 
     @Listener
-    public void onCommand(CommandEvent event) {
+    public void onCommand(SendCommandEvent event) {
         CommandSource cs = event.getSource();
         ConfigurationManager cfg = getPlugin().getGlobalStateManager();
 

@@ -38,7 +38,7 @@ public final class Causes {
     public static boolean isLava(Cause cause) {
         Optional<DamageSource> source = cause.getFirst(DamageSource.class);
         if (source.isPresent() && source.get() instanceof BlockDamageSource) {
-            BlockType type = ((BlockDamageSource) source.get()).getBlockState().getState().getType();
+            BlockType type = ((BlockDamageSource) source.get()).getBlockSnapshot().getState().getType();
             return type.equals(BlockTypes.LAVA) || type.equals(BlockTypes.FLOWING_LAVA);
         }
         return false;
@@ -79,7 +79,12 @@ public final class Causes {
     }
 
     public static boolean isSuffocation(Cause cause) {
-        return findDamageSource(cause, DamageSources.IN_WALL);
+        for (DamageSource source : cause.getAllOf(DamageSource.class)) {
+            if (source instanceof BlockDamageSource) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static boolean isPluginSpawn(Cause cause) {

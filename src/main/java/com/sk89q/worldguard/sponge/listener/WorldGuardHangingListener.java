@@ -30,11 +30,11 @@ import org.spongepowered.api.entity.hanging.ItemFrame;
 import org.spongepowered.api.entity.hanging.Painting;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.monster.Creeper;
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.projectile.Projectile;
 import org.spongepowered.api.entity.projectile.source.ProjectileSource;
-import org.spongepowered.api.event.Subscribe;
-import org.spongepowered.api.event.entity.EntityDamageEvent;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.world.World;
 
 public class WorldGuardHangingListener extends AbstractListener {
@@ -49,9 +49,9 @@ public class WorldGuardHangingListener extends AbstractListener {
     }
 
     @Listener
-    public void onHangingBreak(EntityDamageEvent event) {
-        if (!(event.getEntity() instanceof Hanging)) return;
-        Hanging hanging = ((Hanging) event.getEntity());
+    public void onHangingBreak(DamageEntityEvent event) {
+        if (!(event.getTargetEntity() instanceof Hanging)) return;
+        Hanging hanging = ((Hanging) event.getTargetEntity());
         World world = hanging.getWorld();
         ConfigurationManager cfg = getPlugin().getGlobalStateManager();
         WorldConfiguration wcfg = cfg.get(world);

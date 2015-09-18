@@ -24,12 +24,13 @@ import com.sk89q.worldguard.session.MoveType;
 import com.sk89q.worldguard.sponge.WorldConfiguration;
 import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import com.sk89q.worldguard.sponge.util.Locations;
-import org.spongepowered.api.data.manipulator.mutable.entity.VehicleData;
+import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.manipulator.mutable.entity.PassengerData;
 import org.spongepowered.api.data.manipulator.mutable.entity.VelocityData;
 import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.player.Player;
-import org.spongepowered.api.event.Subscribe;
-import org.spongepowered.api.event.entity.EntityMoveEvent;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.entity.DisplaceEntityEvent;
 
 public class WorldGuardVehicleListener extends AbstractListener {
 
@@ -43,22 +44,21 @@ public class WorldGuardVehicleListener extends AbstractListener {
     }
 
     @Listener
-    public void onVehicleMove(EntityMoveEvent event) {
-        // TODO vehicle -> passenger when sponge does it
-        if (!event.getEntity().get(VehicleData.class).isPresent()) return;
-        Entity vehicle = event.getEntity();
-        VehicleData data = vehicle.get(VehicleData.class).get();
-        if (!data.passenger().exists() || !(data.passenger().get() instanceof Player)) return;
-        Player player = (Player) data.passenger().get();
+    public void onVehicleMove(DisplaceEntityEvent.Move event) {
+        if (!event.getTargetEntity().get(PassengerData.class).isPresent()) return;
+        Entity vehicle = event.getTargetEntity();
+        Entity passenger = vehicle.get(Keys.PASSENGER).orNull();
+        if (!(passenger instanceof Player)) return;
+
         WorldConfiguration wcfg = getWorldConfig(vehicle.getWorld());
 
         if (wcfg.useRegions) {
             // Did we move a block?
-            if (Locations.isDifferentBlock(event.getOldLocation(), event.getNewLocation())) {
-                if (null != getPlugin().getSessionManager().get(player).testMoveTo(
-                        player, Locations.toTransform(event.getNewLocation()), MoveType.RIDE)) {
+            if (Locations.isDifferentBlock(event.getFromTransform(), event.getToTransform())) {
+                if (null != getPlugin().getSessionManager().get(((Player) passenger)).testMoveTo(
+                        ((Player) passenger), event.getToTransform(), MoveType.RIDE)) {
                     vehicle.offer(vehicle.get(VelocityData.class).get().velocity().set(new Vector3d(0, 0, 0)));
-                    vehicle.setLocation(event.getOldLocation());
+                    vehicle.setTransform(event.getFromTransform());
                 }
             }
         }

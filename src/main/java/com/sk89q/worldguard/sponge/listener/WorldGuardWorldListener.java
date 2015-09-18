@@ -24,9 +24,9 @@ import com.sk89q.worldguard.sponge.WorldConfiguration;
 import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import com.sk89q.worldguard.sponge.util.Entities;
 import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.event.Subscribe;
-import org.spongepowered.api.event.world.ChunkLoadEvent;
-import org.spongepowered.api.event.world.WorldLoadEvent;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.world.LoadWorldEvent;
+import org.spongepowered.api.event.world.chunk.LoadChunkEvent;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.weather.Weathers;
 
@@ -50,17 +50,17 @@ public class WorldGuardWorldListener {
      * Register events.
      */
     public void registerEvents() {
-        plugin.getGame().getEventManager().register(plugin, this);
+        plugin.getGame().getEventManager().registerListeners(plugin, this);
     }
 
     @Listener
-    public void onChunkLoad(ChunkLoadEvent event) {
+    public void onChunkLoad(LoadChunkEvent event) {
         ConfigurationManager cfg = plugin.getGlobalStateManager();
 
         if (cfg.activityHaltToggle) {
             int removed = 0;
 
-            for (Entity entity : event.getChunk().getEntities()) {
+            for (Entity entity : event.getTargetChunk().getEntities()) {
                 if (Entities.isIntensiveEntity(entity)) {
                     entity.remove();
                     removed++;
@@ -68,14 +68,14 @@ public class WorldGuardWorldListener {
             }
 
             if (removed > 50) {
-                log.info("Halt-Act: " + removed + " entities (>50) auto-removed from " + event.getChunk().toString());
+                log.info("Halt-Act: " + removed + " entities (>50) auto-removed from " + event.getTargetChunk());
             }
         }
     }
 
     @Listener
-    public void onWorldLoad(WorldLoadEvent event) {
-        initWorld(event.getWorld());
+    public void onWorldLoad(LoadWorldEvent event) {
+        initWorld(event.getTargetWorld());
     }
 
     /**
