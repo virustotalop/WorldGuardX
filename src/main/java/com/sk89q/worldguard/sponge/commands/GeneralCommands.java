@@ -30,7 +30,7 @@ import com.sk89q.worldguard.sponge.ConfigurationManager;
 import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.manipulator.mutable.entity.FoodData;
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.CommandSource;

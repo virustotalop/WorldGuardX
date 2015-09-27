@@ -29,11 +29,12 @@ import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import com.sk89q.worldguard.sponge.event.block.BreakBlockEvent;
 import com.sk89q.worldguard.sponge.event.block.PlaceBlockEvent;
 import com.sk89q.worldguard.sponge.util.Materials;
-import org.spongepowered.api.event.Subscribe;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.living.complex.EnderDragon;
+import org.spongepowered.api.entity.living.monster.Creeper;
+import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
-
-import javax.annotation.Nullable;
 
 public class RegionFlagsListener extends AbstractListener {
 
@@ -48,7 +49,7 @@ public class RegionFlagsListener extends AbstractListener {
 
     @Listener
     public void onPlaceBlock(final PlaceBlockEvent event) {
-        if (!isRegionSupportEnabled(((World) event.getWorld()))) return; // Region support disabled
+        if (!isRegionSupportEnabled(event.getWorld())) return; // Region support disabled
 
         RegionQuery query = getPlugin().getRegionContainer().createQuery();
 
@@ -71,13 +72,13 @@ public class RegionFlagsListener extends AbstractListener {
         WorldConfiguration config = getWorldConfig(event.getWorld());
         RegionQuery query = getPlugin().getRegionContainer().createQuery();
 
-        Block block;
+        Location block;
         if ((block = event.getCause().getFirstBlock()) != null) {
             // ================================================================
             // PISTONS flag
             // ================================================================
 
-            if (Materials.isPistonBlock(block.getType())) {
+            if (Materials.isPistonBlock(block.getBlockType())) {
                 event.filter(testState(query, DefaultFlag.PISTONS), false);
             }
         }
@@ -110,13 +111,8 @@ public class RegionFlagsListener extends AbstractListener {
      * @param flag the flag
      * @return a predicate
      */
-    private Predicate<Location> testState(final RegionQuery query, final StateFlag flag) {
-        return new Predicate<Location>() {
-            @Override
-            public boolean apply(@Nullable Location location) {
-                return query.testState(location, (RegionAssociable) null, flag);
-            }
-        };
+    private Predicate<Location<World>> testState(final RegionQuery query, final StateFlag flag) {
+        return location -> query.testState(location, (RegionAssociable) null, flag);
     }
 
 

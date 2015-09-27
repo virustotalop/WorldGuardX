@@ -19,24 +19,18 @@
 
 package com.sk89q.worldguard.sponge.listener;
 
-import com.sk89q.worldguard.sponge.WorldGuardPlugin;
+import com.google.common.base.Optional;
 import com.sk89q.worldguard.session.MoveType;
 import com.sk89q.worldguard.session.Session;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.event.vehicle.VehicleEnterEvent;
-import org.bukkit.plugin.PluginManager;
-import org.bukkit.util.Vector;
+import com.sk89q.worldguard.sponge.WorldGuardPlugin;
+import com.sk89q.worldguard.sponge.util.Locations;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.entity.MountEntityEvent;
+import org.spongepowered.api.event.entity.living.player.RespawnPlayerEvent;
 
-public class PlayerMoveListener implements Listener {
+public class PlayerMoveListener {
 
     private final WorldGuardPlugin plugin;
 
@@ -45,33 +39,35 @@ public class PlayerMoveListener implements Listener {
     }
 
     public void registerEvents() {
+
         if (plugin.getGlobalStateManager().usePlayerMove) {
-            PluginManager pm = plugin.getServer().getPluginManager();
-            pm.registerEvents(this, plugin);
+            plugin.getGame().getEventManager().registerListeners(plugin, this);
         }
     }
 
-    @EventHandler
-    public void onPlayerRespawn(PlayerRespawnEvent event) {
-        Player player = event.getPlayer();
+    @Listener
+    public void onPlayerRespawn(RespawnPlayerEvent event) {
+        Player player = event.getTargetEntity();
 
         Session session = plugin.getSessionManager().get(player);
-        session.testMoveTo(player, event.getRespawnLocation(), MoveType.RESPAWN, true);
+        session.testMoveTo(player, event.getToTransform(), MoveType.RESPAWN, true);
     }
 
-    @EventHandler
-    public void onVehicleEnter(VehicleEnterEvent event) {
-        Entity entity = event.getEntered();
-        if (entity instanceof Player) {
-            Player player = (Player) entity;
+    @Listener
+    public void onVehicleEnter(MountEntityEvent event) {
+        Entity entity = event.getTargetEntity();
+        Optional<Player> optPlayer = event.getCause().first(Player.class);
+        if (optPlayer.isPresent()) {
+            Player player = optPlayer.get();
             Session session = plugin.getSessionManager().get(player);
-            if (null != session.testMoveTo(player, event.getVehicle().getLocation(), MoveType.EMBARK, true)) {
+            if (null != session.testMoveTo(player, Locations.toTransform(entity.getLocation()), MoveType.EMBARK, true)) {
                 event.setCancelled(true);
             }
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
+    /*
+    @Listener(order = Order.LAST)
     public void onPlayerMove(PlayerMoveEvent event) {
         final Player player = event.getPlayer();
 
@@ -114,5 +110,6 @@ public class PlayerMoveListener implements Listener {
             }
         }
     }
+    */
 
 }

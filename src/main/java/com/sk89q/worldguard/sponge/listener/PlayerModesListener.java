@@ -25,8 +25,8 @@ import com.sk89q.worldguard.session.handler.WaterBreathing;
 import com.sk89q.worldguard.sponge.ConfigurationManager;
 import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import com.sk89q.worldguard.sponge.event.player.ProcessPlayerEvent;
-import org.spongepowered.api.entity.player.Player;
-import org.spongepowered.api.event.Subscribe;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

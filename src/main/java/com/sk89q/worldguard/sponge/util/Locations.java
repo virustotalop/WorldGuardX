@@ -19,9 +19,9 @@
 
 package com.sk89q.worldguard.sponge.util;
 
-import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.extent.Extent;
 
 public final class Locations {
 
@@ -43,8 +43,7 @@ public final class Locations {
         return a.getBlockX() != b.getBlockX() || a.getBlockY() != b.getBlockY() || a.getBlockZ() != b.getBlockZ();
     }
 
-    public static Transform toTransform(Location loc) {
-        return WorldGuardPlugin.inst().getGame().getRegistry().createTransform()
-                .setPosition(loc.getPosition()).setExtent(loc.getExtent());
+    public static <T extends Extent> Transform<T> toTransform(Location<T> loc) {
+        return new Transform<>(loc);
     }
 }

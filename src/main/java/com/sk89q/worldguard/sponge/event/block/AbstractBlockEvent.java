@@ -26,7 +26,7 @@ import com.sk89q.worldguard.sponge.event.DelegateEvent;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.extent.Extent;
+import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -41,11 +41,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 abstract class AbstractBlockEvent extends DelegateEvent implements BulkEvent {
 
-    private final Extent world;
-    private final List<Location> blocks;
+    private final World world;
+    private final List<Location<World>> blocks;
     private final BlockType effectiveMaterial;
 
-    protected AbstractBlockEvent(@Nullable Event originalEvent, Cause cause, Extent world, List<Location> blocks, BlockType effectiveMaterial) {
+    protected AbstractBlockEvent(@Nullable Event originalEvent, Cause cause, World world, List<Location<World>> blocks, BlockType effectiveMaterial) {
         super(originalEvent, cause);
         checkNotNull(world);
         checkNotNull(blocks);
@@ -55,16 +55,16 @@ abstract class AbstractBlockEvent extends DelegateEvent implements BulkEvent {
         this.effectiveMaterial = effectiveMaterial;
     }
 
-    protected AbstractBlockEvent(@Nullable Event originalEvent, Cause cause, Location block) {
+    protected AbstractBlockEvent(@Nullable Event originalEvent, Cause cause, Location<World> block) {
         this(originalEvent, cause, block.getExtent(), createList(checkNotNull(block)), block.getBlockType());
     }
 
-    protected AbstractBlockEvent(@Nullable Event originalEvent, Cause cause, Location target, BlockType effectiveMaterial) {
+    protected AbstractBlockEvent(@Nullable Event originalEvent, Cause cause, Location<World> target, BlockType effectiveMaterial) {
         this(originalEvent, cause, target.getExtent(), createList(target), effectiveMaterial);
     }
 
-    private static List<Location> createList(Location block) {
-        List<Location> blocks = new ArrayList<Location>();
+    private static List<Location<World>> createList(Location<World> block) {
+        List<Location<World>> blocks = new ArrayList<>();
         blocks.add(block);
         return blocks;
     }
@@ -74,7 +74,7 @@ abstract class AbstractBlockEvent extends DelegateEvent implements BulkEvent {
      *
      * @return the world
      */
-    public Extent getWorld() {
+    public World getWorld() {
         return world;
     }
 
@@ -83,7 +83,7 @@ abstract class AbstractBlockEvent extends DelegateEvent implements BulkEvent {
      *
      * @return a list of affected block
      */
-    public List<Location> getBlocks() {
+    public List<Location<World>> getBlocks() {
         return blocks;
     }
 
@@ -96,10 +96,10 @@ abstract class AbstractBlockEvent extends DelegateEvent implements BulkEvent {
      *                           list once the predicate returns {@code false}
      * @return true if one or more blocks were filtered out
      */
-    public boolean filter(Predicate<Location> predicate, boolean cancelEventOnFalse) {
+    public boolean filter(Predicate<Location<World>> predicate, boolean cancelEventOnFalse) {
         boolean hasRemoval = false;
 
-        Iterator<Location> it = blocks.iterator();
+        Iterator<Location<World>> it = blocks.iterator();
         while (it.hasNext()) {
             if (!predicate.apply(it.next())) {
                 hasRemoval = true;
@@ -129,7 +129,7 @@ abstract class AbstractBlockEvent extends DelegateEvent implements BulkEvent {
      * @param predicate the predicate
      * @return true if one or more blocks were filtered out
      */
-    public boolean filter(Predicate<Location> predicate) {
+    public boolean filter(Predicate<Location<World>> predicate) {
         return filter(predicate, false);
     }
 

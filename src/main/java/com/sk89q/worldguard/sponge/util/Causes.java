@@ -36,7 +36,7 @@ public final class Causes {
     }
 
     public static boolean isLava(Cause cause) {
-        Optional<DamageSource> source = cause.getFirst(DamageSource.class);
+        Optional<DamageSource> source = cause.first(DamageSource.class);
         if (source.isPresent() && source.get() instanceof BlockDamageSource) {
             BlockType type = ((BlockDamageSource) source.get()).getBlockSnapshot().getState().getType();
             return type.equals(BlockTypes.LAVA) || type.equals(BlockTypes.FLOWING_LAVA);
@@ -49,7 +49,7 @@ public final class Causes {
     }
 
     public static boolean isContact(Cause cause) {
-        for (DamageSource source : cause.getAllOf(DamageSource.class)) {
+        for (DamageSource source : cause.allOf(DamageSource.class)) {
             if (source.getDamageType().equals(DamageTypes.CONTACT)) {
                 return true;
             }
@@ -79,7 +79,7 @@ public final class Causes {
     }
 
     public static boolean isSuffocation(Cause cause) {
-        for (DamageSource source : cause.getAllOf(DamageSource.class)) {
+        for (DamageSource source : cause.allOf(DamageSource.class)) {
             if (source instanceof BlockDamageSource) {
                 return true;
             }
@@ -97,7 +97,7 @@ public final class Causes {
 
 
     private static boolean findDamageSource(Cause cause, DamageSource source) {
-        for (DamageSource damageSource : cause.getAllOf(DamageSource.class)) {
+        for (DamageSource damageSource : cause.allOf(DamageSource.class)) {
             if (damageSource.equals(source)) {
                 return true;
             }
@@ -106,12 +106,12 @@ public final class Causes {
     }
 
     private static boolean findSpawnCause(Cause cause, SpawnType type) {
-        Optional<SpawnCause> spawnCause = cause.getFirst(SpawnCause.class);
+        Optional<SpawnCause> spawnCause = cause.first(SpawnCause.class);
         return spawnCause.isPresent() && spawnCause.get().getType().equals(type);
     }
 
     public static Entity getAttacker(DamageEntityEvent event) {
-        Optional<Entity> first = event.getCause().getFirst(Entity.class);
+        Optional<Entity> first = event.getCause().first(Entity.class);
         return first.isPresent() ? first.get() : null;
     }
 

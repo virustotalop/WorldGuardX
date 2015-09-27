@@ -28,7 +28,7 @@ import com.sk89q.worldguard.sponge.WorldConfiguration;
 import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import com.sk89q.worldguard.sponge.util.Entities;
 import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.command.CommandSource;

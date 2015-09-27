@@ -24,15 +24,10 @@ import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
 import com.sk89q.worldguard.sponge.WorldGuardPlugin;
-import com.sk89q.worldguard.sponge.event.debug.CancelLogging;
-import com.sk89q.worldguard.sponge.event.debug.LoggingBlockBreakEvent;
-import com.sk89q.worldguard.sponge.event.debug.LoggingBlockPlaceEvent;
-import com.sk89q.worldguard.sponge.event.debug.LoggingEntityDamageByEntityEvent;
-import com.sk89q.worldguard.sponge.event.debug.LoggingPlayerInteractEvent;
+import com.sk89q.worldguard.sponge.event.debug.*;
 import com.sk89q.worldguard.util.report.CancelReport;
 import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.EntityInteractionTypes;
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Texts;
@@ -97,7 +92,7 @@ public class DebuggingCommands {
         Player target = plugin.matchSinglePlayer(sender, args.getString(0));
         Entity entity = traceEntity(sender, target, args.hasFlag('t'));
         sender.sendMessage(Texts.of(TextColors.AQUA, "Testing ENTITY DAMAGE on ", TextColors.DARK_AQUA, entity));
-        LoggingEntityDamageByEntityEvent event = new LoggingEntityDamageByEntityEvent(target, new Cause(null, entity, null), 1);
+        LoggingEntityDamageByEntityEvent event = new LoggingEntityDamageByEntityEvent(target, Cause.of(entity), 1);
         testEvent(sender, target, event);
     }
 

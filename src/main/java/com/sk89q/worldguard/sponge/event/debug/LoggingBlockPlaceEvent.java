@@ -19,31 +19,32 @@
 
 package com.sk89q.worldguard.sponge.event.debug;
 
-import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockState;
-import org.spongepowered.api.entity.player.Player;
-import org.spongepowered.api.event.AbstractEvent;
+import org.spongepowered.api.block.BlockTransaction;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.block.PlaceBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.event.entity.player.PlayerPlaceBlockEvent;
+import org.spongepowered.api.event.impl.AbstractEvent;
 import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.util.List;
 
-public class LoggingBlockPlaceEvent extends AbstractEvent implements PlayerPlaceBlockEvent, CancelLogging {
+public class LoggingBlockPlaceEvent extends AbstractEvent implements PlaceBlockEvent, CancelLogging {
 
     private final CancelLogger logger = new CancelLogger();
 
     public LoggingBlockPlaceEvent(Location placedBlock, Direction placed, BlockSnapshot replacedBlockState, Player player) {
         this.replacement = replacedBlockState;
         this.direction = placed;
-        this.player = player;
         this.block = placedBlock;
         this.state = placedBlock.getBlock();
-        this.cause = Optional.of(new Cause(null, player, null));
+        this.cause = Cause.of(player);
         this.game = WorldGuardPlugin.inst().getGame();
     }
 
@@ -51,10 +52,9 @@ public class LoggingBlockPlaceEvent extends AbstractEvent implements PlayerPlace
     private BlockSnapshot replacement;
     private Location block;
     private BlockState state;
-    private Optional<Cause> cause;
+    private Cause cause;
     private Game game;
     private Direction direction;
-    private Player player;
 
     public List<CancelAttempt> getCancels() {
         return logger.getCancels();
@@ -72,12 +72,7 @@ public class LoggingBlockPlaceEvent extends AbstractEvent implements PlayerPlace
     }
 
     @Override
-    public BlockSnapshot getReplacementBlock() {
-        return replacement;
-    }
-
-    @Override
-    public Optional<Cause> getCause() {
+    public Cause getCause() {
         return cause;
     }
 
@@ -87,27 +82,22 @@ public class LoggingBlockPlaceEvent extends AbstractEvent implements PlayerPlace
     }
 
     @Override
-    public Location getLocation() {
-        return block;
+    public List<BlockTransaction> getTransactions() {
+        return null;
     }
 
     @Override
-    public BlockState getBlock() {
-        return state;
+    public List<BlockTransaction> filter(Predicate<Location<World>> predicate) {
+        return null;
     }
 
     @Override
-    public Direction getBlockFace() {
-        return direction;
+    public List<BlockTransaction> filterAll() {
+        return null;
     }
 
     @Override
-    public Player getEntity() {
-        return player;
-    }
-
-    @Override
-    public Player getUser() {
-        return player;
+    public World getTargetWorld() {
+        return null;
     }
 }

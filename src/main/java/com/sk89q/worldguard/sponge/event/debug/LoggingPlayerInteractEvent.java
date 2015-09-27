@@ -24,7 +24,7 @@ import com.google.common.base.Optional;
 import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.entity.EntityInteractionType;
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.AbstractEvent;
 import org.spongepowered.api.event.entity.player.PlayerInteractEvent;
 import org.spongepowered.api.util.Direction;

@@ -37,7 +37,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 abstract class AbstractEntityEvent extends DelegateEvent {
 
-    private final Location target;
+    private final Location<World> target;
     @Nullable
     private final Entity entity;
 
@@ -48,7 +48,7 @@ abstract class AbstractEntityEvent extends DelegateEvent {
         this.entity = entity;
     }
 
-    protected AbstractEntityEvent(@Nullable Event originalEvent, Cause cause, Location target) {
+    protected AbstractEntityEvent(@Nullable Event originalEvent, Cause cause, Location<World> target) {
         super(originalEvent, cause);
         checkNotNull(target);
         this.target = target;
@@ -69,7 +69,7 @@ abstract class AbstractEntityEvent extends DelegateEvent {
      *
      * @return a location
      */
-    public Location getTarget() {
+    public Location<World> getTarget() {
         return target;
     }
 

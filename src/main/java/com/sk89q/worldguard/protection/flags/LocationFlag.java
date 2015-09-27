@@ -23,7 +23,7 @@ import com.flowpowered.math.vector.Vector3d;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import org.spongepowered.api.entity.Transform;
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.world.World;
 

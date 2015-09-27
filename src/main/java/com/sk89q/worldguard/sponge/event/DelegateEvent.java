@@ -22,9 +22,9 @@ package com.sk89q.worldguard.sponge.event;
 import com.google.common.collect.Lists;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.sponge.cause.Cause;
-import org.spongepowered.api.event.AbstractEvent;
 import org.spongepowered.api.event.Cancellable;
 import org.spongepowered.api.event.Event;
+import org.spongepowered.api.event.impl.AbstractEvent;
 
 import javax.annotation.Nullable;
 import java.util.List;

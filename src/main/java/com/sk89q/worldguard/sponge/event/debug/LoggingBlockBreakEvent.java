@@ -19,35 +19,34 @@
 
 package com.sk89q.worldguard.sponge.event.debug;
 
-import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.sk89q.worldguard.sponge.WorldGuardPlugin;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockState;
-import org.spongepowered.api.entity.player.Player;
-import org.spongepowered.api.event.AbstractEvent;
+import org.spongepowered.api.block.BlockTransaction;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.block.BreakBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.event.entity.player.PlayerBreakBlockEvent;
-import org.spongepowered.api.util.Direction;
+import org.spongepowered.api.event.impl.AbstractEvent;
 import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.util.List;
 
-public class LoggingBlockBreakEvent extends AbstractEvent implements PlayerBreakBlockEvent, CancelLogging {
+public class LoggingBlockBreakEvent extends AbstractEvent implements BreakBlockEvent, CancelLogging {
 
     private final CancelLogger logger = new CancelLogger();
 
     public LoggingBlockBreakEvent(Location block, BlockSnapshot replacedBlockState, Player player) {
         this.block = block;
-        this.cause = Optional.of(new Cause(null, player, null));
-        this.player = player;
+        this.cause = Cause.of(player);
         this.state = block.getBlock();
         this.replacement = replacedBlockState;
         this.game = WorldGuardPlugin.inst().getGame();
     }
 
-    private Optional<Cause> cause;
-    private Player player;
+    private Cause cause;
     private BlockSnapshot replacement;
     private boolean cancelled;
     private Location block;
@@ -70,32 +69,8 @@ public class LoggingBlockBreakEvent extends AbstractEvent implements PlayerBreak
     }
 
     @Override
-    public BlockSnapshot getReplacementBlock() {
-        return replacement;
-    }
-
-    @Override
-    public Location getLocation() {
-        return block;
-    }
-
-    @Override
-    public BlockState getBlock() {
-        return state;
-    }
-
-    @Override
-    public Optional<Cause> getCause() {
+    public Cause getCause() {
         return cause;
-    }
-
-    @Override
-    public int getExp() {
-        return 0;
-    }
-
-    @Override
-    public void setExp(int exp) {
     }
 
     @Override
@@ -104,17 +79,22 @@ public class LoggingBlockBreakEvent extends AbstractEvent implements PlayerBreak
     }
 
     @Override
-    public Direction getBlockFace() {
+    public List<BlockTransaction> getTransactions() {
         return null;
     }
 
     @Override
-    public Player getEntity() {
-        return player;
+    public List<BlockTransaction> filter(Predicate<Location<World>> predicate) {
+        return null;
     }
 
     @Override
-    public Player getUser() {
-        return player;
+    public List<BlockTransaction> filterAll() {
+        return null;
+    }
+
+    @Override
+    public World getTargetWorld() {
+        return null;
     }
 }
