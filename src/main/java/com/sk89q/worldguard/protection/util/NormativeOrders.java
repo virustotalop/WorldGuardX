@@ -27,6 +27,7 @@ import com.sk89q.worldguard.protection.FlagValueCalculator;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import javax.annotation.Nullable;
+
 import java.util.*;
 
 /**

@@ -19,10 +19,10 @@
 
 package com.sk89q.worldguard.util.report;
 
+import java.util.*;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

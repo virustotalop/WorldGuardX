@@ -101,7 +101,6 @@ public final class InteropUtils {
         }
 
         @Nullable
-        @Override
         public Object apply(Object o) {
             if (craftPlayerClass.isAssignableFrom(o.getClass())) {
                 try {

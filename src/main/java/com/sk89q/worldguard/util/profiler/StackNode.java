@@ -19,13 +19,13 @@
 
 package com.sk89q.worldguard.util.profiler;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class StackNode implements Comparable<StackNode> {
 

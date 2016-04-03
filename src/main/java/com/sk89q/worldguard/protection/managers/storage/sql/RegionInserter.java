@@ -57,7 +57,6 @@ class RegionInserter {
         all.add(region);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     public void insertGeometry(ProtectedRegion region) throws SQLException {
         if (region instanceof ProtectedCuboidRegion) {
             cuboids.add((ProtectedCuboidRegion) region);

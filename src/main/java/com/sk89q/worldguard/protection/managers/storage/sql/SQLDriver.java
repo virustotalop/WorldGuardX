@@ -19,14 +19,14 @@
 
 package com.sk89q.worldguard.protection.managers.storage.sql;
 
+import com.sk89q.worldguard.internal.flywaydb.core.Flyway;
+import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
+import com.sk89q.worldguard.internal.flywaydb.core.api.MigrationVersion;
 import com.sk89q.worldguard.protection.managers.storage.RegionDatabase;
 import com.sk89q.worldguard.protection.managers.storage.RegionDriver;
 import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.sk89q.worldguard.util.io.Closer;
 import com.sk89q.worldguard.util.sql.DataSourceConfig;
-import org.flywaydb.core.Flyway;
-import org.flywaydb.core.api.FlywayException;
-import org.flywaydb.core.api.MigrationVersion;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -156,12 +156,12 @@ public class SQLDriver implements RegionDriver {
             // The SQL support predates the usage of Flyway, so let's do some
             // checks and issue messages appropriately
             if (!hasMigrations) {
-                flyway.setInitOnMigrate(true);
+                flyway.setBaselineOnMigrate(true);
 
                 if (tablesExist) {
                     // Detect if this is before migrations
                     if (isBeforeMigrations) {
-                        flyway.setInitVersion(MigrationVersion.fromVersion("1"));
+                        flyway.setBaselineVersion(MigrationVersion.fromVersion("1"));
                     }
 
                     log.log(Level.INFO, "The SQL region tables exist but the migrations table seems to not exist yet. Creating the migrations table...");
@@ -170,7 +170,7 @@ public class SQLDriver implements RegionDriver {
                     // will assume that we are up to date, so we have to manually
                     // check ourselves and then ask Flyway to start from the beginning
                     // if our test table doesn't exist
-                    flyway.setInitVersion(MigrationVersion.fromVersion("0"));
+                    flyway.setBaselineVersion(MigrationVersion.fromVersion("0"));
 
                     log.log(Level.INFO, "SQL region tables do not exist: creating...");
                 }

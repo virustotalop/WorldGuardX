@@ -21,6 +21,7 @@ package com.sk89q.worldguard.bukkit.util.report;
 
 import com.google.common.collect.Maps;
 import com.sk89q.worldguard.util.report.DataReport;
+
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;

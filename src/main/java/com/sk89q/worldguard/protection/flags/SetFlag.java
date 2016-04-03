@@ -21,6 +21,7 @@ package com.sk89q.worldguard.protection.flags;
 
 import com.google.common.collect.Sets;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;

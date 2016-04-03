@@ -52,27 +52,30 @@ public class DelayedRegionOverlapAssociation implements RegionAssociable {
      * @param query the query
      * @param location the location
      */
-    public DelayedRegionOverlapAssociation(RegionQuery query, Location location) {
+    public DelayedRegionOverlapAssociation(RegionQuery query, Location location) 
+    {
         checkNotNull(query);
         checkNotNull(location);
         this.query = query;
         this.location = location;
     }
 
-    @Override
-    public Association getAssociation(List<ProtectedRegion> regions) {
-        if (source == null) {
-            ApplicableRegionSet result = query.getApplicableRegions(location);
-            source = result.getRegions();
-        }
+	public Association getAssociation(List<ProtectedRegion> regions) 
+	{
+		 if (this.source == null) 
+	        {      	
+	            ApplicableRegionSet result = this.query.getApplicableRegions(this.location);
+	            this.source = result.getRegions();
+	        }
 
-        for (ProtectedRegion region : regions) {
-            if ((region.getId().equals(ProtectedRegion.GLOBAL_REGION) && source.isEmpty()) || source.contains(region)) {
-                return Association.OWNER;
-            }
-        }
+	        for (ProtectedRegion region : regions) 
+	        {
+	            if ((region.getId().equals(ProtectedRegion.GLOBAL_REGION) && this.source.isEmpty()) || this.source.contains(region)) 
+	            {
+	                return Association.OWNER;
+	            }
+	        }
 
-        return Association.NON_MEMBER;
-    }
-
+	        return Association.NON_MEMBER;
+	}
 }

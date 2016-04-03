@@ -22,10 +22,12 @@ package com.sk89q.worldguard.bukkit.event;
 import com.google.common.collect.Lists;
 import com.sk89q.worldguard.bukkit.cause.Cause;
 import com.sk89q.worldguard.protection.flags.StateFlag;
+
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 
 import javax.annotation.Nullable;
+
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;

@@ -21,9 +21,11 @@ package com.sk89q.worldguard.util.logging;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
+
 import org.bukkit.plugin.Plugin;
 
 import javax.annotation.Nullable;
+
 import java.security.CodeSource;
 import java.util.List;
 import java.util.Map;

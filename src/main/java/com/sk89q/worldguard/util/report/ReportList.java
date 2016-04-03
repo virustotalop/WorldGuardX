@@ -19,12 +19,12 @@
 
 package com.sk89q.worldguard.util.report;
 
-import com.google.common.collect.Lists;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+
+import com.google.common.collect.Lists;
 
 public class ReportList implements Report, List<Report> {
 

@@ -30,6 +30,7 @@ import com.sk89q.worldguard.util.ChangeTracked;
 import com.sk89q.worldguard.util.Normal;
 
 import javax.annotation.Nullable;
+
 import java.awt.geom.Area;
 import java.awt.geom.Line2D;
 import java.util.Collection;

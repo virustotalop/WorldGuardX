@@ -45,7 +45,7 @@ public class BlacklistLoggerHandler implements LoggerHandler {
     /**
      * Remove a handler.
      *
-     * @param handler The handler to remove
+     * @param handler The handler to removez
      */
     public void removeHandler(LoggerHandler handler) {
         handlers.remove(handler);

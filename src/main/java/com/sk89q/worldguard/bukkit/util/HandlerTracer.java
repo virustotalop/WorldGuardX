@@ -19,12 +19,14 @@
 
 package com.sk89q.worldguard.bukkit.util;
 
-import com.google.common.collect.Lists;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredListener;
 
+import com.google.common.collect.Lists;
+
 import javax.annotation.Nullable;
+
 import java.util.List;
 
 /**

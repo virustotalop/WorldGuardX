@@ -22,11 +22,13 @@ package com.sk89q.worldguard.bukkit.cause;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import com.sk89q.worldguard.bukkit.internal.WGMetadata;
+
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.metadata.Metadatable;
 
 import javax.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

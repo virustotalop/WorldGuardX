@@ -19,7 +19,7 @@
 
 package com.sk89q.worldguard.blacklist.target;
 
-import com.google.common.collect.Range;
+import com.sk89q.guavabackport.collect.Range;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

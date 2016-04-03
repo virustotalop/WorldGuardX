@@ -19,10 +19,10 @@
 
 package com.sk89q.worldguard.bukkit.event.debug;
 
-import com.google.common.collect.ImmutableList;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Logs attempts at cancellation.

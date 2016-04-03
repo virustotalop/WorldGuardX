@@ -46,15 +46,17 @@ public class ProgressIterator<V> implements Iterator<V>, ProgressObservable {
      * @param iterator the iterator
      * @param count the count
      */
-    private ProgressIterator(Iterator<V> iterator, int count) {
+    private ProgressIterator(Iterator<V> iterator, int count) 
+    {
         checkNotNull(iterator);
         this.iterator = iterator;
         this.count = count;
     }
 
     @Override
-    public boolean hasNext() {
-        return iterator.hasNext();
+    public boolean hasNext() 
+    {
+        return this.iterator.hasNext();
     }
 
     @Override

@@ -19,8 +19,6 @@
 
 package com.sk89q.worldguard.session.handler;
 
-import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.GodComponent;
 import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.session.Session;
 import org.bukkit.entity.Player;
@@ -35,25 +33,15 @@ public class GodMode extends Handler {
         super(session);
     }
 
-    public boolean hasGodMode(Player player) {
-        if (getPlugin().getGlobalStateManager().hasCommandBookGodMode()) {
-            GodComponent god = CommandBook.inst().getComponentManager().getComponent(GodComponent.class);
-            if (god != null) {
-                return god.hasGodMode(player);
-            }
-        }
-
+    public boolean hasGodMode(Player player) 
+    {
+    	//To be implemented with Essentials
         return godMode;
     }
 
-    public void setGodMode(Player player, boolean godMode) {
-        if (getPlugin().getGlobalStateManager().hasCommandBookGodMode()) {
-            GodComponent god = CommandBook.inst().getComponentManager().getComponent(GodComponent.class);
-            if (god != null) {
-                god.enableGodMode(player);
-            }
-        }
-
+    public void setGodMode(Player player, boolean godMode) 
+    {
+    	//To be implemented with Essentials
         this.godMode = godMode;
     }
 

@@ -53,6 +53,7 @@ import com.sk89q.worldguard.util.logging.RecordMessagePrefixer;
 import com.sk89q.worldguard.util.task.SimpleSupervisor;
 import com.sk89q.worldguard.util.task.Supervisor;
 import com.sk89q.worldguard.util.task.Task;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -68,6 +69,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import javax.annotation.Nullable;
+
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.CancellationException;
@@ -206,10 +208,6 @@ public class WorldGuardPlugin extends JavaPlugin {
         }
 
         configuration.updateCommandBookGodMode();
-
-        if (getServer().getPluginManager().isPluginEnabled("CommandBook")) {
-            getServer().getPluginManager().registerEvents(new WorldGuardCommandBookListener(this), this);
-        }
 
         // handle worlds separately to initialize already loaded worlds
         WorldGuardWorldListener worldListener = (new WorldGuardWorldListener(this));
