@@ -19,7 +19,7 @@ WorldGuard features
 WorldGuardX features
 ---------
 
-* Disable or enable all of the WorldGuard events, all events can be enabled or disable in the config file.
+* Disable or enable all of the WorldGuard events, all events can be enabled or disabled in the config file.
 
 Licenses
 ---------
