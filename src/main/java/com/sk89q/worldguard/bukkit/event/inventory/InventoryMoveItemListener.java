@@ -2,6 +2,8 @@ package com.sk89q.worldguard.bukkit.event.inventory;
 
 import static com.sk89q.worldguard.bukkit.cause.Cause.create;
 
+import java.util.logging.Level;
+
 import org.bukkit.Bukkit;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.DoubleChest;
@@ -51,7 +53,6 @@ public class InventoryMoveItemListener extends AbstractListener {
         final InventoryHolder causeHolder = event.getInitiator().getHolder();
         InventoryHolder sourceHolder = event.getSource().getHolder();
         InventoryHolder targetHolder = event.getDestination().getHolder();
-
         Entry entry;
         if ((entry = moveItemDebounce.tryDebounce(event)) != null) 
         {

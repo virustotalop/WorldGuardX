@@ -47,7 +47,6 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.PluginManager;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -88,11 +87,11 @@ public class WorldGuardPlayerListener extends AbstractListener {
     @EventHandler
     public void onPlayerGameModeChange(PlayerGameModeChangeEvent event) {
         Player player = event.getPlayer();
-        WorldConfiguration wcfg = plugin.getGlobalStateManager().get(player.getWorld());
-        Session session = plugin.getSessionManager().getIfPresent(player);
+        WorldConfiguration wcfg = this.getPlugin().getGlobalStateManager().get(player.getWorld());
+        Session session = this.getPlugin().getSessionManager().getIfPresent(player);
         if (session != null) {
             GameModeFlag handler = session.getHandler(GameModeFlag.class);
-            if (handler != null && wcfg.useRegions && !plugin.getGlobalRegionManager().hasBypass(player, player.getWorld())) {
+            if (handler != null && wcfg.useRegions && !this.getPlugin().getGlobalRegionManager().hasBypass(player, player.getWorld())) {
                 GameMode expected = handler.getSetGameMode();
                 if (handler.getOriginalGameMode() != null && expected != null && expected != event.getNewGameMode()) {
                     log.info("Game mode change on " + player.getName() + " has been blocked due to the region GAMEMODE flag");
@@ -107,7 +106,7 @@ public class WorldGuardPlayerListener extends AbstractListener {
         Player player = event.getPlayer();
         World world = player.getWorld();
 
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
+        ConfigurationManager cfg = this.getPlugin().getGlobalStateManager();
         WorldConfiguration wcfg = cfg.get(world);
 
         if (cfg.activityHaltToggle) {
@@ -136,22 +135,22 @@ public class WorldGuardPlayerListener extends AbstractListener {
 
         Events.fire(new ProcessPlayerEvent(player));
 
-        plugin.getSessionManager().get(player); // Initializes a session
+        this.getPlugin().getSessionManager().get(player); // Initializes a session
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
-        WorldConfiguration wcfg = plugin.getGlobalStateManager().get(player.getWorld());
+        WorldConfiguration wcfg = this.getPlugin().getGlobalStateManager().get(player.getWorld());
         if (wcfg.useRegions) {
-            if (!plugin.getGlobalRegionManager().allows(DefaultFlag.SEND_CHAT, player.getLocation())) {
+            if (!this.getPlugin().getGlobalRegionManager().allows(DefaultFlag.SEND_CHAT, player.getLocation())) {
                 player.sendMessage(ChatColor.RED + "You don't have permission to chat in this region!");
                 event.setCancelled(true);
                 return;
             }
 
             for (Iterator<Player> i = event.getRecipients().iterator(); i.hasNext();) {
-                if (!plugin.getGlobalRegionManager().allows(DefaultFlag.RECEIVE_CHAT, i.next().getLocation())) {
+                if (!this.getPlugin().getGlobalRegionManager().allows(DefaultFlag.RECEIVE_CHAT, i.next().getLocation())) {
                     i.remove();
                 }
             }
@@ -164,7 +163,7 @@ public class WorldGuardPlayerListener extends AbstractListener {
     @EventHandler(ignoreCancelled = true)
     public void onPlayerLogin(PlayerLoginEvent event) {
         Player player = event.getPlayer();
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
+        ConfigurationManager cfg = this.getPlugin().getGlobalStateManager();
 
         String hostKey = cfg.hostKeys.get(player.getName().toLowerCase());
         if (hostKey != null) {
@@ -200,11 +199,11 @@ public class WorldGuardPlayerListener extends AbstractListener {
             handlePhysicalInteract(event);
         }
 
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
+        ConfigurationManager cfg = this.getPlugin().getGlobalStateManager();
         WorldConfiguration wcfg = cfg.get(world);
 
         if (wcfg.removeInfiniteStacks
-                && !plugin.hasPermission(player, "worldguard.override.infinite-stack")) {
+                && !this.getPlugin().hasPermission(player, "worldguard.override.infinite-stack")) {
             int slot = player.getInventory().getHeldItemSlot();
             ItemStack heldItem = player.getInventory().getItem(slot);
             if (heldItem != null && heldItem.getAmount() < 0) {
@@ -230,7 +229,7 @@ public class WorldGuardPlayerListener extends AbstractListener {
         Player player = event.getPlayer();
         ItemStack item = player.getItemInHand();
 
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
+        ConfigurationManager cfg = this.getPlugin().getGlobalStateManager();
         WorldConfiguration wcfg = cfg.get(world);
 
         // Infinite stack removal
@@ -242,7 +241,7 @@ public class WorldGuardPlayerListener extends AbstractListener {
                 || type == BlockID.BREWING_STAND
                 || type == BlockID.ENCHANTMENT_TABLE)
                 && wcfg.removeInfiniteStacks
-                && !plugin.hasPermission(player, "worldguard.override.infinite-stack")) {
+                && !this.getPlugin().hasPermission(player, "worldguard.override.infinite-stack")) {
             for (int slot = 0; slot < 40; slot++) {
                 ItemStack heldItem = player.getInventory().getItem(slot);
                 if (heldItem != null && heldItem.getAmount() < 0) {
@@ -254,11 +253,11 @@ public class WorldGuardPlayerListener extends AbstractListener {
 
         if (wcfg.useRegions) {
             Block placedIn = block.getRelative(event.getBlockFace());
-            ApplicableRegionSet set = plugin.getRegionContainer().createQuery().getApplicableRegions(block.getLocation());
-            ApplicableRegionSet placedInSet = plugin.getRegionContainer().createQuery().getApplicableRegions(placedIn.getLocation());
-            LocalPlayer localPlayer = plugin.wrapPlayer(player);
+            ApplicableRegionSet set = this.getPlugin().getRegionContainer().createQuery().getApplicableRegions(block.getLocation());
+            ApplicableRegionSet placedInSet = this.getPlugin().getRegionContainer().createQuery().getApplicableRegions(placedIn.getLocation());
+            LocalPlayer localPlayer = this.getPlugin().wrapPlayer(player);
 
-            if (item.getTypeId() == wcfg.regionWand && plugin.hasPermission(player, "worldguard.region.wand")) {
+            if (item.getTypeId() == wcfg.regionWand && this.getPlugin().hasPermission(player, "worldguard.region.wand")) {
                 if (set.size() > 0) {
                     player.sendMessage(ChatColor.YELLOW + "Can you build? "
                             + (set.canBuild(localPlayer) ? "Yes" : "No"));
@@ -294,7 +293,7 @@ public class WorldGuardPlayerListener extends AbstractListener {
         int type = block.getTypeId();
         World world = player.getWorld();
 
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
+        ConfigurationManager cfg = this.getPlugin().getGlobalStateManager();
         WorldConfiguration wcfg = cfg.get(world);
 
         if (block.getTypeId() == BlockID.SOIL && wcfg.disablePlayerCropTrampling) {
@@ -308,13 +307,13 @@ public class WorldGuardPlayerListener extends AbstractListener {
         Player player = event.getPlayer();
         Location location = player.getLocation();
 
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
+        ConfigurationManager cfg = this.getPlugin().getGlobalStateManager();
         WorldConfiguration wcfg = cfg.get(player.getWorld());
 
         if (wcfg.useRegions) {
-            ApplicableRegionSet set = plugin.getRegionContainer().createQuery().getApplicableRegions(location);
+            ApplicableRegionSet set = this.getPlugin().getRegionContainer().createQuery().getApplicableRegions(location);
 
-            LocalPlayer localPlayer = plugin.wrapPlayer(player);
+            LocalPlayer localPlayer = this.getPlugin().wrapPlayer(player);
             com.sk89q.worldedit.Location spawn = set.getFlag(DefaultFlag.SPAWN_LOC, localPlayer);
 
             if (spawn != null) {
@@ -327,11 +326,11 @@ public class WorldGuardPlayerListener extends AbstractListener {
     public void onItemHeldChange(PlayerItemHeldEvent event) {
         Player player = event.getPlayer();
 
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
+        ConfigurationManager cfg = this.getPlugin().getGlobalStateManager();
         WorldConfiguration wcfg = cfg.get(player.getWorld());
 
         if (wcfg.removeInfiniteStacks
-                && !plugin.hasPermission(player, "worldguard.override.infinite-stack")) {
+                && !this.getPlugin().hasPermission(player, "worldguard.override.infinite-stack")) {
             int newSlot = event.getNewSlot();
             ItemStack heldItem = player.getInventory().getItem(newSlot);
             if (heldItem != null && heldItem.getAmount() < 0) {
@@ -345,23 +344,23 @@ public class WorldGuardPlayerListener extends AbstractListener {
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         World world = event.getFrom().getWorld();
         Player player = event.getPlayer();
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
+        ConfigurationManager cfg = this.getPlugin().getGlobalStateManager();
         WorldConfiguration wcfg = cfg.get(world);
 
         if (wcfg.useRegions) {
-            ApplicableRegionSet set = plugin.getRegionContainer().createQuery().getApplicableRegions(event.getTo());
-            ApplicableRegionSet setFrom = plugin.getRegionContainer().createQuery().getApplicableRegions(event.getFrom());
-            LocalPlayer localPlayer = plugin.wrapPlayer(player);
+            ApplicableRegionSet set = this.getPlugin().getRegionContainer().createQuery().getApplicableRegions(event.getTo());
+            ApplicableRegionSet setFrom = this.getPlugin().getRegionContainer().createQuery().getApplicableRegions(event.getFrom());
+            LocalPlayer localPlayer = this.getPlugin().wrapPlayer(player);
 
             if (cfg.usePlayerTeleports) {
-                if (null != plugin.getSessionManager().get(player).testMoveTo(player, event.getTo(), MoveType.TELEPORT)) {
+                if (null != this.getPlugin().getSessionManager().get(player).testMoveTo(player, event.getTo(), MoveType.TELEPORT)) {
                     event.setCancelled(true);
                     return;
                 }
             }
 
             if (event.getCause() == TeleportCause.ENDER_PEARL) {
-                if (!plugin.getGlobalRegionManager().hasBypass(localPlayer, world)
+                if (!this.getPlugin().getGlobalRegionManager().hasBypass(localPlayer, world)
                         && !(set.allows(DefaultFlag.ENDERPEARL, localPlayer)
                                 && setFrom.allows(DefaultFlag.ENDERPEARL, localPlayer))) {
                     player.sendMessage(ChatColor.DARK_RED + "You're not allowed to go there.");
@@ -375,13 +374,13 @@ public class WorldGuardPlayerListener extends AbstractListener {
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
-        LocalPlayer localPlayer = plugin.wrapPlayer(player);
+        LocalPlayer localPlayer = this.getPlugin().wrapPlayer(player);
         World world = player.getWorld();
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
+        ConfigurationManager cfg = this.getPlugin().getGlobalStateManager();
         WorldConfiguration wcfg = cfg.get(world);
 
-        if (wcfg.useRegions && !plugin.getGlobalRegionManager().hasBypass(player, world)) {
-            ApplicableRegionSet set = plugin.getRegionContainer().createQuery().getApplicableRegions(player.getLocation());
+        if (wcfg.useRegions && !this.getPlugin().getGlobalRegionManager().hasBypass(player, world)) {
+            ApplicableRegionSet set = this.getPlugin().getRegionContainer().createQuery().getApplicableRegions(player.getLocation());
 
             Set<String> allowedCommands = set.getFlag(DefaultFlag.ALLOWED_CMDS, localPlayer);
             Set<String> blockedCommands = set.getFlag(DefaultFlag.BLOCKED_CMDS, localPlayer);

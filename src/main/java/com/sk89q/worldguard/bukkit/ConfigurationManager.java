@@ -192,7 +192,7 @@ public class ConfigurationManager {
         
         this.usePlayerModesListener = this.config.getBoolean("use-player-modes-listener", true);
         this.useBuildPermissionListener = this.config.getBoolean("use-build-permission-listener", true);
-        this.useInvincibilityListener = this.config.getBoolean("use-invincibility-listener");
+        this.useInvincibilityListener = this.config.getBoolean("use-invincibility-listener", true);
         
         this.usePlayerTeleports = this.config.getBoolean("use-player-teleports", true);
         this.deopOnJoin = this.config.getBoolean("security.deop-everyone-on-join", false);

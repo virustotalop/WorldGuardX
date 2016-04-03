@@ -115,7 +115,7 @@ public class WorldGuardPlugin extends JavaPlugin {
     private WorldRulesListener worldRulesListener;
     private BlockedPotionsListener blockedPotionsListener;
     private EventAbstractionListener eventAbstractionListener;
-    private InventoryMoveItemListener inventoryMoveListener;
+    private InventoryMoveItemListener inventoryMoveItemListener;
     
     private PlayerModesListener playerModesListener;
     private BuildPermissionListener buildPermissionListener;
@@ -213,7 +213,7 @@ public class WorldGuardPlugin extends JavaPlugin {
         (this.worldRulesListener = new WorldRulesListener(this)).registerEvents();
         (this.blockedPotionsListener = new BlockedPotionsListener(this)).registerEvents();
         (this.eventAbstractionListener = new EventAbstractionListener(this)).registerEvents();
-        (this.inventoryMoveListener = new InventoryMoveItemListener(this)).registerEvents();
+        (this.inventoryMoveItemListener = new InventoryMoveItemListener(this)).registerEvents();
 
         	
         (this.playerModesListener = new PlayerModesListener(this)).registerEvents();
@@ -1089,7 +1089,7 @@ public class WorldGuardPlugin extends JavaPlugin {
     
     public InventoryMoveItemListener getInventoryMoveItemListener() 
     {
-    	return this.inventoryMoveListener;
+    	return this.inventoryMoveItemListener;
     }
     
     /*
@@ -1113,6 +1113,10 @@ public class WorldGuardPlugin extends JavaPlugin {
     	return this.invincibilityListener;
     }
     
+    public void setInventoryMoveItemListener(InventoryMoveItemListener inventoryMoveItemListener) 
+    {
+    	this.inventoryMoveItemListener = inventoryMoveItemListener;
+    }
 
     /**
      * Replace macros in the text.

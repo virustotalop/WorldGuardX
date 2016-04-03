@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldguard.bukkit.ConfigurationManager;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.bukkit.event.inventory.InventoryMoveItemListener;
 import com.sk89q.worldguard.bukkit.util.logging.LoggerToChatHandler;
 import com.sk89q.worldguard.bukkit.util.report.*;
 import com.sk89q.worldguard.util.profiler.SamplerBuilder;
@@ -103,20 +104,24 @@ public class WorldGuardCommands {
             config.unload();
             config.load();
 
-
+            //InventoryMoveItemListener
             if(WorldGuardPlugin.inst().getInventoryMoveItemListener() != null)
             {
-            	if(config.useInventoryMoveItemListener)
+            	if(config.useInventoryMoveItemListener == false)
                 {
             		WorldGuardPlugin.inst().getInventoryMoveItemListener().deRegisterEvents(InventoryMoveItemEvent.class);
-            		WorldGuardPlugin.inst().getInventoryMoveItemListener().registerEvents();
+            		WorldGuardPlugin.inst().setInventoryMoveItemListener(null);
                 }
-            	else
+            }
+            else
+            {
+            	if(config.useInventoryMoveItemListener)
             	{
-            		WorldGuardPlugin.inst().getInventoryMoveItemListener().deRegisterEvents(InventoryMoveItemEvent.class);
+            		InventoryMoveItemListener inventoryMoveItemEvent = new InventoryMoveItemListener(this.plugin);
+            		inventoryMoveItemEvent.registerEvents();
+            		WorldGuardPlugin.inst().setInventoryMoveItemListener(inventoryMoveItemEvent);
             	}
             }
-            
             
 
             

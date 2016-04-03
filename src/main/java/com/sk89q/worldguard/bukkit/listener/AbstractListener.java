@@ -20,7 +20,6 @@
 package com.sk89q.worldguard.bukkit.listener;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 
 import com.sk89q.worldguard.bukkit.ConfigurationManager;
 import com.sk89q.worldguard.bukkit.WorldConfiguration;
@@ -40,7 +39,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AbstractListener implements Listener {
 
     private final WorldGuardPlugin plugin;
-
+    
     /**
      * Construct the listener.
      *
@@ -54,15 +53,17 @@ public class AbstractListener implements Listener {
     /**
      * Register events.
      */
-    public void registerEvents() {
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    public void registerEvents() 
+    {
+        this.plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     /**
      * De-Register events.
      * Thanks to Skript https://github.com/Njol/Skript/blob/23fa87ffb32e4d18014ad7ec63d1acc30e00ad69/src/main/java/ch/njol/skript/SkriptEventHandler.java#L291-L315
      */
-    public void deRegisterEvents(Class<? extends Event>... events) 
+    @SafeVarargs
+	public final void deRegisterEvents(Class<? extends Event>... events) 
     {
     	for(Class<? extends Event> event : events)
     	{
