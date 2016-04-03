@@ -1,6 +1,6 @@
 # New User Guide
 
-Thank you for installing WorldGuardX! By default, when you first install WorldGuard, most features will be disabled until you enable the ones that you want to use. Please note this is different than vanilla WorldGuard. WorldGuardX is a fork of the original WorldGuard, please do not ask sk89q or any of the WorldGuard authors for help.
+Thank you for installing WorldGuardX! By default, when you first install WorldGuardX, most features will be disabled until you enable the ones that you want to use. Please note this is different than vanilla WorldGuard. WorldGuardX is a fork of the original WorldGuard, please do not ask sk89q or any of the WorldGuard authors for help. All listeners can be enabled or disable via the config file that is generated when starting the plugin for the first time after installation.
 
 ## Requirements
 
