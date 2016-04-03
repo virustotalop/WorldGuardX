@@ -42,10 +42,20 @@ public class BuildPermissionListener extends AbstractListener {
      *
      * @param plugin an instance of WorldGuardPlugin
      */
-    public BuildPermissionListener(WorldGuardPlugin plugin) {
+    public BuildPermissionListener(WorldGuardPlugin plugin) 
+    {
         super(plugin);
     }
 
+    @Override
+    public void registerEvents()
+    {
+    	if(this.getPlugin().getGlobalStateManager().useBuildPermissionListener)
+    	{
+    		super.registerEvents();
+    	}
+    }
+    
     private boolean hasBuildPermission(CommandSender sender, String perm) {
         return getPlugin().hasPermission(sender, "worldguard.build." + perm);
     }

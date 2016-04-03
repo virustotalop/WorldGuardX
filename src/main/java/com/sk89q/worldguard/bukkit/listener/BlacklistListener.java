@@ -63,6 +63,15 @@ public class BlacklistListener extends AbstractListener {
     public BlacklistListener(WorldGuardPlugin plugin) {
         super(plugin);
     }
+    
+    @Override
+    public void registerEvents()
+    {
+    	if(this.getPlugin().getGlobalStateManager().useBlacklistListener)
+    	{
+    		super.registerEvents();
+    	}
+    }
 
     @EventHandler(ignoreCancelled = true)
     public void onBreakBlock(final BreakBlockEvent event) {

@@ -50,8 +50,18 @@ public class RegionFlagsListener extends AbstractListener {
      *
      * @param plugin an instance of WorldGuardPlugin
      */
-    public RegionFlagsListener(WorldGuardPlugin plugin) {
+    public RegionFlagsListener(WorldGuardPlugin plugin) 
+    {
         super(plugin);
+    }
+    
+    @Override
+    public void registerEvents()
+    {
+    	if(this.getPlugin().getGlobalStateManager().useRegionFlagsListener)
+    	{
+    		super.registerEvents();	
+    	}
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)

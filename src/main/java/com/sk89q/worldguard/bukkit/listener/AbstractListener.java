@@ -25,7 +25,6 @@ import com.sk89q.worldguard.bukkit.ConfigurationManager;
 import com.sk89q.worldguard.bukkit.WorldConfiguration;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 
-import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -37,7 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Abstract listener to ease creation of listeners.
  */
-class AbstractListener implements Listener {
+public class AbstractListener implements Listener {
 
     private final WorldGuardPlugin plugin;
 
@@ -57,7 +56,7 @@ class AbstractListener implements Listener {
     public void registerEvents() {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
-    
+
     /**
      * De-Register events.
      * Thanks to Skript https://github.com/Njol/Skript/blob/23fa87ffb32e4d18014ad7ec63d1acc30e00ad69/src/main/java/ch/njol/skript/SkriptEventHandler.java#L291-L315
@@ -70,7 +69,8 @@ class AbstractListener implements Listener {
     		try 
     		{
     			m = event.getDeclaredMethod("getHandlerList");
-    		} catch (NoSuchMethodException e) 
+    		} 
+    		catch (NoSuchMethodException e) 
     		{
     			event = (Class<? extends Event>) event.getSuperclass();
     			if (event == Event.class) 

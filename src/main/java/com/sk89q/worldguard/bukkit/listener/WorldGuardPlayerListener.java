@@ -43,7 +43,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
@@ -58,7 +57,7 @@ import java.util.regex.Pattern;
 /**
  * Handles all events thrown in relation to a player.
  */
-public class WorldGuardPlayerListener implements Listener {
+public class WorldGuardPlayerListener extends AbstractListener {
 
     private static final Logger log = Logger.getLogger(WorldGuardPlayerListener.class.getCanonicalName());
     private static final Pattern opPattern = Pattern.compile("^/(?:bukkit:)?op(?:\\s.*)?$", Pattern.CASE_INSENSITIVE);
@@ -69,16 +68,21 @@ public class WorldGuardPlayerListener implements Listener {
      *
      * @param plugin
      */
-    public WorldGuardPlayerListener(WorldGuardPlugin plugin) {
-        this.plugin = plugin;
+    public WorldGuardPlayerListener(WorldGuardPlugin plugin) 
+    {
+        super(plugin);
     }
 
     /**
      * Register events.
      */
-    public void registerEvents() {
-        PluginManager pm = plugin.getServer().getPluginManager();
-        pm.registerEvents(this, plugin);
+    @Override
+    public void registerEvents() 
+    {
+    	if(this.getPlugin().getGlobalStateManager().useWorldGuardPlayerListener)
+    	{
+    		super.registerEvents();
+    	}
     }
 
     @EventHandler

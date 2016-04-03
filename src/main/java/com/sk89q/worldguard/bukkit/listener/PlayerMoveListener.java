@@ -29,25 +29,24 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.util.Vector;
 
-public class PlayerMoveListener implements Listener {
+public class PlayerMoveListener extends AbstractListener {
 
-    private final WorldGuardPlugin plugin;
-
-    public PlayerMoveListener(WorldGuardPlugin plugin) {
-        this.plugin = plugin;
+    public PlayerMoveListener(WorldGuardPlugin plugin) 
+    {
+       	super(plugin);
     }
-
-    public void registerEvents() {
-        if (plugin.getGlobalStateManager().usePlayerMove) {
-            PluginManager pm = plugin.getServer().getPluginManager();
-            pm.registerEvents(this, plugin);
+    
+    @Override
+    public void registerEvents() 
+    {
+        if (this.getPlugin().getGlobalStateManager().usePlayerMoveListener) 
+        {
+            super.registerEvents();
         }
     }
 
@@ -55,7 +54,7 @@ public class PlayerMoveListener implements Listener {
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
 
-        Session session = plugin.getSessionManager().get(player);
+        Session session = this.getPlugin().getSessionManager().get(player);
         session.testMoveTo(player, event.getRespawnLocation(), MoveType.RESPAWN, true);
     }
 
@@ -64,7 +63,7 @@ public class PlayerMoveListener implements Listener {
         Entity entity = event.getEntered();
         if (entity instanceof Player) {
             Player player = (Player) entity;
-            Session session = plugin.getSessionManager().get(player);
+            Session session = this.getPlugin().getSessionManager().get(player);
             if (null != session.testMoveTo(player, event.getVehicle().getLocation(), MoveType.EMBARK, true)) {
                 event.setCancelled(true);
             }
@@ -72,13 +71,15 @@ public class PlayerMoveListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGH)
-    public void onPlayerMove(PlayerMoveEvent event) {
+    public void onPlayerMove(PlayerMoveEvent event) 
+    {
         final Player player = event.getPlayer();
 
-        Session session = plugin.getSessionManager().get(player);
+        Session session = this.getPlugin().getSessionManager().get(player);
         final Location override = session.testMoveTo(player, event.getTo(), MoveType.MOVE);
 
-        if (override != null) {
+        if (override != null) 
+        {
             override.setX(override.getBlockX() + 0.5);
             override.setY(override.getBlockY());
             override.setZ(override.getBlockZ() + 0.5);
@@ -88,16 +89,21 @@ public class PlayerMoveListener implements Listener {
             event.setTo(override.clone());
 
             Entity vehicle = player.getVehicle();
-            if (vehicle != null) {
+            if (vehicle != null) 
+            {
                 vehicle.eject();
 
                 Entity current = vehicle;
-                while (current != null) {
+                while (current != null) 
+                {
                     current.eject();
                     vehicle.setVelocity(new Vector());
-                    if (vehicle instanceof LivingEntity) {
+                    if (vehicle instanceof LivingEntity) 
+                    {
                         vehicle.teleport(override.clone());
-                    } else {
+                    }
+                    else 
+                    {
                         vehicle.teleport(override.clone().add(0, 1, 0));
                     }
                     current = current.getVehicle();
@@ -105,14 +111,15 @@ public class PlayerMoveListener implements Listener {
 
                 player.teleport(override.clone().add(0, 1, 0));
 
-                Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+                Bukkit.getScheduler().runTaskLater(this.getPlugin(), new Runnable() 
+                {
                     @Override
-                    public void run() {
+                    public void run() 
+                    {
                         player.teleport(override.clone().add(0, 1, 0));
                     }
                 }, 1);
             }
         }
     }
-
 }

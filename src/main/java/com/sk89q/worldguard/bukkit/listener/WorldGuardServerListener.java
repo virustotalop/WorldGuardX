@@ -20,25 +20,22 @@
 package com.sk89q.worldguard.bukkit.listener;
 
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.server.PluginDisableEvent;
-import org.bukkit.event.server.PluginEnableEvent;
-import org.bukkit.plugin.PluginManager;
 
 /**
  * @author zml2008
  */
-public class WorldGuardServerListener implements Listener {
+public class WorldGuardServerListener extends AbstractListener {
 
-    private final WorldGuardPlugin plugin;
-
-    public WorldGuardServerListener(WorldGuardPlugin plugin) {
-        this.plugin = plugin;
+    public WorldGuardServerListener(WorldGuardPlugin plugin) 
+    {
+       super(plugin);
     }
 
-    public void registerEvents() {
-        PluginManager pm = plugin.getServer().getPluginManager();
-        pm.registerEvents(this, plugin);
+    public void registerEvents() 
+    {
+        if(this.getPlugin().getGlobalStateManager().useWorldGuardServerListener)
+        {
+        	super.registerEvents();
+        }
     }
 }

@@ -34,7 +34,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowman;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockFadeEvent;
@@ -55,7 +54,7 @@ import org.bukkit.inventory.ItemStack;
  *
  * @author sk89q
  */
-public class WorldGuardBlockListener implements Listener {
+public class WorldGuardBlockListener extends AbstractListener {
 
     private WorldGuardPlugin plugin;
 
@@ -64,15 +63,22 @@ public class WorldGuardBlockListener implements Listener {
      *
      * @param plugin The plugin instance
      */
-    public WorldGuardBlockListener(WorldGuardPlugin plugin) {
-        this.plugin = plugin;
+    public WorldGuardBlockListener(WorldGuardPlugin plugin) 
+    {
+        super(plugin);
     }
 
     /**
      * Register events.
      */
-    public void registerEvents() {
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    @Override
+    public void registerEvents() 
+    {
+        if(this.getPlugin().getGlobalStateManager().useWorldGuardBlockListener)
+        {
+        	super.registerEvents();
+        }
+        
     }
 
     /**
@@ -82,7 +88,7 @@ public class WorldGuardBlockListener implements Listener {
      * @return The configuration for {@code world}
      */
     protected WorldConfiguration getWorldConfig(World world) {
-        return plugin.getGlobalStateManager().get(world);
+        return this.getPlugin().getGlobalStateManager().get(world);
     }
 
     /**

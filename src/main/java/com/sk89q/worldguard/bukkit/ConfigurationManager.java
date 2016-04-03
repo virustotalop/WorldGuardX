@@ -82,14 +82,34 @@ public class ConfigurationManager {
     public boolean useGodPermission;
     public boolean useGodGroup;
     public boolean useAmphibiousGroup;
-    public boolean usePlayerMove;
-    public boolean usePlayerTeleports;
+    
     public boolean deopOnJoin;
     public boolean blockInGameOp;
     public boolean migrateRegionsToUuid;
     public boolean keepUnresolvedNames;
-    public boolean useInventoryMoveItemEvent;
-
+    
+    public boolean useWorldGuardPlayerListener;
+    public boolean useWorldGuardBlockListener;
+    public boolean useWorldGuardEntityListener;
+    public boolean useWorldGuardWeatherListener;
+    public boolean useWorldGuardVehicleListener;
+    public boolean useWorldGuardServerListener;
+    
+    public boolean usePlayerMoveListener;
+    public boolean useBlacklistListener;
+    public boolean useChestProtectionListener;
+    public boolean useRegionProtectionListener;
+    public boolean useRegionFlagsListener;
+    public boolean useWorldRulesListener;
+    public boolean useBlockedPotionsListener;
+    public boolean useEventAbstractionListener;
+    public boolean useInventoryMoveItemListener;
+    
+    public boolean usePlayerModesListener;
+    public boolean useBuildPermissionListener;
+    public boolean useInvincibilityListener;
+    
+    public boolean usePlayerTeleports;
     @Unreported public Map<String, String> hostKeys = new HashMap<String, String>();
 
     /**
@@ -152,10 +172,29 @@ public class ConfigurationManager {
         this.useGodGroup = this.config.getBoolean("auto-invincible-group", false);
         this.useAmphibiousGroup = this.config.getBoolean("auto-no-drowning-group", false);
         this.config.removeProperty("auto-invincible-permission");
-        this.usePlayerMove = this.config.getBoolean("use-player-move-event", true);
-        this.usePlayerTeleports = this.config.getBoolean("use-player-teleports", true);
-        this.useInventoryMoveItemEvent = this.config.getBoolean("use-inventory-move-event", false);
         
+        this.useWorldGuardPlayerListener = this.config.getBoolean("use-worldguard-player-listener", true);
+        this.useWorldGuardBlockListener = this.config.getBoolean("use-worldguard-block-listener", true);
+        this.useWorldGuardEntityListener = this.config.getBoolean("use-worldguard-entity-listener", true);
+        this.useWorldGuardWeatherListener = this.config.getBoolean("use-worldguard-weather-listener", true);
+        this.useWorldGuardVehicleListener = this.config.getBoolean("use-worldguard-vehicle-listener", true);
+        this.useWorldGuardServerListener = this.config.getBoolean("use-worldguard-server-listener", false);
+        
+        this.usePlayerMoveListener = this.config.getBoolean("use-player-move-listener", true);
+        this.useBlacklistListener = this.config.getBoolean("use-blacklist-listener", true);
+        this.useChestProtectionListener = this.config.getBoolean("use-chest-protection-listener", true);
+        this.useRegionProtectionListener = this.config.getBoolean("use-region-protection-listener", true);
+        this.useRegionFlagsListener = this.config.getBoolean("use-region-flags-listener", true);
+        this.useWorldRulesListener = this.config.getBoolean("use-world-rules-listener", true);
+        this.useBlockedPotionsListener = this.config.getBoolean("use-blocked-potions-listener", true);
+        this.useEventAbstractionListener = this.config.getBoolean("use-event-abstraction-listener", true);
+        this.useInventoryMoveItemListener = this.config.getBoolean("use-inventory-move-listener", false);
+        
+        this.usePlayerModesListener = this.config.getBoolean("use-player-modes-listener", true);
+        this.useBuildPermissionListener = this.config.getBoolean("use-build-permission-listener", true);
+        this.useInvincibilityListener = this.config.getBoolean("use-invincibility-listener");
+        
+        this.usePlayerTeleports = this.config.getBoolean("use-player-teleports", true);
         this.deopOnJoin = this.config.getBoolean("security.deop-everyone-on-join", false);
         this.blockInGameOp = this.config.getBoolean("security.block-in-game-op-command", false);
 

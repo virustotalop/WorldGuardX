@@ -47,6 +47,15 @@ public class ChestProtectionListener extends AbstractListener {
         super(plugin);
     }
 
+    @Override
+    public void registerEvents()
+    {
+    	if(this.getPlugin().getGlobalStateManager().useChestProtectionListener)
+    	{
+    		super.registerEvents();
+    	}
+    }
+    
     private void sendMessage(DelegateEvent event, Player player, String message) {
         if (!event.isSilent()) {
             player.sendMessage(message);

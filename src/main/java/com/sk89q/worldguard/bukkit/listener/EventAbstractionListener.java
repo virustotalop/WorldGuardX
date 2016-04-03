@@ -92,13 +92,20 @@ public class EventAbstractionListener extends AbstractListener {
     }
 
     @Override
-    public void registerEvents() {
-        super.registerEvents();
-
-        try {
-            getPlugin().getServer().getPluginManager().registerEvents(new SpigotCompatListener(), getPlugin());
-        } catch (LinkageError ignored) {
-        }
+    public void registerEvents() 
+    {
+    	if(this.getPlugin().getGlobalStateManager().useEventAbstractionListener)
+    	{
+    		super.registerEvents();
+    		try 
+    		{
+    			getPlugin().getServer().getPluginManager().registerEvents(new SpigotCompatListener(), getPlugin());
+    		} 
+    		catch (LinkageError ignored) 
+    		{
+    			
+    		}
+    	}
     }
 
     //-------------------------------------------------------------------------

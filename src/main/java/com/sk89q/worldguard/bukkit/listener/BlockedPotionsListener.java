@@ -42,8 +42,18 @@ public class BlockedPotionsListener extends AbstractListener {
      *
      * @param plugin an instance of WorldGuardPlugin
      */
-    public BlockedPotionsListener(WorldGuardPlugin plugin) {
+    public BlockedPotionsListener(WorldGuardPlugin plugin) 
+    {
         super(plugin);
+    }
+    
+    @Override
+    public void registerEvents()
+    {
+    	if(this.getPlugin().getGlobalStateManager().useBlockedPotionsListener)
+    	{
+    		super.registerEvents();
+    	}
     }
 
     @EventHandler

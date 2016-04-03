@@ -38,8 +38,18 @@ public class InvincibilityListener extends AbstractListener {
      *
      * @param plugin an instance of WorldGuardPlugin
      */
-    public InvincibilityListener(WorldGuardPlugin plugin) {
+    public InvincibilityListener(WorldGuardPlugin plugin) 
+    {
         super(plugin);
+    }
+    
+    @Override
+    public void registerEvents()
+    {
+    	if(this.getPlugin().getGlobalStateManager().useInvincibilityListener)
+    	{
+    		super.registerEvents();
+    	}
     }
 
     /**

@@ -44,8 +44,18 @@ public class PlayerModesListener extends AbstractListener {
      *
      * @param plugin an instance of WorldGuardPlugin
      */
-    public PlayerModesListener(WorldGuardPlugin plugin) {
+    public PlayerModesListener(WorldGuardPlugin plugin) 
+    {
         super(plugin);
+    }
+    
+    @Override
+    public void registerEvents()
+    {
+    	if(this.getPlugin().getGlobalStateManager().usePlayerModesListener)
+    	{
+    		super.registerEvents();
+    	}
     }
 
     private boolean hasGodModeGroup(Player player) {

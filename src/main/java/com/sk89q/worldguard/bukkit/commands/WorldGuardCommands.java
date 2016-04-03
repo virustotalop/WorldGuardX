@@ -104,24 +104,26 @@ public class WorldGuardCommands {
             config.load();
 
 
-            if(WorldGuardPlugin.inst().inventoryMoveListener != null)
+            if(WorldGuardPlugin.inst().getInventoryMoveItemListener() != null)
             {
-            	if(config.useInventoryMoveItemEvent)
+            	if(config.useInventoryMoveItemListener)
                 {
-            		WorldGuardPlugin.inst().inventoryMoveListener.deRegisterEvents(InventoryMoveItemEvent.class);
-            		WorldGuardPlugin.inst().inventoryMoveListener.registerEvents();
+            		WorldGuardPlugin.inst().getInventoryMoveItemListener().deRegisterEvents(InventoryMoveItemEvent.class);
+            		WorldGuardPlugin.inst().getInventoryMoveItemListener().registerEvents();
                 }
             	else
             	{
-            		WorldGuardPlugin.inst().inventoryMoveListener.deRegisterEvents(InventoryMoveItemEvent.class);
+            		WorldGuardPlugin.inst().getInventoryMoveItemListener().deRegisterEvents(InventoryMoveItemEvent.class);
             	}
             }
+            
+            
 
             
             for (World world : Bukkit.getServer().getWorlds()) {
                 config.get(world);
             }
-            plugin.getRegionContainer().reload();
+            this.plugin.getRegionContainer().reload();
             // WGBukkit.cleanCache();
             sender.sendMessage("WorldGuard configuration reloaded.");
         } catch (Throwable t) {

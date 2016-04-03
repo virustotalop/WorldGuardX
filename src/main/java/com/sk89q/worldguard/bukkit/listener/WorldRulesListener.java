@@ -33,8 +33,18 @@ public class WorldRulesListener extends AbstractListener {
      *
      * @param plugin an instance of WorldGuardPlugin
      */
-    public WorldRulesListener(WorldGuardPlugin plugin) {
+    public WorldRulesListener(WorldGuardPlugin plugin) 
+    {
         super(plugin);
+    }
+    
+    @Override
+    public void registerEvents()
+    {
+    	if(this.getPlugin().getGlobalStateManager().useWorldRulesListener)
+    	{
+    		super.registerEvents();
+    	}
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)

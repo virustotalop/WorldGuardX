@@ -33,9 +33,9 @@ import com.sk89q.squirrelid.resolver.*;
 import com.sk89q.wepif.PermissionsResolverManager;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldguard.LocalPlayer;
-import com.sk89q.worldguard.bukkit.commands.GeneralCommands;
 import com.sk89q.worldguard.bukkit.commands.ProtectionCommands;
 import com.sk89q.worldguard.bukkit.commands.ToggleCommands;
+import com.sk89q.worldguard.bukkit.event.inventory.InventoryMoveItemListener;
 import com.sk89q.worldguard.bukkit.event.player.ProcessPlayerEvent;
 import com.sk89q.worldguard.bukkit.listener.*;
 import com.sk89q.worldguard.bukkit.util.Events;
@@ -64,7 +64,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -99,9 +98,30 @@ public class WorldGuardPlugin extends JavaPlugin {
     private ListeningExecutorService executorService;
     private ProfileService profileService;
     private ProfileCache profileCache;
+    
+    private WorldGuardPlayerListener worldGuardPlayerListener;
+    private WorldGuardBlockListener worldGuardBlockListener;
+    private WorldGuardEntityListener worldGuardEntityListener;
+    private WorldGuardWeatherListener worldGuardWeatherListener;
+    private WorldGuardVehicleListener worldGuardVehicleListener;
+    private WorldGuardServerListener worldGuardServerListener;
+    private WorldGuardHangingListener worldGuardHangingListener;
+    
     private PlayerMoveListener playerMoveListener;
-    public EventAbstractionListenerInventory inventoryMoveListener;
-
+    private BlacklistListener blacklistListener;
+    private ChestProtectionListener chestProtectionListener;
+    private RegionProtectionListener regionProtectionListener;
+    private RegionFlagsListener regionFlagsListener;
+    private WorldRulesListener worldRulesListener;
+    private BlockedPotionsListener blockedPotionsListener;
+    private EventAbstractionListener eventAbstractionListener;
+    private InventoryMoveItemListener inventoryMoveListener;
+    
+    private PlayerModesListener playerModesListener;
+    private BuildPermissionListener buildPermissionListener;
+    private InvincibilityListener invincibilityListener;
+    
+    
     /**
      * Construct objects. Actual loading occurs when the plugin is enabled, so
      * this merely instantiates the objects.
@@ -176,32 +196,30 @@ public class WorldGuardPlugin extends JavaPlugin {
 
         // Register events
         getServer().getPluginManager().registerEvents(sessionManager, this);
-        (new WorldGuardPlayerListener(this)).registerEvents();
-        (new WorldGuardBlockListener(this)).registerEvents();
-        (new WorldGuardEntityListener(this)).registerEvents();
-        (new WorldGuardWeatherListener(this)).registerEvents();
-        (new WorldGuardVehicleListener(this)).registerEvents();
-        (new WorldGuardServerListener(this)).registerEvents();
-        (new WorldGuardHangingListener(this)).registerEvents();
+        (this.worldGuardPlayerListener = new WorldGuardPlayerListener(this)).registerEvents();
+        (this.worldGuardBlockListener = new WorldGuardBlockListener(this)).registerEvents();
+        (this.worldGuardEntityListener = new WorldGuardEntityListener(this)).registerEvents();
+        (this.worldGuardWeatherListener = new WorldGuardWeatherListener(this)).registerEvents();
+        (this.worldGuardVehicleListener = new WorldGuardVehicleListener(this)).registerEvents();
+        (this.worldGuardServerListener = new WorldGuardServerListener(this)).registerEvents();
+        (this.worldGuardHangingListener = new WorldGuardHangingListener(this)).registerEvents();
 
         // Modules
-        (playerMoveListener = new PlayerMoveListener(this)).registerEvents();
-        (new BlacklistListener(this)).registerEvents();
-        (new ChestProtectionListener(this)).registerEvents();
-        (new RegionProtectionListener(this)).registerEvents();
-        (new RegionFlagsListener(this)).registerEvents();
-        (new WorldRulesListener(this)).registerEvents();
-        (new BlockedPotionsListener(this)).registerEvents();
-        (new EventAbstractionListener(this)).registerEvents();
-        if(configuration.useInventoryMoveItemEvent)
-        {
-        	(this.inventoryMoveListener = new EventAbstractionListenerInventory(this)).registerEvents();
-        	log.log(Level.INFO, "WorldguardX InventoryItemMoveListener enabled!");
-        }
+        (this.playerMoveListener = new PlayerMoveListener(this)).registerEvents();
+        (this.blacklistListener = new BlacklistListener(this)).registerEvents();
+        (this.chestProtectionListener = new ChestProtectionListener(this)).registerEvents();
+        (this.regionProtectionListener = new RegionProtectionListener(this)).registerEvents();
+        (this.regionFlagsListener = new RegionFlagsListener(this)).registerEvents();
+        (this.worldRulesListener = new WorldRulesListener(this)).registerEvents();
+        (this.blockedPotionsListener = new BlockedPotionsListener(this)).registerEvents();
+        (this.eventAbstractionListener = new EventAbstractionListener(this)).registerEvents();
+        (this.inventoryMoveListener = new InventoryMoveItemListener(this)).registerEvents();
+
         	
-        (new PlayerModesListener(this)).registerEvents();
-        (new BuildPermissionListener(this)).registerEvents();
-        (new InvincibilityListener(this)).registerEvents();
+        (this.playerModesListener = new PlayerModesListener(this)).registerEvents();
+        (this.buildPermissionListener = new BuildPermissionListener(this)).registerEvents();
+        (this.invincibilityListener = new InvincibilityListener(this)).registerEvents();
+        
         if ("true".equalsIgnoreCase(System.getProperty("worldguard.debug.listener"))) {
             (new DebuggingListener(this, log)).registerEvents();
         }
@@ -971,9 +989,130 @@ public class WorldGuardPlugin extends JavaPlugin {
         return getGlobalRegionManager().get(world);
     }
 
-    public PlayerMoveListener getPlayerMoveListener() {
-        return playerMoveListener;
+    /*
+        (this.worldGuardPlayerListener = new WorldGuardPlayerListener(this)).registerEvents();
+        (this.worldGuardBlockListener = new WorldGuardBlockListener(this)).registerEvents();
+        (this.worldGuardEntityListener = new WorldGuardEntityListener(this)).registerEvents();
+        (this.worldGuardWeatherListener = new WorldGuardWeatherListener(this)).registerEvents();
+        (this.worldGuardVehicleListener = new WorldGuardVehicleListener(this)).registerEvents();
+        (this.worldGuardServerListener = new WorldGuardServerListener(this)).registerEvents();
+        (this.worldGuardHangingListener = new WorldGuardHangingListener(this)).registerEvents();
+     */
+    
+    public WorldGuardPlayerListener getWorldGuardPlayerListener()
+    {
+    	return this.worldGuardPlayerListener;
     }
+    
+    public WorldGuardBlockListener getWorldGuardBlockListener()
+    {
+    	return this.worldGuardBlockListener;
+    }
+    
+    public WorldGuardEntityListener getWorldGuardEntityListener()
+    {
+    	return this.worldGuardEntityListener;
+    }
+    
+    public WorldGuardWeatherListener getWorldGuardWeatherListener()
+    {
+    	return this.worldGuardWeatherListener;
+    }
+    
+    public WorldGuardVehicleListener getWorldGuardVehicleListener()
+    {
+    	return this.worldGuardVehicleListener;
+    }
+    
+    public WorldGuardServerListener getWorldGuardServerListener()
+    {
+    	return this.worldGuardServerListener;
+    }
+    
+    public WorldGuardHangingListener getWorldGuardHangingListener()
+    {
+    	return this.worldGuardHangingListener;
+    }
+    
+    /*
+        Modules
+        (this.playerMoveListener = new PlayerMoveListener(this)).registerEvents();
+        (this.blacklistListener = new BlacklistListener(this)).registerEvents();
+        (this.chestProtectionListener = new ChestProtectionListener(this)).registerEvents();
+        (this.regionProtectionListener = new RegionProtectionListener(this)).registerEvents();
+        (this.regionFlagsListener = new RegionFlagsListener(this)).registerEvents();
+        (this.worldRulesListener = new WorldRulesListener(this)).registerEvents();
+        (this.blockedPotionsListener = new BlockedPotionsListener(this)).registerEvents();
+        (this.eventAbstractionListener = new EventAbstractionListener(this)).registerEvents();
+        (this.inventoryMoveListener = new InventoryMoveItemListener(this)).registerEvents();
+     */
+    
+    public PlayerMoveListener getPlayerMoveListener() 
+    {
+        return this.playerMoveListener;
+    }
+    
+    public BlacklistListener getBlacklistListener()
+    {
+    	return this.blacklistListener;
+    }
+    
+    public ChestProtectionListener getChestProtectionListener()
+    {
+    	return this.chestProtectionListener;
+    }
+    
+    public RegionProtectionListener getRegionProtectionListener()
+    {
+    	return this.regionProtectionListener;
+    }
+    
+    public RegionFlagsListener getRegionFlagsListener()
+    {
+    	return this.regionFlagsListener;
+    }
+    
+    public WorldRulesListener getWorldRulesListener()
+    {
+    	return this.worldRulesListener;
+    }
+    
+    public BlockedPotionsListener getBlockedPotionsListener()
+    {
+    	return this.blockedPotionsListener;
+    }
+    
+    public EventAbstractionListener getEventAbstractionListener()
+    {
+    	return this.eventAbstractionListener;
+    }
+    
+    public InventoryMoveItemListener getInventoryMoveItemListener() 
+    {
+    	return this.inventoryMoveListener;
+    }
+    
+    /*
+        (this.playerModesListener = new PlayerModesListener(this)).registerEvents();
+        (this.buildPermissionListener = new BuildPermissionListener(this)).registerEvents();
+        (this.invincibilityListener = new InvincibilityListener(this)).registerEvents();
+     */
+    
+    public PlayerModesListener getPlayerModesListener()
+    {
+    	return this.playerModesListener;
+    }
+    
+    public BuildPermissionListener getBuildPermissionListener()
+    {
+    	return this.buildPermissionListener;
+    }
+    
+    public InvincibilityListener getInvincibilityListener()
+    {
+    	return this.invincibilityListener;
+    }
+    
 
     /**
      * Replace macros in the text.
