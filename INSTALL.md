@@ -6,6 +6,8 @@ Thank you for installing WorldGuard! By default, when you first install WorldGua
 
 You will need to be using [Bukkit](http://dl.bukkit.org/) for your server or one of its derivatives (such as Spigot or Cauldron). If you are using Minecraft Forge, you will have to use Cauldron in order to use WorldGuard.
 
+You will also need to have WorldEdit installed.
+
 It is not possible to use WorldGuard with the plain vanilla server from Mojang.
 
 ## Installation
