@@ -1,12 +1,10 @@
 # New User Guide
 
-Thank you for installing WorldGuard! By default, when you first install WorldGuard, most features will be disabled until you enable the ones that you want to use.
+Thank you for installing WorldGuardX! By default, when you first install WorldGuard, most features will be disabled until you enable the ones that you want to use. Please note this is different than vanilla WorldGuard. WorldGuardX is a fork of the original WorldGuard, please do not ask sk89q or any of the WorldGuard authors for help.
 
 ## Requirements
 
-You will need to be using [Bukkit](http://dl.bukkit.org/) for your server or one of its derivatives (such as Spigot or Cauldron). If you are using Minecraft Forge, you will have to use Cauldron in order to use WorldGuard.
-
-You will also need to have WorldEdit installed.
+You will need to be using CraftBukkit for your server or one of its derivatives such as Spigot, PaperSpigot or Cauldron. If you are using Minecraft Forge, you will have to use Cauldron in order to use WorldGuard. You will also need to have WorldEdit installed.
 
 It is not possible to use WorldGuard with the plain vanilla server from Mojang.
 
@@ -22,7 +20,8 @@ By default, only "ops" can use WorldGuard commands. If you install a permissions
 
 ## Documentation
 
-To learn how to use WorldGuard, check out [the wiki](http://wiki.sk89q.com/wiki/WorldGuard).
+To learn how to use WorldGuardX, check out [the WorldGuard wiki](http://wiki.sk89q.com/wiki/WorldGuard).
+Note WorldGuardX will have some features that vanilla WorldGuard does not. A complete wiki will be available in the future.
 
 ## Frequently Asked Questions
 
@@ -32,7 +31,7 @@ Check out the [region protection tutorial](http://wiki.sk89q.com/wiki/$%7Bprojec
 
 ### Players can't do anything!
 
-WorldGuard will typically not block something without also telling the user that he or she does not have permission. Please make sure that it's not another plugin that is preventing players from interacting with the world.
+WorldGuardX will typically not block something without also telling the user that he or she does not have permission. Please make sure that it's not another plugin that is preventing players from interacting with the world.
 
 Also, be aware that spawn protection is a feature of vanilla Minecraft and you must disable that in `bukkit.yml`. It only allows ops to do anything in a specified radius around the world's spawn point.
 
@@ -41,14 +40,10 @@ Also, be aware that spawn protection is a feature of vanilla Minecraft and you m
 1. If players get a "you can't do that here" message but they are still able to build, it's because another plugin is likely undoing the protection offered by WorldGuard.
 2. If no message is being sent, make sure that there is a region where you think one is. 
 
-### Where can I ask questions?
-
-You can [ask questions on our forum](http://forum.sk89q.com) or visit us on IRC (irc.esper.net #sk89q).
-
 ### Where can I file a bug report or request a feature?
 
-Visit our [issue tracker](http://youtrack.sk89q.com/dashboard). It's also used for WorldEdit and our other projects.
+Visit our [issue tracker](https://github.com/virustotalop/WorldGuardX/issues). It's also used for WorldEdit and our other projects.
 
-### Is WorldGuard open source?
+### Is WorldGuardX open source?
 
-Yes! [View the source code on GitHub](https://github.com/sk89q/worldguard).
+Yes! [View the source code on GitHub](https://github.com/virustotalop/WorldGuardX).
