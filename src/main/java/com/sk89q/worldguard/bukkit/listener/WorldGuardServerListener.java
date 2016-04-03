@@ -41,18 +41,4 @@ public class WorldGuardServerListener implements Listener {
         PluginManager pm = plugin.getServer().getPluginManager();
         pm.registerEvents(this, plugin);
     }
-
-    @EventHandler
-    public void onPluginEnable(PluginEnableEvent event) {
-        if (event.getPlugin().getDescription().getName().equalsIgnoreCase("CommandBook")) {
-            plugin.getGlobalStateManager().updateCommandBookGodMode();
-        }
-    }
-
-    @EventHandler
-    public void onPluginDisable(PluginDisableEvent event) {
-        if (event.getPlugin().getDescription().getName().equalsIgnoreCase("CommandBook")) {
-            plugin.getGlobalStateManager().updateCommandBookGodMode();
-        }
-    }
 }

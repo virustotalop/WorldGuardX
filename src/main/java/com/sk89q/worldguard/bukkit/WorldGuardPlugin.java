@@ -64,6 +64,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -99,6 +100,7 @@ public class WorldGuardPlugin extends JavaPlugin {
     private ProfileService profileService;
     private ProfileCache profileCache;
     private PlayerMoveListener playerMoveListener;
+    public EventAbstractionListenerInventory inventoryMoveListener;
 
     /**
      * Construct objects. Actual loading occurs when the plugin is enabled, so
@@ -149,15 +151,6 @@ public class WorldGuardPlugin extends JavaPlugin {
         reg.register(ToggleCommands.class);
         reg.register(ProtectionCommands.class);
 
-        getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-            @Override
-            public void run() {
-                if (!getGlobalStateManager().hasCommandBookGodMode()) {
-                    reg.register(GeneralCommands.class);
-                }
-            }
-        }, 0L);
-
         File cacheDir = new File(getDataFolder(), "cache");
         cacheDir.mkdirs();
         try {
@@ -200,14 +193,14 @@ public class WorldGuardPlugin extends JavaPlugin {
         (new WorldRulesListener(this)).registerEvents();
         (new BlockedPotionsListener(this)).registerEvents();
         (new EventAbstractionListener(this)).registerEvents();
+        if(configuration.useInventoryMoveItemEvent)
+        	(this.inventoryMoveListener = new EventAbstractionListenerInventory(this)).registerEvents();
         (new PlayerModesListener(this)).registerEvents();
         (new BuildPermissionListener(this)).registerEvents();
         (new InvincibilityListener(this)).registerEvents();
         if ("true".equalsIgnoreCase(System.getProperty("worldguard.debug.listener"))) {
             (new DebuggingListener(this, log)).registerEvents();
         }
-
-        configuration.updateCommandBookGodMode();
 
         // handle worlds separately to initialize already loaded worlds
         WorldGuardWorldListener worldListener = (new WorldGuardWorldListener(this));

@@ -38,13 +38,16 @@ import com.sk89q.worldguard.util.report.ReportList;
 import com.sk89q.worldguard.util.report.SystemInfoReport;
 import com.sk89q.worldguard.util.task.Task;
 import com.sk89q.worldguard.util.task.TaskStateComparator;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 
 import javax.annotation.Nullable;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ThreadInfo;
@@ -94,10 +97,27 @@ public class WorldGuardCommands {
             minecraftLogger.addHandler(handler);
         }
 
-        try {
+        try 
+        {
             ConfigurationManager config = plugin.getGlobalStateManager();
             config.unload();
             config.load();
+
+
+            if(WorldGuardPlugin.inst().inventoryMoveListener != null)
+            {
+            	if(config.useInventoryMoveItemEvent)
+                {
+            		WorldGuardPlugin.inst().inventoryMoveListener.deRegisterEvents(InventoryMoveItemEvent.class);
+            		WorldGuardPlugin.inst().inventoryMoveListener.registerEvents();
+                }
+            	else
+            	{
+            		WorldGuardPlugin.inst().inventoryMoveListener.deRegisterEvents(InventoryMoveItemEvent.class);
+            	}
+            }
+
+            
             for (World world : Bukkit.getServer().getWorlds()) {
                 config.get(world);
             }

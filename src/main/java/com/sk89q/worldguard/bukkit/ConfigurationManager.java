@@ -77,8 +77,6 @@ public class ConfigurationManager {
     @Unreported private ConcurrentMap<String, WorldConfiguration> worlds;
     @Unreported private YAMLProcessor config;
 
-    private boolean hasCommandBookGodMode = false;
-
     public boolean useRegionsCreatureSpawnEvent;
     public boolean activityHaltToggle = false;
     public boolean useGodPermission;
@@ -90,6 +88,7 @@ public class ConfigurationManager {
     public boolean blockInGameOp;
     public boolean migrateRegionsToUuid;
     public boolean keepUnresolvedNames;
+    public boolean useInventoryMoveItemEvent;
 
     @Unreported public Map<String, String> hostKeys = new HashMap<String, String>();
 
@@ -145,21 +144,22 @@ public class ConfigurationManager {
             e.printStackTrace();
         }
 
-        config.removeProperty("suppress-tick-sync-warnings");
-        migrateRegionsToUuid = config.getBoolean("regions.uuid-migration.perform-on-next-start", true);
-        keepUnresolvedNames = config.getBoolean("regions.uuid-migration.keep-names-that-lack-uuids", true);
-        useRegionsCreatureSpawnEvent = config.getBoolean("regions.use-creature-spawn-event", true);
-        useGodPermission = config.getBoolean("auto-invincible", config.getBoolean("auto-invincible-permission", false));
-        useGodGroup = config.getBoolean("auto-invincible-group", false);
-        useAmphibiousGroup = config.getBoolean("auto-no-drowning-group", false);
-        config.removeProperty("auto-invincible-permission");
-        usePlayerMove = config.getBoolean("use-player-move-event", true);
-        usePlayerTeleports = config.getBoolean("use-player-teleports", true);
+        this.config.removeProperty("suppress-tick-sync-warnings");
+        this.migrateRegionsToUuid = this.config.getBoolean("regions.uuid-migration.perform-on-next-start", true);
+        this.keepUnresolvedNames = this.config.getBoolean("regions.uuid-migration.keep-names-that-lack-uuids", true);
+        this.useRegionsCreatureSpawnEvent = this.config.getBoolean("regions.use-creature-spawn-event", true);
+        this.useGodPermission = this.config.getBoolean("auto-invincible", config.getBoolean("auto-invincible-permission", false));
+        this.useGodGroup = this.config.getBoolean("auto-invincible-group", false);
+        this.useAmphibiousGroup = this.config.getBoolean("auto-no-drowning-group", false);
+        this.config.removeProperty("auto-invincible-permission");
+        this.usePlayerMove = this.config.getBoolean("use-player-move-event", true);
+        this.usePlayerTeleports = this.config.getBoolean("use-player-teleports", true);
+        this.useInventoryMoveItemEvent = this.config.getBoolean("use-inventory-move-event", false);
+        
+        this.deopOnJoin = this.config.getBoolean("security.deop-everyone-on-join", false);
+        this.blockInGameOp = this.config.getBoolean("security.block-in-game-op-command", false);
 
-        deopOnJoin = config.getBoolean("security.deop-everyone-on-join", false);
-        blockInGameOp = config.getBoolean("security.block-in-game-op-command", false);
-
-        hostKeys = new HashMap<String, String>();
+        this.hostKeys = new HashMap<String, String>();
         Object hostKeysRaw = config.getProperty("host-keys");
         if (hostKeysRaw == null || !(hostKeysRaw instanceof Map)) {
             config.setProperty("host-keys", new HashMap<String, String>());
@@ -167,7 +167,7 @@ public class ConfigurationManager {
             for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) hostKeysRaw).entrySet()) {
                 String key = String.valueOf(entry.getKey());
                 String value = String.valueOf(entry.getValue());
-                hostKeys.put(key.toLowerCase(), value);
+                this.hostKeys.put(key.toLowerCase(), value);
             }
         }
 
@@ -175,11 +175,11 @@ public class ConfigurationManager {
         // Region store drivers
         // ====================================================================
 
-        boolean useSqlDatabase = config.getBoolean("regions.sql.use", false);
-        String sqlDsn = config.getString("regions.sql.dsn", "jdbc:mysql://localhost/worldguard");
-        String sqlUsername = config.getString("regions.sql.username", "worldguard");
-        String sqlPassword = config.getString("regions.sql.password", "worldguard");
-        String sqlTablePrefix = config.getString("regions.sql.table-prefix", "");
+        boolean useSqlDatabase = this.config.getBoolean("regions.sql.use", false);
+        String sqlDsn = this.config.getString("regions.sql.dsn", "jdbc:mysql://localhost/worldguard");
+        String sqlUsername = this.config.getString("regions.sql.username", "worldguard");
+        String sqlPassword = this.config.getString("regions.sql.password", "worldguard");
+        String sqlTablePrefix = this.config.getString("regions.sql.table-prefix", "");
 
         DataSourceConfig dataSourceConfig = new DataSourceConfig(sqlDsn, sqlUsername, sqlPassword, sqlTablePrefix);
         SQLDriver sqlDriver = new SQLDriver(dataSourceConfig);
@@ -203,11 +203,11 @@ public class ConfigurationManager {
      * Unload the configuration.
      */
     public void unload() {
-        worlds.clear();
+    	this.worlds.clear();
     }
 
     public void disableUuidMigration() {
-        config.setProperty("regions.uuid-migration.perform-on-next-start", false);
+    	this.config.setProperty("regions.uuid-migration.perform-on-next-start", false);
         if (!config.save()) {
             log.severe("Error saving configuration!");
         }
@@ -221,15 +221,15 @@ public class ConfigurationManager {
      */
     public WorldConfiguration get(World world) {
         String worldName = world.getName();
-        WorldConfiguration config = worlds.get(worldName);
+        WorldConfiguration config = this.worlds.get(worldName);
         WorldConfiguration newConfig = null;
 
         while (config == null) {
             if (newConfig == null) {
-                newConfig = new WorldConfiguration(plugin, worldName, this.config);
+                newConfig = new WorldConfiguration(this.plugin, worldName, this.config);
             }
-            worlds.putIfAbsent(world.getName(), newConfig);
-            config = worlds.get(world.getName());
+            this.worlds.putIfAbsent(world.getName(), newConfig);
+            config = this.worlds.get(world.getName());
         }
 
         return config;
@@ -242,7 +242,7 @@ public class ConfigurationManager {
      * @return Whether the player has godmode through WorldGuard or CommandBook
      */
     public boolean hasGodMode(Player player) {
-        return plugin.getSessionManager().get(player).isInvincible(player);
+        return this.plugin.getSessionManager().get(player).isInvincible(player);
     }
 
     /**
@@ -251,7 +251,7 @@ public class ConfigurationManager {
      * @param player The player to enable amphibious mode for
      */
     public void enableAmphibiousMode(Player player) {
-        WaterBreathing handler = plugin.getSessionManager().get(player).getHandler(WaterBreathing.class);
+        WaterBreathing handler = this.plugin.getSessionManager().get(player).getHandler(WaterBreathing.class);
         if (handler != null) {
             handler.setWaterBreathing(true);
         }
@@ -263,7 +263,7 @@ public class ConfigurationManager {
      * @param player The player to disable amphibious mode for
      */
     public void disableAmphibiousMode(Player player) {
-        WaterBreathing handler = plugin.getSessionManager().get(player).getHandler(WaterBreathing.class);
+        WaterBreathing handler = this.plugin.getSessionManager().get(player).getHandler(WaterBreathing.class);
         if (handler != null) {
             handler.setWaterBreathing(false);
         }
@@ -276,22 +276,7 @@ public class ConfigurationManager {
      * @return Whether {@code player} has amphibious mode
      */
     public boolean hasAmphibiousMode(Player player) {
-        WaterBreathing handler = plugin.getSessionManager().get(player).getHandler(WaterBreathing.class);
+        WaterBreathing handler = this.plugin.getSessionManager().get(player).getHandler(WaterBreathing.class);
         return handler != null && handler.hasWaterBreathing();
-    }
-
-    public void updateCommandBookGodMode() {
-        try {
-            if (plugin.getServer().getPluginManager().isPluginEnabled("CommandBook")) {
-                Class.forName("com.sk89q.commandbook.GodComponent");
-                hasCommandBookGodMode = true;
-                return;
-            }
-        } catch (ClassNotFoundException ignore) {}
-        hasCommandBookGodMode = false;
-    }
-
-    public boolean hasCommandBookGodMode() {
-        return hasCommandBookGodMode;
     }
 }

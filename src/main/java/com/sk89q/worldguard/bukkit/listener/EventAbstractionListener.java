@@ -35,10 +35,8 @@ import com.sk89q.worldguard.bukkit.event.inventory.UseItemEvent;
 import com.sk89q.worldguard.bukkit.listener.debounce.BlockPistonExtendKey;
 import com.sk89q.worldguard.bukkit.listener.debounce.BlockPistonRetractKey;
 import com.sk89q.worldguard.bukkit.listener.debounce.EventDebounce;
-import com.sk89q.worldguard.bukkit.listener.debounce.legacy.AbstractEventDebounce.Entry;
 import com.sk89q.worldguard.bukkit.listener.debounce.legacy.BlockEntityEventDebounce;
 import com.sk89q.worldguard.bukkit.listener.debounce.legacy.EntityEntityEventDebounce;
-import com.sk89q.worldguard.bukkit.listener.debounce.legacy.InventoryMoveItemEventDebounce;
 import com.sk89q.worldguard.bukkit.util.Blocks;
 import com.sk89q.worldguard.bukkit.util.Events;
 import com.sk89q.worldguard.bukkit.util.Materials;
@@ -57,7 +55,6 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
-import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
@@ -82,7 +79,6 @@ public class EventAbstractionListener extends AbstractListener {
     private final BlockEntityEventDebounce interactDebounce = new BlockEntityEventDebounce(10000);
     private final EntityEntityEventDebounce pickupDebounce = new EntityEntityEventDebounce(10000);
     private final BlockEntityEventDebounce entityBreakBlockDebounce = new BlockEntityEventDebounce(10000);
-    private final InventoryMoveItemEventDebounce moveItemDebounce = new InventoryMoveItemEventDebounce(30000);
     private final EventDebounce<BlockPistonRetractKey> pistonRetractDebounce = EventDebounce.create(5000);
     private final EventDebounce<BlockPistonExtendKey> pistonExtendDebounce = EventDebounce.create(5000);
 
@@ -733,43 +729,7 @@ public class EventAbstractionListener extends AbstractListener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onInventoryMoveItem(InventoryMoveItemEvent event) {
-        final InventoryHolder causeHolder = event.getInitiator().getHolder();
-        InventoryHolder sourceHolder = event.getSource().getHolder();
-        InventoryHolder targetHolder = event.getDestination().getHolder();
-
-        Entry entry;
-
-        if ((entry = moveItemDebounce.tryDebounce(event)) != null) {
-            Cause cause;
-
-            if (causeHolder instanceof Entity) {
-                cause = create(causeHolder);
-            } else if (causeHolder instanceof BlockState) {
-                cause = create(((BlockState) causeHolder).getBlock());
-            } else {
-                cause = Cause.unknown();
-            }
-
-            if (!causeHolder.equals(sourceHolder)) {
-                handleInventoryHolderUse(event, cause, sourceHolder);
-            }
-
-            handleInventoryHolderUse(event, cause, targetHolder);
-
-            if (event.isCancelled() && causeHolder instanceof Hopper) {
-                Bukkit.getScheduler().scheduleSyncDelayedTask(getPlugin(), new Runnable() {
-                    @Override
-                    public void run() {
-                        ((Hopper) causeHolder).getBlock().breakNaturally();
-                    }
-                });
-            } else {
-                entry.setCancelled(event.isCancelled());
-            }
-        }
-    }
+    
 
     @EventHandler(ignoreCancelled = true)
     public void onPotionSplash(PotionSplashEvent event) {
@@ -885,21 +845,6 @@ public class EventAbstractionListener extends AbstractListener {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private static <T extends Event & Cancellable> void handleInventoryHolderUse(T originalEvent, Cause cause, InventoryHolder holder) {
-        if (originalEvent.isCancelled()) {
-            return;
-        }
-
-        if (holder instanceof Entity) {
-            Events.fireToCancel(originalEvent, new UseEntityEvent(originalEvent, cause, (Entity) holder));
-        } else if (holder instanceof BlockState) {
-            Events.fireToCancel(originalEvent, new UseBlockEvent(originalEvent, cause, ((BlockState) holder).getBlock()));
-        } else if (holder instanceof DoubleChest) {
-            Events.fireToCancel(originalEvent, new UseBlockEvent(originalEvent, cause, ((BlockState) ((DoubleChest) holder).getLeftSide()).getBlock()));
-            Events.fireToCancel(originalEvent, new UseBlockEvent(originalEvent, cause, ((BlockState) ((DoubleChest) holder).getRightSide()).getBlock()));
-        }
-    }
 
     private boolean hasInteractBypass(Block block) {
         return getWorldConfig(block.getWorld()).allowAllInteract.test(block);
