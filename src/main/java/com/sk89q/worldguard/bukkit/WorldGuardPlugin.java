@@ -194,7 +194,11 @@ public class WorldGuardPlugin extends JavaPlugin {
         (new BlockedPotionsListener(this)).registerEvents();
         (new EventAbstractionListener(this)).registerEvents();
         if(configuration.useInventoryMoveItemEvent)
+        {
         	(this.inventoryMoveListener = new EventAbstractionListenerInventory(this)).registerEvents();
+        	log.log(Level.INFO, "WorldguardX InventoryItemMoveListener enabled!");
+        }
+        	
         (new PlayerModesListener(this)).registerEvents();
         (new BuildPermissionListener(this)).registerEvents();
         (new InvincibilityListener(this)).registerEvents();

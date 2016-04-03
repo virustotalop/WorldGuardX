@@ -2,6 +2,8 @@ package com.sk89q.worldguard.bukkit.listener;
 
 import static com.sk89q.worldguard.bukkit.cause.Cause.create;
 
+import java.util.logging.Level;
+
 import org.bukkit.Bukkit;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.DoubleChest;
@@ -43,7 +45,6 @@ public class EventAbstractionListenerInventory extends AbstractListener {
         InventoryHolder targetHolder = event.getDestination().getHolder();
 
         Entry entry;
-
         if ((entry = moveItemDebounce.tryDebounce(event)) != null) 
         {
             Cause cause;
@@ -79,7 +80,6 @@ public class EventAbstractionListenerInventory extends AbstractListener {
         }
     }
 	
-    @SuppressWarnings("unchecked")
     private static <T extends Event & Cancellable> void handleInventoryHolderUse(T originalEvent, Cause cause, InventoryHolder holder) 
     {
         if (originalEvent.isCancelled()) 
