@@ -20,6 +20,7 @@
 package com.sk89q.worldguard.bukkit.listener;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 
 import com.sk89q.worldguard.bukkit.ConfigurationManager;
 import com.sk89q.worldguard.bukkit.WorldConfiguration;
@@ -61,32 +62,36 @@ public class AbstractListener implements Listener {
      * De-Register events.
      * Thanks to Skript https://github.com/Njol/Skript/blob/23fa87ffb32e4d18014ad7ec63d1acc30e00ad69/src/main/java/ch/njol/skript/SkriptEventHandler.java#L291-L315
      */
-    public void deRegisterEvents(Class<? extends Event> event) {
-    	try
+    public void deRegisterEvents(Class<? extends Event>... events) 
+    {
+    	for(Class<? extends Event> event : events)
     	{
-    		Method m = null;
-
-    		try 
+    		try
     		{
-    			m = event.getDeclaredMethod("getHandlerList");
-    		} 
-    		catch (NoSuchMethodException e) 
-    		{
-    			event = (Class<? extends Event>) event.getSuperclass();
-    			if (event == Event.class) 
+    			Method m = null;
+    			try 
     			{
-    				return;
+    				m = event.getDeclaredMethod("getHandlerList");
+    			} 
+    			catch (NoSuchMethodException e) 
+    			{
+    				event = (Class<? extends Event>) event.getSuperclass();
+    				if (event == Event.class) 
+    				{
+    					return;
+    				}
     			}
+    			m.setAccessible(true);
+    			final HandlerList l = (HandlerList) m.invoke(null);
+    			l.unregister(this);
+    		} 
+    		catch (final Exception e) 
+    		{
+    			e.printStackTrace();
     		}
-    		m.setAccessible(true);
-    		final HandlerList l = (HandlerList) m.invoke(null);
-    		l.unregister(this);
-    	} 
-    	catch (final Exception e) 
-    	{
-    		e.printStackTrace();
     	}
     }
+   
 
     /**
      * Get the plugin.
