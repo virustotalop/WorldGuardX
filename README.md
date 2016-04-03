@@ -19,7 +19,7 @@ WorldGuard features
 WorldGuardX features
 ---------
 
-* Disable or enable InventoryItemMoveListener, can be changed via /wg reload.
+* Disable or enable all of the WorldGuard events, all events can be enabled or disable in the config file.
 
 Licenses
 ---------
