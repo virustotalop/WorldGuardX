@@ -39,13 +39,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AbstractListener implements Listener {
 
     private final WorldGuardPlugin plugin;
-    
+    private boolean isRegistered = false;
     /**
      * Construct the listener.
      *
      * @param plugin an instance of WorldGuardPlugin
      */
-    public AbstractListener(WorldGuardPlugin plugin) {
+    public AbstractListener(WorldGuardPlugin plugin) 
+    {
         checkNotNull(plugin);
         this.plugin = plugin;
     }
@@ -56,6 +57,7 @@ public class AbstractListener implements Listener {
     public void registerEvents() 
     {
         this.plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        this.isRegistered = true;
     }
 
     /**
@@ -92,8 +94,17 @@ public class AbstractListener implements Listener {
     		}
     	}
     }
-   
 
+    public boolean isRegistered()
+    {
+    	return this.isRegistered;
+    }
+    
+    public void setRegistered(boolean isRegistered)
+    {
+    	this.isRegistered = isRegistered;
+    }
+    
     /**
      * Get the plugin.
      *

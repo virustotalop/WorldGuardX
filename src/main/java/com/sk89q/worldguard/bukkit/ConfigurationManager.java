@@ -94,6 +94,7 @@ public class ConfigurationManager {
     public boolean useWorldGuardWeatherListener;
     public boolean useWorldGuardVehicleListener;
     public boolean useWorldGuardServerListener;
+    public boolean useWorldGuardHangingListener;
     
     public boolean usePlayerMoveListener;
     public boolean useBlacklistListener;
@@ -179,6 +180,7 @@ public class ConfigurationManager {
         this.useWorldGuardWeatherListener = this.config.getBoolean("use-worldguard-weather-listener", true);
         this.useWorldGuardVehicleListener = this.config.getBoolean("use-worldguard-vehicle-listener", true);
         this.useWorldGuardServerListener = this.config.getBoolean("use-worldguard-server-listener", false);
+        this.useWorldGuardHangingListener = this.config.getBoolean("use-worldguard-hanging-listener", true);
         
         this.usePlayerMoveListener = this.config.getBoolean("use-player-move-listener", true);
         this.useBlacklistListener = this.config.getBoolean("use-blacklist-listener", true);

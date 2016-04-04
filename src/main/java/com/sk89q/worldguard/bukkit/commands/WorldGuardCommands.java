@@ -105,12 +105,12 @@ public class WorldGuardCommands {
             config.load();
 
             //InventoryMoveItemListener
-            if(WorldGuardPlugin.inst().getInventoryMoveItemListener() != null)
+            if(WorldGuardPlugin.inst().getInventoryMoveItemListener().isRegistered())
             {
             	if(config.useInventoryMoveItemListener == false)
                 {
             		WorldGuardPlugin.inst().getInventoryMoveItemListener().deRegisterEvents(InventoryMoveItemEvent.class);
-            		WorldGuardPlugin.inst().setInventoryMoveItemListener(null);
+            		WorldGuardPlugin.inst().getInventoryMoveItemListener().setRegistered(false);
                 }
             }
             else

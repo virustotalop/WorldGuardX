@@ -45,31 +45,35 @@ import org.bukkit.projectiles.ProjectileSource;
  *
  * @author BangL <henno.rickowski@gmail.com>
  */
-public class WorldGuardHangingListener implements Listener {
-
-    private WorldGuardPlugin plugin;
+public class WorldGuardHangingListener extends AbstractListener {
 
     /**
      * Construct the object;
      *
      * @param plugin The plugin instance
      */
-    public WorldGuardHangingListener(WorldGuardPlugin plugin) {
-        this.plugin = plugin;
+    public WorldGuardHangingListener(WorldGuardPlugin plugin) 
+    {
+        super(plugin);
     }
 
     /**
      * Register events.
      */
-    public void registerEvents() {
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    public void registerEvents() 
+    {
+       if(this.getPlugin().getGlobalStateManager().useWorldGuardHangingListener)
+       {
+    	   super.registerEvents();
+       }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onHangingBreak(HangingBreakEvent event) {
+    public void onHangingBreak(HangingBreakEvent event) 
+    {
         Hanging hanging = event.getEntity();
         World world = hanging.getWorld();
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
+        ConfigurationManager cfg = this.getPlugin().getGlobalStateManager();
         WorldConfiguration wcfg = cfg.get(world);
 
         if (event instanceof HangingBreakByEntityEvent) {
@@ -87,7 +91,7 @@ public class WorldGuardHangingListener implements Listener {
                         event.setCancelled(true);
                         return;
                     }
-                    if (wcfg.useRegions && !plugin.getGlobalRegionManager().allows(DefaultFlag.CREEPER_EXPLOSION, hanging.getLocation())) {
+                    if (wcfg.useRegions && !this.getPlugin().getGlobalRegionManager().allows(DefaultFlag.CREEPER_EXPLOSION, hanging.getLocation())) {
                         event.setCancelled(true);
                         return;
                     }
@@ -98,12 +102,12 @@ public class WorldGuardHangingListener implements Listener {
                 if (hanging instanceof Painting
                         && (wcfg.blockEntityPaintingDestroy
                         || (wcfg.useRegions
-                        && !plugin.getGlobalRegionManager().allows(DefaultFlag.ENTITY_PAINTING_DESTROY, hanging.getLocation())))) {
+                        && !this.getPlugin().getGlobalRegionManager().allows(DefaultFlag.ENTITY_PAINTING_DESTROY, hanging.getLocation())))) {
                     event.setCancelled(true);
                 } else if (hanging instanceof ItemFrame
                         && (wcfg.blockEntityItemFrameDestroy
                         || (wcfg.useRegions
-                        && !plugin.getGlobalRegionManager().allows(DefaultFlag.ENTITY_ITEM_FRAME_DESTROY, hanging.getLocation())))) {
+                        && !this.getPlugin().getGlobalRegionManager().allows(DefaultFlag.ENTITY_ITEM_FRAME_DESTROY, hanging.getLocation())))) {
                     event.setCancelled(true);
                 }
             }
