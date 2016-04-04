@@ -30,7 +30,7 @@ The images for the project are licensed under CC0 1.0 Universal.
 
 Flyaway is licensed under the Apache License, Version 2.0.
 
-Ptree is licensed under the BSD license you can see the license [here](https://github.com/virustotalop/WorldGuardX/blob/master/LICENSE-Ptree.txt)
+Ptree is licensed under the BSD license you can see the license [here](https://github.com/virustotalop/WorldGuardX/blob/master/LICENSE-Ptree.txt).
 
 SquirrelID is licensed under the GNU Lesser General Public License v3.
 
