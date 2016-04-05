@@ -246,6 +246,7 @@ public class ConfigurationManager {
         }
 
         config.setHeader(CONFIG_HEADER);
+        config.save();
     }
 
     /**
