@@ -121,6 +121,7 @@ public class WorldGuardPlugin extends JavaPlugin {
     private BuildPermissionListener buildPermissionListener;
     private InvincibilityListener invincibilityListener;
     
+    private WorldGuardWorldListener worldGuardWorldListener;
     
     /**
      * Construct objects. Actual loading occurs when the plugin is enabled, so
@@ -225,11 +226,12 @@ public class WorldGuardPlugin extends JavaPlugin {
         }
 
         // handle worlds separately to initialize already loaded worlds
-        WorldGuardWorldListener worldListener = (new WorldGuardWorldListener(this));
-        for (World world : getServer().getWorlds()) {
-            worldListener.initWorld(world);
+        this.worldGuardWorldListener = (new WorldGuardWorldListener(this));
+        for (World world : getServer().getWorlds()) 
+        {
+            this.worldGuardWorldListener.initWorld(world);
         }
-        worldListener.registerEvents();
+        this.worldGuardWorldListener.registerEvents();
 
         for (Player player : BukkitUtil.getOnlinePlayers()) {
             ProcessPlayerEvent event = new ProcessPlayerEvent(player);
@@ -988,16 +990,6 @@ public class WorldGuardPlugin extends JavaPlugin {
 
         return getGlobalRegionManager().get(world);
     }
-
-    /*
-        (this.worldGuardPlayerListener = new WorldGuardPlayerListener(this)).registerEvents();
-        (this.worldGuardBlockListener = new WorldGuardBlockListener(this)).registerEvents();
-        (this.worldGuardEntityListener = new WorldGuardEntityListener(this)).registerEvents();
-        (this.worldGuardWeatherListener = new WorldGuardWeatherListener(this)).registerEvents();
-        (this.worldGuardVehicleListener = new WorldGuardVehicleListener(this)).registerEvents();
-        (this.worldGuardServerListener = new WorldGuardServerListener(this)).registerEvents();
-        (this.worldGuardHangingListener = new WorldGuardHangingListener(this)).registerEvents();
-     */
     
     public WorldGuardPlayerListener getWorldGuardPlayerListener()
     {
@@ -1033,19 +1025,6 @@ public class WorldGuardPlugin extends JavaPlugin {
     {
     	return this.worldGuardHangingListener;
     }
-    
-    /*
-        Modules
-        (this.playerMoveListener = new PlayerMoveListener(this)).registerEvents();
-        (this.blacklistListener = new BlacklistListener(this)).registerEvents();
-        (this.chestProtectionListener = new ChestProtectionListener(this)).registerEvents();
-        (this.regionProtectionListener = new RegionProtectionListener(this)).registerEvents();
-        (this.regionFlagsListener = new RegionFlagsListener(this)).registerEvents();
-        (this.worldRulesListener = new WorldRulesListener(this)).registerEvents();
-        (this.blockedPotionsListener = new BlockedPotionsListener(this)).registerEvents();
-        (this.eventAbstractionListener = new EventAbstractionListener(this)).registerEvents();
-        (this.inventoryMoveListener = new InventoryMoveItemListener(this)).registerEvents();
-     */
     
     public PlayerMoveListener getPlayerMoveListener() 
     {
@@ -1092,12 +1071,6 @@ public class WorldGuardPlugin extends JavaPlugin {
     	return this.inventoryMoveItemListener;
     }
     
-    /*
-        (this.playerModesListener = new PlayerModesListener(this)).registerEvents();
-        (this.buildPermissionListener = new BuildPermissionListener(this)).registerEvents();
-        (this.invincibilityListener = new InvincibilityListener(this)).registerEvents();
-     */
-    
     public PlayerModesListener getPlayerModesListener()
     {
     	return this.playerModesListener;
@@ -1113,9 +1086,9 @@ public class WorldGuardPlugin extends JavaPlugin {
     	return this.invincibilityListener;
     }
     
-    public void setInventoryMoveItemListener(InventoryMoveItemListener inventoryMoveItemListener) 
+    public WorldGuardWorldListener getWorldListener()
     {
-    	this.inventoryMoveItemListener = inventoryMoveItemListener;
+    	return this.worldGuardWorldListener;
     }
 
     /**
@@ -1133,7 +1106,8 @@ public class WorldGuardPlugin extends JavaPlugin {
      * @param message The message to replace macros in
      * @return The message with macros replaced
      */
-    public String replaceMacros(CommandSender sender, String message) {
+    public String replaceMacros(CommandSender sender, String message) 
+    {
         Collection<? extends Player> online = BukkitUtil.getOnlinePlayers();
 
         message = message.replace("%name%", toName(sender));

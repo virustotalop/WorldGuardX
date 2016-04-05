@@ -110,7 +110,10 @@ public class ConfigurationManager {
     public boolean useBuildPermissionListener;
     public boolean useInvincibilityListener;
     
+    public boolean useWorldGuardWorldListener;
+    
     public boolean usePlayerTeleports;
+    
     @Unreported public Map<String, String> hostKeys = new HashMap<String, String>();
 
     /**
@@ -181,6 +184,7 @@ public class ConfigurationManager {
         this.useWorldGuardVehicleListener = this.config.getBoolean("use-worldguard-vehicle-listener", true);
         this.useWorldGuardServerListener = this.config.getBoolean("use-worldguard-server-listener", false);
         this.useWorldGuardHangingListener = this.config.getBoolean("use-worldguard-hanging-listener", true);
+        this.useWorldGuardWorldListener = this.config.getBoolean("use-worldguard-world-listener", true);
         
         this.usePlayerMoveListener = this.config.getBoolean("use-player-move-listener", true);
         this.useBlacklistListener = this.config.getBoolean("use-blacklist-listener", true);
@@ -196,7 +200,11 @@ public class ConfigurationManager {
         this.useBuildPermissionListener = this.config.getBoolean("use-build-permission-listener", true);
         this.useInvincibilityListener = this.config.getBoolean("use-invincibility-listener", true);
         
+        
+        
         this.usePlayerTeleports = this.config.getBoolean("use-player-teleports", true);
+       
+        
         this.deopOnJoin = this.config.getBoolean("security.deop-everyone-on-join", false);
         this.blockInGameOp = this.config.getBoolean("security.block-in-game-op-command", false);
 

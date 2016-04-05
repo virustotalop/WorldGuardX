@@ -26,36 +26,36 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 
 import java.util.logging.Logger;
 
-public class WorldGuardWorldListener implements Listener {
+public class WorldGuardWorldListener extends AbstractListener {
 
     private static final Logger log = Logger.getLogger(WorldGuardWorldListener.class.getCanonicalName());
-    private WorldGuardPlugin plugin;
 
     /**
      * Construct the object;
      *
      * @param plugin The plugin instance
      */
-    public WorldGuardWorldListener(WorldGuardPlugin plugin) {
-        this.plugin = plugin;
+    public WorldGuardWorldListener(WorldGuardPlugin plugin) 
+    {
+        super(plugin);
     }
 
     /**
      * Register events.
      */
+    @Override
     public void registerEvents() {
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        //this.getPlugin().getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     @EventHandler
     public void onChunkLoad(ChunkLoadEvent event) {
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
+        ConfigurationManager cfg = this.getPlugin().getGlobalStateManager();
 
         if (cfg.activityHaltToggle) {
             int removed = 0;
@@ -87,7 +87,7 @@ public class WorldGuardWorldListener implements Listener {
      * @param world The specified world
      */
     public void initWorld(World world) {
-        ConfigurationManager cfg = plugin.getGlobalStateManager();
+        ConfigurationManager cfg = this.getPlugin().getGlobalStateManager();
         WorldConfiguration wcfg = cfg.get(world);
         if (wcfg.alwaysRaining && !wcfg.disableWeather) {
             world.setStorm(true);
