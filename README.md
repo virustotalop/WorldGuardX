@@ -19,7 +19,13 @@ WorldGuard features
 WorldGuardX features
 ---------
 
-* Disable or enable all of the WorldGuard events, all events can be enabled or disabled in the config file.
+* Disable or enable all of the WorldGuard events, all events can be enabled or disabled in the config file. Events can be loaded and disabled via a /wg reload.
+
+WorldGuardX features in progress
+---------
+Features that are in various states of usability.
+* Ability to turn off effects and messages for events.
+* Custom flag support.
 
 Licenses
 ---------
