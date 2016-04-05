@@ -35,12 +35,12 @@ class BukkitOfflinePlayer extends LocalPlayer {
 
     @Override
     public String getName() {
-        return player.getName();
+        return this.player.getName();
     }
 
     @Override
     public UUID getUniqueId() {
-        return player.getUniqueId();
+        return this.player.getUniqueId();
     }
 
     @Override

@@ -29,6 +29,24 @@ import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldguard.bukkit.ConfigurationManager;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.bukkit.event.inventory.InventoryMoveItemListener;
+import com.sk89q.worldguard.bukkit.listener.BlacklistListener;
+import com.sk89q.worldguard.bukkit.listener.BlockedPotionsListener;
+import com.sk89q.worldguard.bukkit.listener.BuildPermissionListener;
+import com.sk89q.worldguard.bukkit.listener.ChestProtectionListener;
+import com.sk89q.worldguard.bukkit.listener.EventAbstractionListener;
+import com.sk89q.worldguard.bukkit.listener.InvincibilityListener;
+import com.sk89q.worldguard.bukkit.listener.PlayerModesListener;
+import com.sk89q.worldguard.bukkit.listener.PlayerMoveListener;
+import com.sk89q.worldguard.bukkit.listener.RegionFlagsListener;
+import com.sk89q.worldguard.bukkit.listener.RegionProtectionListener;
+import com.sk89q.worldguard.bukkit.listener.WorldGuardBlockListener;
+import com.sk89q.worldguard.bukkit.listener.WorldGuardEntityListener;
+import com.sk89q.worldguard.bukkit.listener.WorldGuardHangingListener;
+import com.sk89q.worldguard.bukkit.listener.WorldGuardPlayerListener;
+import com.sk89q.worldguard.bukkit.listener.WorldGuardServerListener;
+import com.sk89q.worldguard.bukkit.listener.WorldGuardVehicleListener;
+import com.sk89q.worldguard.bukkit.listener.WorldGuardWeatherListener;
+import com.sk89q.worldguard.bukkit.listener.WorldRulesListener;
 import com.sk89q.worldguard.bukkit.util.logging.LoggerToChatHandler;
 import com.sk89q.worldguard.bukkit.util.report.*;
 import com.sk89q.worldguard.util.profiler.SamplerBuilder;
@@ -103,27 +121,310 @@ public class WorldGuardCommands {
             ConfigurationManager config = plugin.getGlobalStateManager();
             config.unload();
             config.load();
+            
+            //WorldGuardPlayerListener
+            if(this.plugin.getWorldGuardPlayerListener().isRegistered())
+            {
+            	if(config.useWorldGuardPlayerListener == false)
+            	{
+            		this.plugin.getWorldGuardPlayerListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useWorldGuardPlayerListener)
+            	{
+            		this.plugin.getWorldGuardPlayerListener().registerEvents();
+            	}
+            }
+
+            //WorldGuardBlockListener
+            if(this.plugin.getWorldGuardBlockListener().isRegistered())
+            {
+            	if(config.useWorldGuardBlockListener == false)
+            	{
+            		this.plugin.getWorldGuardBlockListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useWorldGuardBlockListener)
+            	{
+            		this.plugin.getWorldGuardBlockListener().registerEvents();
+            	}
+            }
+
+            //WorldGuardEntityListener
+            if(this.plugin.getWorldGuardEntityListener().isRegistered())
+            {
+            	if(config.useWorldGuardEntityListener == false)
+            	{
+            		this.plugin.getWorldGuardEntityListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useWorldGuardEntityListener)
+            	{
+            		this.plugin.getWorldGuardEntityListener().registerEvents();
+            	}
+            }
+
+            //WorldGuardWeatherListener
+            if(this.plugin.getWorldGuardWeatherListener().isRegistered())
+            {
+            	if(config.useWorldGuardWeatherListener == false)
+            	{
+            		this.plugin.getWorldGuardWeatherListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useWorldGuardWeatherListener)
+            	{
+            		this.plugin.getWorldGuardWeatherListener().registerEvents();
+            	}
+            }
+
+            //WorldGuardVehicleListener
+            if(this.plugin.getWorldGuardVehicleListener().isRegistered())
+            {
+            	if(config.useWorldGuardVehicleListener == false)
+            	{
+            		this.plugin.getWorldGuardVehicleListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useWorldGuardVehicleListener)
+            	{
+            		this.plugin.getWorldGuardVehicleListener().registerEvents();
+            	}
+            }
+
+            //WorldGuardServerListener
+            if(this.plugin.getWorldGuardServerListener().isRegistered())
+            {
+            	if(config.useWorldGuardServerListener == false)
+            	{
+            		this.plugin.getWorldGuardServerListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useWorldGuardServerListener)
+            	{
+            		this.plugin.getWorldGuardServerListener().registerEvents();
+            	}
+            }
+
+            //WorldGuardHangingListener
+            if(this.plugin.getWorldGuardHangingListener().isRegistered())
+            {
+            	if(config.useWorldGuardHangingListener == false)
+            	{
+            		this.plugin.getWorldGuardHangingListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useWorldGuardHangingListener)
+            	{
+            		this.plugin.getWorldGuardHangingListener().registerEvents();
+            	}
+            }
+
+            //PlayerMoveListener
+            if(this.plugin.getPlayerMoveListener().isRegistered())
+            {
+            	if(config.usePlayerMoveListener == false)
+            	{
+            		this.plugin.getPlayerMoveListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.usePlayerMoveListener)
+            	{
+            		this.plugin.getPlayerMoveListener().registerEvents();
+            	}
+            }
+
+            //BlacklistListener
+            if(this.plugin.getBlacklistListener().isRegistered())
+            {
+            	if(config.useBlacklistListener == false)
+            	{
+            		this.plugin.getBlacklistListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useBlacklistListener)
+            	{
+            		this.plugin.getBlacklistListener().registerEvents();
+            	}
+            }
+
+            //ChestProtectionListener
+            if(this.plugin.getChestProtectionListener().isRegistered())
+            {
+            	if(config.useChestProtectionListener == false)
+            	{
+            		this.plugin.getChestProtectionListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useChestProtectionListener)
+            	{
+            		this.plugin.getChestProtectionListener().registerEvents();
+            	}
+            }
+
+            //RegionProtectionListener
+            if(this.plugin.getRegionProtectionListener().isRegistered())
+            {
+            	if(config.useRegionProtectionListener == false)
+            	{
+            		this.plugin.getRegionProtectionListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useRegionProtectionListener)
+            	{
+            		this.plugin.getRegionProtectionListener().registerEvents();
+            	}
+            }
+
+            //RegionFlagsListener
+            if(this.plugin.getRegionFlagsListener().isRegistered())
+            {
+            	if(config.useRegionFlagsListener == false)
+            	{
+            		this.plugin.getRegionFlagsListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useRegionFlagsListener)
+            	{
+            		this.plugin.getRegionFlagsListener().registerEvents();
+            	}
+            }
+
+            //WorldRulesListener
+            if(this.plugin.getWorldRulesListener().isRegistered())
+            {
+            	if(config.useWorldRulesListener == false)
+            	{
+            		this.plugin.getWorldRulesListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useWorldRulesListener)
+            	{
+            		this.plugin.getWorldRulesListener().registerEvents();
+            	}
+            }
+
+            //BlockedPotionsListener
+            if(this.plugin.getBlockedPotionsListener().isRegistered())
+            {
+            	if(config.useBlockedPotionsListener == false)
+            	{
+            		this.plugin.getBlockedPotionsListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useBlockedPotionsListener)
+            	{
+            		this.plugin.getBlockedPotionsListener().registerEvents();
+            	}
+            }
+
+            //EventAbstractionListener
+            if(this.plugin.getEventAbstractionListener().isRegistered())
+            {
+            	if(config.useEventAbstractionListener == false)
+            	{
+            		this.plugin.getEventAbstractionListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useEventAbstractionListener)
+            	{
+            		this.plugin.getEventAbstractionListener().registerEvents();
+            	}
+            }
 
             //InventoryMoveItemListener
-            if(WorldGuardPlugin.inst().getInventoryMoveItemListener().isRegistered())
+            if(this.plugin.getInventoryMoveItemListener().isRegistered())
             {
             	if(config.useInventoryMoveItemListener == false)
-                {
-            		WorldGuardPlugin.inst().getInventoryMoveItemListener().deRegisterEvents(InventoryMoveItemEvent.class);
-            		WorldGuardPlugin.inst().getInventoryMoveItemListener().setRegistered(false);
-                }
+            	{
+            		this.plugin.getInventoryMoveItemListener().deRegister();
+            	}
             }
             else
             {
             	if(config.useInventoryMoveItemListener)
             	{
-            		InventoryMoveItemListener inventoryMoveItemEvent = new InventoryMoveItemListener(this.plugin);
-            		inventoryMoveItemEvent.registerEvents();
-            		WorldGuardPlugin.inst().setInventoryMoveItemListener(inventoryMoveItemEvent);
+            		this.plugin.getInventoryMoveItemListener().registerEvents();
             	}
             }
-            
 
+            //PlayerModesListener
+            if(this.plugin.getPlayerModesListener().isRegistered())
+            {
+            	if(config.usePlayerModesListener == false)
+            	{
+            		this.plugin.getPlayerModesListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.usePlayerModesListener)
+            	{
+            		this.plugin.getPlayerModesListener().registerEvents();
+            	}
+            }
+
+            //BuildPermissionListener
+            if(this.plugin.getBuildPermissionListener().isRegistered())
+            {
+            	if(config.useBuildPermissionListener == false)
+            	{
+            		this.plugin.getBuildPermissionListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useBuildPermissionListener)
+            	{
+            		this.plugin.getBuildPermissionListener().registerEvents();
+            	}
+            }
+
+            //InvincibilityListener
+            if(this.plugin.getInvincibilityListener().isRegistered())
+            {
+            	if(config.useInvincibilityListener == false)
+            	{
+            		this.plugin.getInvincibilityListener().deRegister();
+            	}
+            }
+            else
+            {
+            	if(config.useInvincibilityListener)
+            	{
+            		this.plugin.getInvincibilityListener().registerEvents();
+            	}
+            }
             
             for (World world : Bukkit.getServer().getWorlds()) {
                 config.get(world);
@@ -132,6 +433,7 @@ public class WorldGuardCommands {
             // WGBukkit.cleanCache();
             sender.sendMessage("WorldGuard configuration reloaded.");
         } catch (Throwable t) {
+        	t.printStackTrace();
             sender.sendMessage("Error while reloading: "
                     + t.getMessage());
         } finally {

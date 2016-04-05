@@ -24,13 +24,16 @@ import org.khelekore.prtree.MBRConverter;
 public class ProtectedRegionMBRConverter implements MBRConverter<ProtectedRegion> {
 
     @Override
-    public int getDimensions() {
+    public int getDimensions() 
+    {
         return 3;
     }
 
     @Override
-    public double getMax(int dimension, ProtectedRegion region) {
-        switch (dimension) {
+    public double getMax(int dimension, ProtectedRegion region) 
+    {
+        switch (dimension) 
+        {
             case 0:
                 return region.getMaximumPoint().getBlockX();
             case 1:
@@ -42,8 +45,10 @@ public class ProtectedRegionMBRConverter implements MBRConverter<ProtectedRegion
     }
 
     @Override
-    public double getMin(int dimension, ProtectedRegion region) {
-        switch (dimension) {
+    public double getMin(int dimension, ProtectedRegion region) 
+    {
+        switch (dimension) 
+        {
             case 0:
                 return region.getMinimumPoint().getBlockX();
             case 1:

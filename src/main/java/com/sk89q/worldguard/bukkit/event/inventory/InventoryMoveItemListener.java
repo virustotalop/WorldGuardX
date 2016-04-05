@@ -54,7 +54,8 @@ public class InventoryMoveItemListener extends AbstractListener {
         InventoryHolder sourceHolder = event.getSource().getHolder();
         InventoryHolder targetHolder = event.getDestination().getHolder();
         Entry entry;
-        if ((entry = moveItemDebounce.tryDebounce(event)) != null) 
+        WorldGuardPlugin.inst().getLogger().log(Level.INFO, "ran");
+        if ((entry = this.moveItemDebounce.tryDebounce(event)) != null) 
         {
             Cause cause;
 

@@ -203,7 +203,7 @@ public class ConfigurationManager {
         this.hostKeys = new HashMap<String, String>();
         Object hostKeysRaw = config.getProperty("host-keys");
         if (hostKeysRaw == null || !(hostKeysRaw instanceof Map)) {
-            config.setProperty("host-keys", new HashMap<String, String>());
+        	this.config.setProperty("host-keys", new HashMap<String, String>());
         } else {
             for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) hostKeysRaw).entrySet()) {
                 String key = String.valueOf(entry.getKey());

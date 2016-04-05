@@ -53,10 +53,10 @@ class QueryCache {
         checkNotNull(location);
 
         CacheKey key = new CacheKey(location);
-        ApplicableRegionSet result = cache.get(key);
+        ApplicableRegionSet result = this.cache.get(key);
         if (result == null) {
             result = manager.getApplicableRegions(location);
-            cache.put(key, result);
+            this.cache.put(key, result);
         }
 
         return result;
@@ -100,17 +100,17 @@ class QueryCache {
 
             CacheKey cacheKey = (CacheKey) o;
 
-            if (x != cacheKey.x) return false;
-            if (y != cacheKey.y) return false;
-            if (z != cacheKey.z) return false;
-            if (!world.equals(cacheKey.world)) return false;
+            if (this.x != cacheKey.x) return false;
+            if (this.y != cacheKey.y) return false;
+            if (this.z != cacheKey.z) return false;
+            if (!this.world.equals(cacheKey.world)) return false;
 
             return true;
         }
 
         @Override
         public int hashCode() {
-            return hashCode;
+            return this.hashCode;
         }
     }
 

@@ -20,6 +20,7 @@
 package com.sk89q.worldguard.bukkit.listener;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 
 import com.sk89q.worldguard.bukkit.ConfigurationManager;
 import com.sk89q.worldguard.bukkit.WorldConfiguration;
@@ -64,9 +65,26 @@ public class AbstractListener implements Listener {
      * De-Register events.
      * Thanks to Skript https://github.com/Njol/Skript/blob/23fa87ffb32e4d18014ad7ec63d1acc30e00ad69/src/main/java/ch/njol/skript/SkriptEventHandler.java#L291-L315
      */
-    @SafeVarargs
-	public final void deRegisterEvents(Class<? extends Event>... events) 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public final void deRegister()
     {
+    	this.isRegistered = false;
+    	ArrayList<Class<? extends Event>> events = new ArrayList<Class<? extends Event>>();
+
+    	for(Method meth : this.getClass().getDeclaredMethods())
+    	{
+    		for(Class cl : meth.getParameterTypes())
+    		{
+    			if(cl.getSuperclass() != null)
+    			{
+    				if(cl.getSuperclass().equals(Event.class))
+    				{
+    					events.add(cl);
+    				}
+    			}
+    		}
+    	}
+
     	for(Class<? extends Event> event : events)
     	{
     		try
@@ -78,6 +96,7 @@ public class AbstractListener implements Listener {
     			} 
     			catch (NoSuchMethodException e) 
     			{
+    				e.printStackTrace();
     				event = (Class<? extends Event>) event.getSuperclass();
     				if (event == Event.class) 
     				{
@@ -99,11 +118,7 @@ public class AbstractListener implements Listener {
     {
     	return this.isRegistered;
     }
-    
-    public void setRegistered(boolean isRegistered)
-    {
-    	this.isRegistered = isRegistered;
-    }
+
     
     /**
      * Get the plugin.
