@@ -114,6 +114,11 @@ public class ConfigurationManager {
     
     public boolean usePlayerTeleports;
     
+    public boolean isInteractMessageSilent;
+    public boolean isInteractEffectSilent;
+    public boolean isBlockBreakingMessageSilent;
+    public boolean isBlockBreakingEffectSilent;
+    
     @Unreported public Map<String, String> hostKeys = new HashMap<String, String>();
 
     /**
@@ -177,33 +182,35 @@ public class ConfigurationManager {
         this.useAmphibiousGroup = this.config.getBoolean("auto-no-drowning-group", false);
         this.config.removeProperty("auto-invincible-permission");
         
-        this.useWorldGuardPlayerListener = this.config.getBoolean("use-worldguard-player-listener", true);
-        this.useWorldGuardBlockListener = this.config.getBoolean("use-worldguard-block-listener", true);
-        this.useWorldGuardEntityListener = this.config.getBoolean("use-worldguard-entity-listener", true);
-        this.useWorldGuardWeatherListener = this.config.getBoolean("use-worldguard-weather-listener", true);
-        this.useWorldGuardVehicleListener = this.config.getBoolean("use-worldguard-vehicle-listener", true);
-        this.useWorldGuardServerListener = this.config.getBoolean("use-worldguard-server-listener", false);
-        this.useWorldGuardHangingListener = this.config.getBoolean("use-worldguard-hanging-listener", true);
-        this.useWorldGuardWorldListener = this.config.getBoolean("use-worldguard-world-listener", true);
+        this.useWorldGuardPlayerListener = this.config.getBoolean("listeners.use-worldguard-player-listener", true);
+        this.useWorldGuardBlockListener = this.config.getBoolean("listeners.use-worldguard-block-listener", true);
+        this.useWorldGuardEntityListener = this.config.getBoolean("listeners.use-worldguard-entity-listener", true);
+        this.useWorldGuardWeatherListener = this.config.getBoolean("listeners.use-worldguard-weather-listener", true);
+        this.useWorldGuardVehicleListener = this.config.getBoolean("listeners.use-worldguard-vehicle-listener", true);
+        this.useWorldGuardServerListener = this.config.getBoolean("listeners.use-worldguard-server-listener", false);
+        this.useWorldGuardHangingListener = this.config.getBoolean("listeners.use-worldguard-hanging-listener", true);
+        this.useWorldGuardWorldListener = this.config.getBoolean("listeners.use-worldguard-world-listener", true);
         
-        this.usePlayerMoveListener = this.config.getBoolean("use-player-move-listener", true);
-        this.useBlacklistListener = this.config.getBoolean("use-blacklist-listener", true);
-        this.useChestProtectionListener = this.config.getBoolean("use-chest-protection-listener", true);
-        this.useRegionProtectionListener = this.config.getBoolean("use-region-protection-listener", true);
-        this.useRegionFlagsListener = this.config.getBoolean("use-region-flags-listener", true);
-        this.useWorldRulesListener = this.config.getBoolean("use-world-rules-listener", true);
-        this.useBlockedPotionsListener = this.config.getBoolean("use-blocked-potions-listener", true);
-        this.useEventAbstractionListener = this.config.getBoolean("use-event-abstraction-listener", true);
-        this.useInventoryMoveItemListener = this.config.getBoolean("use-inventory-move-listener", false);
+        this.usePlayerMoveListener = this.config.getBoolean("listeners.use-player-move-listener", true);
+        this.useBlacklistListener = this.config.getBoolean("listeners.use-blacklist-listener", true);
+        this.useChestProtectionListener = this.config.getBoolean("listeners.use-chest-protection-listener", true);
+        this.useRegionProtectionListener = this.config.getBoolean("listeners.use-region-protection-listener", true);
+        this.useRegionFlagsListener = this.config.getBoolean("listeners.use-region-flags-listener", true);
+        this.useWorldRulesListener = this.config.getBoolean("listeners.use-world-rules-listener", true);
+        this.useBlockedPotionsListener = this.config.getBoolean("listeners.use-blocked-potions-listener", true);
+        this.useEventAbstractionListener = this.config.getBoolean("listeners.use-event-abstraction-listener", true);
+        this.useInventoryMoveItemListener = this.config.getBoolean("listeners.use-inventory-move-listener", false);
         
-        this.usePlayerModesListener = this.config.getBoolean("use-player-modes-listener", true);
-        this.useBuildPermissionListener = this.config.getBoolean("use-build-permission-listener", true);
-        this.useInvincibilityListener = this.config.getBoolean("use-invincibility-listener", true);
+        this.usePlayerModesListener = this.config.getBoolean("listeners.use-player-modes-listener", true);
+        this.useBuildPermissionListener = this.config.getBoolean("listeners.use-build-permission-listener", true);
+        this.useInvincibilityListener = this.config.getBoolean("listeners.use-invincibility-listener", true);
         
-        
-        
-        this.usePlayerTeleports = this.config.getBoolean("use-player-teleports", true);
+        this.usePlayerTeleports = this.config.getBoolean("listeners.use-player-teleports-listener", true);
        
+        this.isInteractMessageSilent = this.config.getBoolean("suppress.message.interact", false);
+        this.isInteractEffectSilent = this.config.getBoolean("suppress.effect.interact", false);
+        this.isBlockBreakingMessageSilent = this.config.getBoolean("suppress.message.block-breaking", false);
+        this.isBlockBreakingEffectSilent = this.config.getBoolean("suppress.effect.block-breaking", false);
         
         this.deopOnJoin = this.config.getBoolean("security.deop-everyone-on-join", false);
         this.blockInGameOp = this.config.getBoolean("security.block-in-game-op-command", false);

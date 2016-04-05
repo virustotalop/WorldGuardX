@@ -116,7 +116,7 @@ public class EventAbstractionListener extends AbstractListener {
     public void onBlockBreak(BlockBreakEvent event) {
         Events.fireToCancel(event, new BreakBlockEvent(event, create(event.getPlayer()), event.getBlock()));
 
-        if (event.isCancelled()) {
+        if (event.isCancelled() && !this.getPlugin().getGlobalStateManager().isBlockBreakingEffectSilent) {
             playDenyEffect(event.getPlayer(), event.getBlock().getLocation().add(0.5, 1, 0.5));
         }
     }
@@ -363,7 +363,7 @@ public class EventAbstractionListener extends AbstractListener {
                     }
                 }
 
-                if (event.isCancelled()) {
+                if (event.isCancelled() && !this.getPlugin().getGlobalStateManager().isInteractEffectSilent) {
                     playDenyEffect(event.getPlayer(), clicked.getLocation().add(0.5, 1, 0.5));
                 }
 

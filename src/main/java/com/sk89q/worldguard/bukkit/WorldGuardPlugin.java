@@ -162,6 +162,7 @@ public class WorldGuardPlugin extends JavaPlugin {
         // Set the proper command injector
         commands.setInjector(new SimpleInjector(this));
 
+        
         // Catch bad things being done by naughty plugins that include
         // WorldGuard's classes
         ClassSourceValidator verifier = new ClassSourceValidator(this);

@@ -19,6 +19,9 @@
 
 package com.sk89q.worldguard.protection.flags;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.WeatherType;
@@ -138,31 +141,41 @@ public final class DefaultFlag {
     public static final DoubleFlag PRICE = new DoubleFlag("price");
     public static final SetFlag<String> BLOCKED_CMDS = new SetFlag<String>("blocked-cmds", new CommandStringFlag(null));
     public static final SetFlag<String> ALLOWED_CMDS = new SetFlag<String>("allowed-cmds", new CommandStringFlag(null));
-
-    public static final Flag<?>[] flagsList = new Flag<?>[] {
-            PASSTHROUGH, BUILD, CONSTRUCT, BLOCK_BREAK, BLOCK_PLACE, PVP, CHEST_ACCESS, PISTONS,
+    
+    /*MAX_PLAYERS, MAX_PLAYERS_MESSAGE,*/
+    
+    public static final ArrayList<Flag<?>> flagList = new ArrayList<Flag<?>>(Arrays.asList(PASSTHROUGH, BUILD, CONSTRUCT, BLOCK_BREAK, BLOCK_PLACE, PVP, CHEST_ACCESS, PISTONS,
             TNT, LIGHTER, RIDE, USE, INTERACT, PLACE_VEHICLE, DESTROY_VEHICLE, DAMAGE_ANIMALS, SLEEP,
             MOB_DAMAGE, MOB_SPAWNING, DENY_SPAWN, INVINCIBILITY, EXP_DROPS,
             CREEPER_EXPLOSION, OTHER_EXPLOSION, ENDERDRAGON_BLOCK_DAMAGE, GHAST_FIREBALL, ENDER_BUILD,
             DENY_MESSAGE, ENTRY_DENY_MESSAGE, EXIT_DENY_MESSAGE, EXIT_OVERRIDE, EXIT_VIA_TELEPORT,
             GREET_MESSAGE, FAREWELL_MESSAGE, NOTIFY_ENTER, NOTIFY_LEAVE,
             EXIT, ENTRY, LIGHTNING, ENTITY_PAINTING_DESTROY, ENDERPEARL,
-            ENTITY_ITEM_FRAME_DESTROY, FALL_DAMAGE, ITEM_PICKUP, ITEM_DROP, /*MAX_PLAYERS, MAX_PLAYERS_MESSAGE,*/
+            ENTITY_ITEM_FRAME_DESTROY, FALL_DAMAGE, ITEM_PICKUP, ITEM_DROP, 
             HEAL_AMOUNT, HEAL_DELAY, MIN_HEAL, MAX_HEAL,
             FEED_DELAY, FEED_AMOUNT, MIN_FOOD, MAX_FOOD,
             SNOW_FALL, SNOW_MELT, ICE_FORM, ICE_MELT, SOIL_DRY, GAME_MODE,
             MUSHROOMS, LEAF_DECAY, GRASS_SPREAD, MYCELIUM_SPREAD, VINE_GROWTH,
             SEND_CHAT, RECEIVE_CHAT, FIRE_SPREAD, LAVA_FIRE, LAVA_FLOW, WATER_FLOW,
             TELE_LOC, SPAWN_LOC, POTION_SPLASH, TIME_LOCK, WEATHER_LOCK,
-            BLOCKED_CMDS, ALLOWED_CMDS, PRICE, BUYABLE, ENABLE_SHOP
-    };
+            BLOCKED_CMDS, ALLOWED_CMDS, PRICE, BUYABLE, ENABLE_SHOP));
 
+    public static void addFlag(Flag<?> flag)
+    {
+    	DefaultFlag.flagList.add(flag);
+    }
+    
     private DefaultFlag() {
+    	
     }
 
-    public static Flag<?>[] getFlags() {
-        return flagsList;
+    public static ArrayList<Flag<?>> getFlags()
+    {
+    	return DefaultFlag.flagList;
     }
+    /*public static Flag<?>[] getFlags() {
+        return flagsList;
+    }*/
 
     /**
      * Try to match the flag with the given ID using a fuzzy name match.
