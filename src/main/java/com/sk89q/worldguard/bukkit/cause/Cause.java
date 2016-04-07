@@ -84,14 +84,18 @@ public final class Cause {
      *
      * @return true if known
      */
-    public boolean isKnown() {
-        if (causes.isEmpty()) {
+    public boolean isKnown() 
+    {
+        if (this.causes.isEmpty()) 
+        {
             return false;
         }
 
         boolean found = false;
-        for (Object object : causes) {
-            if (!(object instanceof TNTPrimed) && !(object instanceof Vehicle)) {
+        for (Object object : this.causes) 
+        {
+            if (!(object instanceof TNTPrimed) && !(object instanceof Vehicle)) 
+            {
                 found = true;
                 break;
             }
@@ -101,18 +105,23 @@ public final class Cause {
     }
 
     @Nullable
-    public Object getRootCause() {
-        if (!causes.isEmpty()) {
-            return causes.get(0);
+    public Object getRootCause() 
+    {
+        if (!this.causes.isEmpty()) 
+        {
+            return this.causes.get(0);
         }
-
+        
         return null;
     }
 
     @Nullable
-    public Player getFirstPlayer() {
-        for (Object object : causes) {
-            if (object instanceof Player) {
+    public Player getFirstPlayer() 
+    {
+        for (Object object : this.causes) 
+        {
+            if (object instanceof Player) 
+            {
                 return (Player) object;
             }
         }
@@ -122,8 +131,10 @@ public final class Cause {
 
     @Nullable
     public Entity getFirstEntity() {
-        for (Object object : causes) {
-            if (object instanceof Entity) {
+        for (Object object : this.causes) 
+        {
+            if (object instanceof Entity) 
+            {
                 return (Entity) object;
             }
         }
@@ -133,8 +144,10 @@ public final class Cause {
 
     @Nullable
     public Entity getFirstNonPlayerEntity() {
-        for (Object object : causes) {
-            if (object instanceof Entity && !(object instanceof Player)) {
+        for (Object object : this.causes) 
+        {
+            if (object instanceof Entity && !(object instanceof Player)) 
+            {
                 return (Entity) object;
             }
         }
@@ -143,9 +156,12 @@ public final class Cause {
     }
 
     @Nullable
-    public Block getFirstBlock() {
-        for (Object object : causes) {
-            if (object instanceof Block) {
+    public Block getFirstBlock() 
+    {
+        for (Object object : this.causes) 
+        {
+            if (object instanceof Block) 
+            {
                 return (Block) object;
             }
         }
@@ -160,11 +176,16 @@ public final class Cause {
      * @return a found type or null
      */
     @Nullable
-    public EntityType find(EntityType... types) {
-        for (Object object : causes) {
-            if (object instanceof Entity) {
-                for (EntityType type : types) {
-                    if (((Entity) object).getType() == type) {
+    public EntityType find(EntityType... types) 
+    {
+        for (Object object : this.causes) 
+        {
+            if (object instanceof Entity) 
+            {
+                for (EntityType type : types) 
+                {
+                    if (((Entity) object).getType() == type) 
+                    {
                         return type;
                     }
                 }
@@ -175,8 +196,9 @@ public final class Cause {
     }
 
     @Override
-    public String toString() {
-        return Joiner.on(" | ").join(causes);
+    public String toString() 
+    {
+        return Joiner.on(" | ").join(this.causes);
     }
 
     /**
@@ -187,12 +209,16 @@ public final class Cause {
      * @param cause an array of causing objects
      * @return a cause
      */
-    public static Cause create(@Nullable Object... cause) {
-        if (cause != null) {
+    public static Cause create(@Nullable Object... cause) 
+    {
+        if (cause != null) 
+        {
             Builder builder = new Builder(cause.length);
             builder.addAll(cause);
             return builder.build();
-        } else {
+        } 
+        else 
+        {
             return UNKNOWN;
         }
     }
@@ -202,7 +228,8 @@ public final class Cause {
      *
      * @return a cause
      */
-    public static Cause unknown() {
+    public static Cause unknown() 
+    {
         return UNKNOWN;
     }
 
@@ -218,8 +245,10 @@ public final class Cause {
      * @param parent the parent cause
      * @throws IllegalArgumentException thrown if {@code target} is an instance of {@link Block}
      */
-    public static void trackParentCause(Metadatable target, Object parent) {
-        if (target instanceof Block) {
+    public static void trackParentCause(Metadatable target, Object parent) 
+    {
+        if (target instanceof Block) 
+        {
             throw new IllegalArgumentException("Can't track causes on Blocks because Cause doesn't check block metadata");
         }
 
@@ -229,57 +258,74 @@ public final class Cause {
     /**
      * Builds causes.
      */
-    private static final class Builder {
+    private static final class Builder 
+    {
         private final List<Object> causes;
         private final Set<Object> seen = Sets.newHashSet();
         private boolean indirect;
 
-        private Builder(int expectedSize) {
+        private Builder(int expectedSize) 
+        {
             this.causes = new ArrayList<Object>(expectedSize);
         }
 
-        private void addAll(@Nullable Object... element) {
-            if (element != null) {
-                for (Object o : element) {
-                    if (o == null || seen.contains(o)) {
+        private void addAll(@Nullable Object... element) 
+        {
+            if (element != null) 
+            {
+                for (Object o : element) 
+                {
+                    if (o == null || this.seen.contains(o)) 
+                    {
                         continue;
                     }
 
-                    seen.add(o);
+                    this.seen.add(o);
 
-                    if (o instanceof TNTPrimed) {
+                    if (o instanceof TNTPrimed) 
+                    {
                         addAll(((TNTPrimed) o).getSource());
-                    } else if (o instanceof Projectile) {
+                    } 
+                    else if (o instanceof Projectile) 
+                    {
                         addAll(((Projectile) o).getShooter());
-                    } else if (o instanceof Vehicle) {
+                    } 
+                    else if (o instanceof Vehicle) 
+                    {
                         addAll(((Vehicle) o).getPassenger());
-                    } else if (o instanceof Creature && ((Creature) o).getTarget() != null) {
-                        indirect = true;
+                    } 
+                    else if (o instanceof Creature && ((Creature) o).getTarget() != null) 
+                    {
+                    	this.indirect = true;
                         addAll(((Creature) o).getTarget());
-                    } else if (o instanceof Tameable) {
-                        indirect = true;
+                    } 
+                    else if (o instanceof Tameable) 
+                    {
+                    	this.indirect = true;
                         addAll(((Tameable) o).getOwner());
                     }
 
                     // Add manually tracked parent causes
                     Object source = o;
-                    int index = causes.size();
-                    while (source instanceof Metadatable && !(source instanceof Block)) {
+                    int index = this.causes.size();
+                    while (source instanceof Metadatable && !(source instanceof Block)) 
+                    {
                         source = WGMetadata.getIfPresent((Metadatable) source, CAUSE_KEY, Object.class);
-                        if (source != null) {
-                            causes.add(index, source);
-                            seen.add(source);
+                        if (source != null) 
+                        {
+                        	this.causes.add(index, source);
+                        	this.seen.add(source);
                         }
                     }
 
-                    causes.add(o);
+                    this.causes.add(o);
                 }
             }
         }
 
-        public Cause build() {
-            return new Cause(causes, indirect);
+        public Cause build() 
+        {
+            return new Cause(this.causes, this.indirect);
         }
     }
-
 }

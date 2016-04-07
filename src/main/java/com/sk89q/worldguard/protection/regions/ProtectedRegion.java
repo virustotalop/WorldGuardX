@@ -85,7 +85,8 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      *
      * @param points the points to set with at least one entry
      */
-    protected void setMinMaxPoints(List<Vector> points) {
+    protected void setMinMaxPoints(List<Vector> points) 
+    {
         int minX = points.get(0).getBlockX();
         int minY = points.get(0).getBlockY();
         int minZ = points.get(0).getBlockZ();
@@ -108,8 +109,8 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
         }
 
         setDirty(true);
-        min = new BlockVector(minX, minY, minZ);
-        max = new BlockVector(maxX, maxY, maxZ);
+        this.min = new BlockVector(minX, minY, minZ);
+        this.max = new BlockVector(maxX, maxY, maxZ);
     }
 
     /**
@@ -117,8 +118,9 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      *
      * @return the name
      */
-    public String getId() {
-        return id;
+    public String getId() 
+    {
+        return this.id;
     }
 
     /**
@@ -135,7 +137,7 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      * @return the minimum point
      */
     public BlockVector getMinimumPoint() {
-        return min;
+        return this.min;
     }
 
     /**
@@ -145,7 +147,7 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      * @return the maximum point
      */
     public BlockVector getMaximumPoint() {
-        return max;
+        return this.max;
     }
 
     /**
@@ -154,8 +156,9 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      *
      * @return the priority
      */
-    public int getPriority() {
-        return priority;
+    public int getPriority() 
+    {
+        return this.priority;
     }
 
     /**
@@ -164,7 +167,8 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      *
      * @param priority the priority to set
      */
-    public void setPriority(int priority) {
+    public void setPriority(int priority) 
+    {
         setDirty(true);
         this.priority = priority;
     }
@@ -175,8 +179,9 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      * @return the parent, or {@code null}
      */
     @Nullable
-    public ProtectedRegion getParent() {
-        return parent;
+    public ProtectedRegion getParent() 
+    {
+        return this.parent;
     }
 
     /**
@@ -223,7 +228,7 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      * @return the domain
      */
     public DefaultDomain getOwners() {
-        return owners;
+        return this.owners;
     }
 
     /**
