@@ -28,21 +28,25 @@ abstract class AbstractPermissionModel implements PermissionModel {
     private final WorldGuardPlugin plugin;
     private final CommandSender sender;
 
-    public AbstractPermissionModel(WorldGuardPlugin plugin, CommandSender sender) {
+    public AbstractPermissionModel(WorldGuardPlugin plugin, CommandSender sender) 
+    {
         this.plugin = plugin;
         this.sender = sender;
     }
     
-    protected WorldGuardPlugin getPlugin() {
-        return plugin;
+    protected WorldGuardPlugin getPlugin() 
+    {
+        return this.plugin;
     }
 
-    public CommandSender getSender() {
-        return sender;
+    public CommandSender getSender() 
+    {
+        return this.sender;
     }
 
-    protected boolean hasPluginPermission(String permission) {
-        return plugin.hasPermission(getSender(), "worldguard." + permission);
+    protected boolean hasPluginPermission(String permission) 
+    {
+        return this.plugin.hasPermission(getSender(), "worldguard." + permission);
     }
 
 }
