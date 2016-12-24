@@ -23,12 +23,14 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.sk89q.worldguard.bukkit.RegionQuery;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.bukkit.event.player.PlayerEnterExitRegionEvent;
 import com.sk89q.worldguard.bukkit.util.Locations;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.session.handler.Handler;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -217,10 +219,13 @@ public class Session {
 
             for (Handler handler : handlers.values()) {
                 if (!handler.onCrossBoundary(player, lastValid, to, toSet, entered, exited, moveType) && moveType.isCancellable()) {
-                    return lastValid;
+                	return lastValid;
                 }
             }
-
+            
+            PlayerEnterExitRegionEvent event = new PlayerEnterExitRegionEvent(player, entered, exited);
+        	Bukkit.getPluginManager().callEvent(event);
+            
             lastValid = to;
             lastRegionSet = toSet.getRegions();
         }
