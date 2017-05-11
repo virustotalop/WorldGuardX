@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,9 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport;
 
-import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
-
-import java.sql.Connection;
 import java.sql.SQLException;
+
+import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
 
 /**
  * Abstraction for database-specific functionality.
@@ -30,18 +29,12 @@ public abstract class DbSupport {
     protected final JdbcTemplate jdbcTemplate;
 
     /**
-     * The original schema of the connection that should be restored later.
-     */
-    protected final String originalSchema;
-
-    /**
      * Creates a new DbSupport instance with this JdbcTemplate.
      *
      * @param jdbcTemplate The JDBC template to use.
      */
     public DbSupport(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.originalSchema = jdbcTemplate.getConnection() == null ? null : getCurrentSchemaName();
     }
 
     /**
@@ -72,26 +65,18 @@ public abstract class DbSupport {
     public abstract String getDbName();
 
     /**
-     * Retrieves the original schema of the connection.
-     *
-     * @return The original schema for this connection.
-     */
-    public Schema getOriginalSchema() {
-        if (originalSchema == null) {
-            return null;
-        }
-
-        return getSchema(originalSchema);
-    }
-
-    /**
      * Retrieves the current schema.
      *
      * @return The current schema for this connection.
      */
-    public String getCurrentSchemaName() {
+    public Schema getCurrentSchema() {
         try {
-            return doGetCurrentSchemaName();
+            String schemaName = doGetCurrentSchema();
+            if (schemaName == null) {
+                return null;
+            }
+
+            return getSchema(schemaName);
         } catch (SQLException e) {
             throw new FlywayException("Unable to retrieve the current schema for the connection", e);
         }
@@ -103,33 +88,18 @@ public abstract class DbSupport {
      * @return The current schema for this connection.
      * @throws SQLException when the current schema could not be retrieved.
      */
-    protected abstract String doGetCurrentSchemaName() throws SQLException;
+    protected abstract String doGetCurrentSchema() throws SQLException;
 
     /**
      * Sets the current schema to this schema.
      *
      * @param schema The new current schema for this connection.
      */
-    public void changeCurrentSchemaTo(Schema schema) {
-        if (schema.getName().equals(originalSchema) || !schema.exists()) {
-            return;
-        }
-
+    public void setCurrentSchema(Schema schema) {
         try {
-            doChangeCurrentSchemaTo(schema.toString());
+            doSetCurrentSchema(schema);
         } catch (SQLException e) {
             throw new FlywayException("Error setting current schema to " + schema, e);
-        }
-    }
-
-    /**
-     * Restores the current schema of the connection to its original setting.
-     */
-    public void restoreCurrentSchema() {
-        try {
-            doChangeCurrentSchemaTo(originalSchema);
-        } catch (SQLException e) {
-            throw new FlywayException("Error restoring current schema to its original setting", e);
         }
     }
 
@@ -139,7 +109,7 @@ public abstract class DbSupport {
      * @param schema The new current schema for this connection.
      * @throws SQLException when the current schema could not be set.
      */
-    protected abstract void doChangeCurrentSchemaTo(String schema) throws SQLException;
+    protected abstract void doSetCurrentSchema(Schema schema) throws SQLException;
 
     /**
      * @return The database function that returns the current user.
@@ -147,7 +117,7 @@ public abstract class DbSupport {
     public abstract String getCurrentUserFunction();
 
     /**
-     * Checks whether ddl transactions are supported by this database.
+     * Checks whether ddl transactions are supported for this database.
      *
      * @return {@code true} if ddl transactions are supported, {@code false} if not.
      */
@@ -196,14 +166,4 @@ public abstract class DbSupport {
      * @return {@code true} if this database use a catalog to represent a schema. {@code false} if a schema is simply a schema.
      */
     public abstract boolean catalogIsSchema();
-
-    /**
-     * Executes this COPY statement (PostgreSQL only).
-     *
-     * @param connection The connection to use.
-     * @param sql        The statement to execute.
-     */
-    public void executePgCopy(Connection connection, String sql) throws SQLException {
-        // Do nothing by default
-    }
 }

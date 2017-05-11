@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,19 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.hsql;
 
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Table;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Table;
+
 /**
  * Hsql implementation of Schema.
  */
-public class HsqlSchema extends Schema<HsqlDbSupport> {
+public class HsqlSchema extends Schema {
     /**
      * Creates a new Hsql schema.
      *
@@ -34,7 +35,7 @@ public class HsqlSchema extends Schema<HsqlDbSupport> {
      * @param dbSupport    The database-specific support.
      * @param name         The name of the schema.
      */
-    public HsqlSchema(JdbcTemplate jdbcTemplate, HsqlDbSupport dbSupport, String name) {
+    public HsqlSchema(JdbcTemplate jdbcTemplate, DbSupport dbSupport, String name) {
         super(jdbcTemplate, dbSupport, name);
     }
 

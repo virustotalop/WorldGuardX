@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,6 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.util.scanner.classpath;
 
-import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.FileCopyUtils;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.scanner.Resource;
-
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -28,6 +23,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
+
+import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.util.FileCopyUtils;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.util.scanner.Resource;
 
 /**
  * A resource on the classpath.
@@ -64,7 +63,7 @@ public class ClassPathResource implements Comparable<ClassPathResource>, Resourc
             throw new FlywayException("Unable to location resource on disk: " + location);
         }
         try {
-            return new File(URLDecoder.decode(url.getPath(), "UTF-8")).getAbsolutePath();
+            return URLDecoder.decode(url.getPath(), "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new FlywayException("Unknown encoding: UTF-8", e);
         }

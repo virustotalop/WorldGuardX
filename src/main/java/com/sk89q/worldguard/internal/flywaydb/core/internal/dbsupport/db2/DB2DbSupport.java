@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,25 +15,19 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.db2;
 
-import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Types;
+
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.SqlStatementBuilder;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Types;
-
 /**
  * DB2 Support.
  */
 public class DB2DbSupport extends DbSupport {
-    /**
-     * The major version of DB2. (9, 10, ...)
-     */
-    private final int majorVersion;
-
     /**
      * Creates a new instance.
      *
@@ -41,11 +35,6 @@ public class DB2DbSupport extends DbSupport {
      */
     public DB2DbSupport(Connection connection) {
         super(new JdbcTemplate(connection, Types.VARCHAR));
-        try {
-            majorVersion = connection.getMetaData().getDatabaseMajorVersion();
-        } catch (SQLException e) {
-            throw new FlywayException("Unable to determine DB2 major version", e);
-        }
     }
 
     public SqlStatementBuilder createSqlStatementBuilder() {
@@ -57,12 +46,12 @@ public class DB2DbSupport extends DbSupport {
     }
 
     @Override
-    protected String doGetCurrentSchemaName() throws SQLException {
+    protected String doGetCurrentSchema() throws SQLException {
         return jdbcTemplate.queryForString("select current_schema from sysibm.sysdummy1");
     }
 
     @Override
-    protected void doChangeCurrentSchemaTo(String schema) throws SQLException {
+    protected void doSetCurrentSchema(Schema schema) throws SQLException {
         jdbcTemplate.execute("SET SCHEMA " + schema);
     }
 
@@ -95,12 +84,5 @@ public class DB2DbSupport extends DbSupport {
     @Override
     public boolean catalogIsSchema() {
         return false;
-    }
-
-    /**
-     * @return The major version of DB2. (9, 10, ...)
-     */
-    public int getDb2MajorVersion() {
-        return majorVersion;
     }
 }

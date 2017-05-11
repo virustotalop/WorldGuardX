@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,36 +15,30 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+
 import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.db2.DB2DbSupport;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.db2zos.DB2zosDbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.derby.DerbyDbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.h2.H2DbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.hsql.HsqlDbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.mysql.MySQLDbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.oracle.OracleDbSupport;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.phoenix.PhoenixDbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.postgresql.PostgreSQLDbSupport;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.redshift.RedshfitDbSupportViaPostgreSQLDriver;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.redshift.RedshfitDbSupportViaRedshiftDriver;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.redshift.RedshiftDbSupport;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.saphana.SapHanaDbSupport;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.solid.SolidDbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.sqlite.SQLiteDbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.sqlserver.SQLServerDbSupport;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.sybase.ase.SybaseASEDbSupport;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.vertica.VerticaDbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.Log;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.LogFactory;
-
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 
 /**
  * Factory for obtaining the correct DbSupport instance for the current connection.
  */
 public class DbSupportFactory {
+    /**
+     * Logger.
+     */
     private static final Log LOG = LogFactory.getLog(DbSupportFactory.class);
 
     /**
@@ -93,49 +87,13 @@ public class DbSupportFactory {
         if (databaseProductName.startsWith("Oracle")) {
             return new OracleDbSupport(connection);
         }
-        if (databaseProductName.startsWith("PostgreSQL 8")) {
-            // Redshift reports a databaseProductName of "PostgreSQL 8.0", and it uses the same JDBC driver,
-            // but only supports a subset of features. Therefore, we need to execute a query in order to
-            // distinguish it from the real PostgreSQL 8:
-            RedshiftDbSupport redshift;
-            if ("RedshiftJDBC".equals(getDriverName(connection))) {
-                redshift = new RedshfitDbSupportViaRedshiftDriver(connection);
-            } else {
-                redshift = new RedshfitDbSupportViaPostgreSQLDriver(connection);
-            }
-            if (redshift.detect()) {
-                return redshift;
-            }
-        }
         if (databaseProductName.startsWith("PostgreSQL")) {
             return new PostgreSQLDbSupport(connection);
         }
         if (databaseProductName.startsWith("DB2")) {
-			if (getDatabaseProductVersion(connection).startsWith("DSN")){
-				return new DB2zosDbSupport(connection);
-			} else {
-				return new DB2DbSupport(connection);
-			}
-        }
-        if (databaseProductName.startsWith("Vertica")) {
-            return new VerticaDbSupport(connection);
-        }
-        if (databaseProductName.contains("solidDB")) {
-            // SolidDB was originally developed by a company named Solid and was sold afterwards to IBM.
-            // In the meanwhile IBM also sold solidDB to Unicom Systems.
-            // Therefore no vendor string in search criteria
-            return new SolidDbSupport(connection);
-        }
-        if (databaseProductName.startsWith("Phoenix")) {
-            return new PhoenixDbSupport(connection);
-        }
-
-		//Sybase ASE support
-        if (databaseProductName.startsWith("ASE") || databaseProductName.startsWith("Adaptive")) {
-        	return new SybaseASEDbSupport(connection);
-        }
-        if (databaseProductName.startsWith("HDB")) {
-        	return new SapHanaDbSupport(connection);
+            // DB2 also returns the OS it's running on.
+            //   ex.: DB2/NT
+            return new DB2DbSupport(connection);
         }
 
         throw new FlywayException("Unsupported Database: " + databaseProductName);
@@ -147,7 +105,6 @@ public class DbSupportFactory {
      * @param connection The Jdbc connection.
      * @return The Jdbc Url.
      */
-
     private static String getJdbcUrl(Connection connection) {
         try {
             return connection.getMetaData().getURL();
@@ -180,57 +137,6 @@ public class DbSupportFactory {
             return databaseProductName + " " + databaseMajorVersion + "." + databaseMinorVersion;
         } catch (SQLException e) {
             throw new FlywayException("Error while determining database product name", e);
-        }
-    }
-
-	/**
-	 * Retrieves the database version.
-	 *
-	 * @param connection The connection to use to query the database.
-	 * @return The version of the database product.
-	 * Ex.: DSN11015 DB2 for z/OS Version 11
-	 *      SQL10050 DB" for Linux, UNIX and Windows Version 10.5
-	 */
-	private static String getDatabaseProductVersion(Connection connection) {
-		try {
-			DatabaseMetaData databaseMetaData = connection.getMetaData();
-			if (databaseMetaData == null) {
-				throw new FlywayException("Unable to read database metadata while it is null!");
-			}
-
-			String databaseProductVersion = databaseMetaData.getDatabaseProductVersion();
-			if (databaseProductVersion == null) {
-				throw new FlywayException("Unable to determine database. Product version is null.");
-			}
-
-
-			return databaseProductVersion;
-		} catch (SQLException e) {
-			throw new FlywayException("Error while determining database product version", e);
-		}
-	}
-
-    /**
-     * Retrieves the name of the JDBC driver
-     *
-     * @param connection The connection to use to query the database.
-     * @return The name of the driver. Ex: RedshiftJDBC
-     */
-    private static String getDriverName(Connection connection) {
-        try {
-            DatabaseMetaData databaseMetaData = connection.getMetaData();
-            if (databaseMetaData == null) {
-                throw new FlywayException("Unable to read database metadata while it is null!");
-            }
-
-            String driverName = databaseMetaData.getDriverName();
-            if (driverName == null) {
-                throw new FlywayException("Unable to determine JDBC  driver name. JDBC driver name is null.");
-            }
-
-            return driverName;
-        } catch (SQLException e) {
-            throw new FlywayException("Error while determining JDBC driver name", e);
         }
     }
 

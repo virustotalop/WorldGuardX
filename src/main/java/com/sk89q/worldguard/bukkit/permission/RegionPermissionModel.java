@@ -33,194 +33,198 @@ import javax.annotation.Nullable;
  * Used for querying region-related permissions.
  */
 public class RegionPermissionModel extends AbstractPermissionModel {
-    
-    public RegionPermissionModel(WorldGuardPlugin plugin, CommandSender sender) 
-    {
-        super(plugin, sender);
-    }
 
-    public boolean mayIgnoreRegionProtection(World world) 
-    {
-        return this.hasPluginPermission("region.bypass." + world.getName());
-    }
-    
-    public boolean mayForceLoadRegions() 
-    {
-        return this.hasPluginPermission("region.load");
-    }
-    
-    public boolean mayForceSaveRegions() 
-    {
-        return this.hasPluginPermission("region.save");
-    }
+	public RegionPermissionModel(WorldGuardPlugin plugin, CommandSender sender) 
+	{
+		super(plugin, sender);
+	}
 
-    public boolean mayMigrateRegionStore() 
-    {
-        return this.hasPluginPermission("region.migratedb");
-    }
+	public boolean mayIgnoreRegionProtection(World world) 
+	{
+		return hasPluginPermission("region.bypass." + world.getName());
+	}
 
-    public boolean mayMigrateRegionNames() 
-    {
-        return this.hasPluginPermission("region.migrateuuid");
-    }
-    
-    public boolean mayDefine() 
-    {
-        return this.hasPluginPermission("region.define");
-    }
-    
-    public boolean mayRedefine(ProtectedRegion region) 
-    {
-        return this.hasPatternPermission("redefine", region);
-    }
-    
-    public boolean mayClaim() 
-    {
-        return this.hasPluginPermission("region.claim");
-    }
-    
-    public boolean mayClaimRegionsUnbounded() 
-    {
-        return this.hasPluginPermission("region.unlimited");
-    }
-    
-    public boolean mayDelete(ProtectedRegion region) 
-    {
-        return this.hasPatternPermission("remove", region);
-    }
-    
-    public boolean maySetPriority(ProtectedRegion region) 
-    {
-        return this.hasPatternPermission("setpriority", region);
-    }
-    
-    public boolean maySetParent(ProtectedRegion child, ProtectedRegion parent) 
-    {
-        return this.hasPatternPermission("setparent", child) && (parent == null || this.hasPatternPermission("setparent", parent));
-    }
-    
-    public boolean maySelect(ProtectedRegion region) 
-    {
-        return this.hasPatternPermission("select", region);
-    }
-    
-    public boolean mayLookup(ProtectedRegion region) 
-    {
-        return this.hasPatternPermission("info", region);
-    }
-    
-    public boolean mayTeleportTo(ProtectedRegion region) 
-    {
-        return this.hasPatternPermission("teleport", region);
-    }
-    
-    public boolean mayList() 
-    {
-        return hasPluginPermission("region.list");
-    }
-    
-    public boolean mayList(String targetPlayer) 
-    {
-        if (targetPlayer == null) 
-        {
-            return this.mayList();
-        }
-        
-        if (targetPlayer.equalsIgnoreCase(getSender().getName())) 
-        {
-            return this.hasPluginPermission("region.list.own");
-        }
-        else 
-        {
-            return this.mayList();
-        }
-    }
-    
-    public boolean maySetFlag(ProtectedRegion region) 
-    {
-        return this.hasPatternPermission("flag.regions", region);
-    }
+	public boolean mayForceLoadRegions() 
+	{
+		return hasPluginPermission("region.load");
+	}
 
-    public boolean maySetFlag(ProtectedRegion region, Flag<?> flag) 
-    {
-        // This is a WTF permission
-        return this.hasPatternPermission("flag.flags." + flag.getName().toLowerCase(), region);
-    }
+	public boolean mayForceSaveRegions() 
+	{
+		return hasPluginPermission("region.save");
+	}
 
-    public boolean maySetFlag(ProtectedRegion region, Flag<?> flag, @Nullable String value) 
-    {
-        String sanitizedValue;
+	public boolean mayMigrateRegionStore() 
+	{
+		return hasPluginPermission("region.migratedb");
+	}
 
-        if (value != null) 
-        {
-            sanitizedValue = value.trim().toLowerCase().replaceAll("[^a-z0-9]", "");
-            if (sanitizedValue.length() > 20) 
-            {
-                sanitizedValue = sanitizedValue.substring(0, 20);
-            }
-        } 
-        else 
-        {
-            sanitizedValue = "unset";
-        }
+	public boolean mayMigrateRegionNames() 
+	{
+		return hasPluginPermission("region.migrateuuid");
+	}
 
-        // This is a WTF permission
-        return this.hasPatternPermission("flag.flags." + flag.getName().toLowerCase() + "." + sanitizedValue, region);
-    }
+	public boolean mayDefine() 
+	{
+		return hasPluginPermission("region.define");
+	}
 
-    public boolean mayAddMembers(ProtectedRegion region) 
-    {
-        return this.hasPatternPermission("addmember", region);
-    }
-    
-    public boolean mayAddOwners(ProtectedRegion region) 
-    {
-        return this.hasPatternPermission("addowner", region);
-    }
+	public boolean mayRedefine(ProtectedRegion region) 
+	{
+		return hasPatternPermission("redefine", region);
+	}
 
-    public boolean mayRemoveMembers(ProtectedRegion region) 
-    {
-        return this.hasPatternPermission("removemember", region);
-    }
+	public boolean mayClaim() 
+	{
+		return hasPluginPermission("region.claim");
+	}
 
-    public boolean mayRemoveOwners(ProtectedRegion region) 
-    {
-        return this.hasPatternPermission("removeowner", region);
-    }
-    
-    /**
-     * Checks to see if the given sender has permission to modify the given region
-     * using the region permission pattern.
-     * 
-     * @param perm the name of the node
-     * @param region the region
-     */
-    private boolean hasPatternPermission(String perm, ProtectedRegion region) 
-    {
-        if (!(this.getSender() instanceof Player)) 
-        {
-            return true; // Non-players (i.e. console, command blocks, etc.) have full power
-        }
-        
-        LocalPlayer localPlayer = getPlugin().wrapPlayer((Player) getSender());
-        String idLower = region.getId().toLowerCase();
-        String effectivePerm;
-        
-        if (region.isOwner(localPlayer)) 
-        {
-            return hasPluginPermission("region." + perm + ".own." + idLower) ||
-                    hasPluginPermission("region." + perm + ".member." + idLower);
-        } 
-        else if (region.isMember(localPlayer)) 
-        {
-            return hasPluginPermission("region." + perm + ".member." + idLower);
-        } 
-        else 
-        {
-            effectivePerm = "region." + perm + "." + idLower;
-        }
+	public boolean mayClaimRegionsUnbounded() 
+	{
+		return hasPluginPermission("region.unlimited");
+	}
 
-        return this.hasPluginPermission(effectivePerm);
-    }
+	public boolean mayDelete(ProtectedRegion region) 
+	{
+		return hasPatternPermission("remove", region);
+	}
 
+	public boolean maySetPriority(ProtectedRegion region) 
+	{
+		return hasPatternPermission("setpriority", region);
+	}
+
+	public boolean maySetParent(ProtectedRegion child, ProtectedRegion parent) 
+	{
+		return hasPatternPermission("setparent", child) &&
+				(parent == null ||
+				hasPatternPermission("setparent", parent));
+	}
+
+	public boolean maySelect(ProtectedRegion region) 
+	{
+		return hasPatternPermission("select", region);
+	}
+
+	public boolean mayLookup(ProtectedRegion region) 
+	{
+		return hasPatternPermission("info", region);
+	}
+
+	public boolean mayTeleportTo(ProtectedRegion region) 
+	{
+		return hasPatternPermission("teleport", region);
+	}
+
+	public boolean mayOverrideLocationFlagBounds(ProtectedRegion region) 
+	{
+		return hasPatternPermission("locationoverride", region);
+	}
+
+	public boolean mayList() 
+	{
+		return hasPluginPermission("region.list");
+	}
+
+	public boolean mayList(String targetPlayer) 
+	{
+		if (targetPlayer == null) {
+			return mayList();
+		}
+
+		if (targetPlayer.equalsIgnoreCase(getSender().getName())) 
+		{
+			return hasPluginPermission("region.list.own");
+		}
+		else 
+		{
+			return mayList();
+		}
+	}
+
+	public boolean maySetFlag(ProtectedRegion region) 
+	{
+		return hasPatternPermission("flag.regions", region);
+	}
+
+	public boolean maySetFlag(ProtectedRegion region, Flag<?> flag) 
+	{
+		// This is a WTF permission
+		return hasPatternPermission(
+				"flag.flags." + flag.getName().toLowerCase(), region);
+	}
+
+	public boolean maySetFlag(ProtectedRegion region, Flag<?> flag, @Nullable String value) 
+	{
+		String sanitizedValue;
+
+		if (value != null) {
+			sanitizedValue = value.trim().toLowerCase().replaceAll("[^a-z0-9]", "");
+			if (sanitizedValue.length() > 20) {
+				sanitizedValue = sanitizedValue.substring(0, 20);
+			}
+		} 
+		else 
+		{
+			sanitizedValue = "unset";
+		}
+
+		// This is a WTF permission
+		return hasPatternPermission("flag.flags." + flag.getName().toLowerCase() + "." + sanitizedValue, region);
+	}
+
+	public boolean mayAddMembers(ProtectedRegion region) 
+	{
+		return hasPatternPermission("addmember", region);
+	}
+
+	public boolean mayAddOwners(ProtectedRegion region) 
+	{
+		return hasPatternPermission("addowner", region);
+	}
+
+	public boolean mayRemoveMembers(ProtectedRegion region) 
+	{
+		return hasPatternPermission("removemember", region);
+	}
+
+	public boolean mayRemoveOwners(ProtectedRegion region) 
+	{
+		return hasPatternPermission("removeowner", region);
+	}
+
+	/**
+	 * Checks to see if the given sender has permission to modify the given region
+	 * using the region permission pattern.
+	 * 
+	 * @param perm the name of the node
+	 * @param region the region
+	 */
+	private boolean hasPatternPermission(String perm, ProtectedRegion region) 
+	{
+		if (!(getSender() instanceof Player)) 
+		{
+			return true; // Non-players (i.e. console, command blocks, etc.) have full power
+		}
+
+		LocalPlayer localPlayer = getPlugin().wrapPlayer((Player) getSender());
+		String idLower = region.getId().toLowerCase();
+		String effectivePerm;
+
+		if (region.isOwner(localPlayer)) 
+		{
+			return hasPluginPermission("region." + perm + ".own." + idLower) ||
+					hasPluginPermission("region." + perm + ".member." + idLower);
+		} 
+		else if (region.isMember(localPlayer)) 
+		{
+			return hasPluginPermission("region." + perm + ".member." + idLower);
+		} 
+		else 
+		{
+			effectivePerm = "region." + perm + "." + idLower;
+		}
+
+		return hasPluginPermission(effectivePerm);
+	}
 }

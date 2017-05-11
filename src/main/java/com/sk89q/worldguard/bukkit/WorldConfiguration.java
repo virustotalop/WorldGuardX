@@ -118,6 +118,7 @@ public class WorldConfiguration {
     public boolean blockOtherExplosions;
     public boolean blockEntityPaintingDestroy;
     public boolean blockEntityItemFrameDestroy;
+    public boolean blockEntityArmorStandDestroy;
     public boolean blockPluginSpawning;
     public boolean blockGroundSlimes;
     public boolean blockZombieDoorDestruction;
@@ -145,6 +146,7 @@ public class WorldConfiguration {
     public int maxClaimVolume;
     public boolean claimOnlyInsideExistingRegions;
     public int maxRegionCountPerPlayer;
+    public boolean boundedLocationFlags;
     public boolean antiWolfDumbness;
     public boolean signChestProtection;
     public boolean disableSignChestProtectionCheck;
@@ -174,14 +176,15 @@ public class WorldConfiguration {
     public boolean disableSoilDehydration;
     public Set<Integer> allowedSnowFallOver;
     public boolean regionInvinciblityRemovesMobs;
+    public boolean regionNetherPortalProtection;
     public boolean fakePlayerBuildOverride;
     public boolean explosionFlagCancellation;
     public boolean disableDeathMessages;
     public boolean disableObsidianGenerators;
     public boolean strictEntitySpawn;
     public TargetMatcherSet allowAllInteract;
-    public TargetMatcherSet blockUseAtFeet;
 
+    public TargetMatcherSet blockUseAtFeet;
     private Map<String, Integer> maxRegionCounts;
 
     /* Configuration data end */
@@ -405,6 +408,7 @@ public class WorldConfiguration {
         disableSnowmanTrails = getBoolean("mobs.disable-snowman-trails", false);
         blockEntityPaintingDestroy = getBoolean("mobs.block-painting-destroy", false);
         blockEntityItemFrameDestroy = getBoolean("mobs.block-item-frame-destroy", false);
+        blockEntityArmorStandDestroy = getBoolean("mobs.block-armor-stand-destroy", false);
         blockPluginSpawning = getBoolean("mobs.block-plugin-spawning", true);
         blockGroundSlimes = getBoolean("mobs.block-above-ground-slimes", false);
         blockOtherExplosions = getBoolean("mobs.block-other-explosions", false);
@@ -453,6 +457,7 @@ public class WorldConfiguration {
 
         useRegions = getBoolean("regions.enable", true);
         regionInvinciblityRemovesMobs = getBoolean("regions.invincibility-removes-mobs", false);
+        regionNetherPortalProtection = getBoolean("regions.nether-portal-protection", false);
         fakePlayerBuildOverride = getBoolean("regions.fake-player-build-override", true);
         explosionFlagCancellation = getBoolean("regions.explosion-flags-block-entity-damage", true);
         highFreqFlags = getBoolean("regions.high-frequency-flags", false);
@@ -460,6 +465,7 @@ public class WorldConfiguration {
         regionWand = getInt("regions.wand", 334);
         maxClaimVolume = getInt("regions.max-claim-volume", 30000);
         claimOnlyInsideExistingRegions = getBoolean("regions.claim-only-inside-existing-regions", false);
+        boundedLocationFlags = getBoolean("regions.location-flags-only-inside-regions", false);
 
         maxRegionCountPerPlayer = getInt("regions.max-region-count-per-player.default", 7);
         maxRegionCounts = new HashMap<String, Integer>();

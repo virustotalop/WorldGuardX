@@ -28,25 +28,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.sk89q.minecraft.util.commands.*;
 import com.sk89q.worldguard.bukkit.ConfigurationManager;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.sk89q.worldguard.bukkit.event.inventory.InventoryMoveItemListener;
-import com.sk89q.worldguard.bukkit.listener.BlacklistListener;
-import com.sk89q.worldguard.bukkit.listener.BlockedPotionsListener;
-import com.sk89q.worldguard.bukkit.listener.BuildPermissionListener;
-import com.sk89q.worldguard.bukkit.listener.ChestProtectionListener;
-import com.sk89q.worldguard.bukkit.listener.EventAbstractionListener;
-import com.sk89q.worldguard.bukkit.listener.InvincibilityListener;
-import com.sk89q.worldguard.bukkit.listener.PlayerModesListener;
-import com.sk89q.worldguard.bukkit.listener.PlayerMoveListener;
-import com.sk89q.worldguard.bukkit.listener.RegionFlagsListener;
-import com.sk89q.worldguard.bukkit.listener.RegionProtectionListener;
-import com.sk89q.worldguard.bukkit.listener.WorldGuardBlockListener;
-import com.sk89q.worldguard.bukkit.listener.WorldGuardEntityListener;
-import com.sk89q.worldguard.bukkit.listener.WorldGuardHangingListener;
-import com.sk89q.worldguard.bukkit.listener.WorldGuardPlayerListener;
-import com.sk89q.worldguard.bukkit.listener.WorldGuardServerListener;
-import com.sk89q.worldguard.bukkit.listener.WorldGuardVehicleListener;
-import com.sk89q.worldguard.bukkit.listener.WorldGuardWeatherListener;
-import com.sk89q.worldguard.bukkit.listener.WorldRulesListener;
 import com.sk89q.worldguard.bukkit.util.logging.LoggerToChatHandler;
 import com.sk89q.worldguard.bukkit.util.report.*;
 import com.sk89q.worldguard.util.profiler.SamplerBuilder;
@@ -94,7 +75,7 @@ public class WorldGuardCommands {
         sender.sendMessage(ChatColor.YELLOW
                 + "WorldGuard " + plugin.getDescription().getVersion());
         sender.sendMessage(ChatColor.YELLOW
-                + "http://www.sk89q.com");
+                + "http://www.github.com/virustotalop/WorldGuardX");
     }
 
     @Command(aliases = {"reload"}, desc = "Reload WorldGuard configuration", max = 0)

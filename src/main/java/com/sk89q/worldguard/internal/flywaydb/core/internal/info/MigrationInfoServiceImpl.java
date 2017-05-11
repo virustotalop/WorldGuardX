@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,15 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.info;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
 import com.sk89q.worldguard.internal.flywaydb.core.api.MigrationInfo;
 import com.sk89q.worldguard.internal.flywaydb.core.api.MigrationInfoService;
 import com.sk89q.worldguard.internal.flywaydb.core.api.MigrationState;
@@ -24,16 +33,6 @@ import com.sk89q.worldguard.internal.flywaydb.core.api.resolver.MigrationResolve
 import com.sk89q.worldguard.internal.flywaydb.core.api.resolver.ResolvedMigration;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.metadatatable.AppliedMigration;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.metadatatable.MetaDataTable;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.Pair;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * Default implementation of MigrationInfoService.
@@ -52,7 +51,7 @@ public class MigrationInfoServiceImpl implements MigrationInfoService {
     /**
      * The target version up to which to retrieve the info.
      */
-    private MigrationVersion target;
+    private final MigrationVersion target;
 
     /**
      * Allows migrations to be run "out of order".
@@ -68,11 +67,6 @@ public class MigrationInfoServiceImpl implements MigrationInfoService {
     private final boolean pending;
 
     /**
-     * Whether future migrations are allowed.
-     */
-    private final boolean future;
-
-    /**
      * The migrations infos calculated at the last refresh.
      */
     private List<MigrationInfoImpl> migrationInfos;
@@ -84,17 +78,15 @@ public class MigrationInfoServiceImpl implements MigrationInfoService {
      * @param metaDataTable     The metadata table for applied migrations.
      * @param target            The target version up to which to retrieve the info.
      * @param outOfOrder        Allows migrations to be run "out of order".
-     * @param pending           Whether pending migrations are allowed.
-     * @param future            Whether future migrations are allowed.
+     * @param pending                 Whether pending migrations are allowed.
      */
     public MigrationInfoServiceImpl(MigrationResolver migrationResolver, MetaDataTable metaDataTable,
-                                    MigrationVersion target, boolean outOfOrder, boolean pending, boolean future) {
+                                    MigrationVersion target, boolean outOfOrder, boolean pending) {
         this.migrationResolver = migrationResolver;
         this.metaDataTable = metaDataTable;
         this.target = target;
         this.outOfOrder = outOfOrder;
         this.pending = pending;
-        this.future = future;
     }
 
     /**
@@ -105,10 +97,6 @@ public class MigrationInfoServiceImpl implements MigrationInfoService {
         List<AppliedMigration> appliedMigrations = metaDataTable.allAppliedMigrations();
 
         migrationInfos = mergeAvailableAndAppliedMigrations(availableMigrations, appliedMigrations);
-
-        if (MigrationVersion.CURRENT == target) {
-            target = current().getVersion();
-        }
     }
 
     /**
@@ -123,47 +111,30 @@ public class MigrationInfoServiceImpl implements MigrationInfoService {
         MigrationInfoContext context = new MigrationInfoContext();
         context.outOfOrder = outOfOrder;
         context.pending = pending;
-        context.future = future;
         context.target = target;
 
         Map<MigrationVersion, ResolvedMigration> resolvedMigrationsMap = new TreeMap<MigrationVersion, ResolvedMigration>();
-        Map<String, ResolvedMigration> resolvedRepeatableMigrationsMap = new TreeMap<String, ResolvedMigration>();
         for (ResolvedMigration resolvedMigration : resolvedMigrations) {
             MigrationVersion version = resolvedMigration.getVersion();
-            if (version != null) {
-                if (version.compareTo(context.lastResolved) > 0) {
-                    context.lastResolved = version;
-                }
-                resolvedMigrationsMap.put(version, resolvedMigration);
-            } else {
-                resolvedRepeatableMigrationsMap.put(resolvedMigration.getDescription(), resolvedMigration);
+            if (version.compareTo(context.lastResolved) > 0) {
+                context.lastResolved = version;
             }
+            resolvedMigrationsMap.put(version, resolvedMigration);
         }
 
-        Map<MigrationVersion, Pair<AppliedMigration, Boolean>> appliedMigrationsMap =
-                new TreeMap<MigrationVersion, Pair<AppliedMigration, Boolean>>();
-        List<AppliedMigration> appliedRepeatableMigrations = new ArrayList<AppliedMigration>();
+        Map<MigrationVersion, AppliedMigration> appliedMigrationsMap = new TreeMap<MigrationVersion, AppliedMigration>();
         for (AppliedMigration appliedMigration : appliedMigrations) {
             MigrationVersion version = appliedMigration.getVersion();
-            boolean outOfOrder = false;
-            if (version != null) {
-                if (version.compareTo(context.lastApplied) > 0) {
-                    context.lastApplied = version;
-                } else {
-                    outOfOrder = true;
-                }
+            if (version.compareTo(context.lastApplied) > 0) {
+                context.lastApplied = version;
             }
             if (appliedMigration.getType() == MigrationType.SCHEMA) {
                 context.schema = version;
             }
-            if (appliedMigration.getType() == MigrationType.BASELINE) {
-                context.baseline = version;
+            if (appliedMigration.getType() == MigrationType.INIT) {
+                context.init = version;
             }
-            if (version != null) {
-                appliedMigrationsMap.put(version, Pair.of(appliedMigration, outOfOrder));
-            } else {
-                appliedRepeatableMigrations.add(appliedMigration);
-            }
+            appliedMigrationsMap.put(version, appliedMigration);
         }
 
         Set<MigrationVersion> allVersions = new HashSet<MigrationVersion>();
@@ -173,29 +144,8 @@ public class MigrationInfoServiceImpl implements MigrationInfoService {
         List<MigrationInfoImpl> migrationInfos = new ArrayList<MigrationInfoImpl>();
         for (MigrationVersion version : allVersions) {
             ResolvedMigration resolvedMigration = resolvedMigrationsMap.get(version);
-            Pair<AppliedMigration, Boolean> appliedMigrationInfo = appliedMigrationsMap.get(version);
-            if (appliedMigrationInfo == null) {
-                migrationInfos.add(new MigrationInfoImpl(resolvedMigration, null, context, false));
-            } else {
-                migrationInfos.add(new MigrationInfoImpl(resolvedMigration, appliedMigrationInfo.getLeft(), context, appliedMigrationInfo.getRight()));
-            }
-        }
-
-        Set<ResolvedMigration> pendingResolvedRepeatableMigrations = new HashSet<ResolvedMigration>(resolvedRepeatableMigrationsMap.values());
-        for (AppliedMigration appliedRepeatableMigration : appliedRepeatableMigrations) {
-            ResolvedMigration resolvedMigration = resolvedRepeatableMigrationsMap.get(appliedRepeatableMigration.getDescription());
-            if (resolvedMigration != null) {
-                pendingResolvedRepeatableMigrations.remove(resolvedMigration);
-            }
-            if (!context.latestRepeatableRuns.containsKey(appliedRepeatableMigration.getDescription())
-                    || (appliedRepeatableMigration.getInstalledRank() > context.latestRepeatableRuns.get(appliedRepeatableMigration.getDescription()))) {
-                context.latestRepeatableRuns.put(appliedRepeatableMigration.getDescription(), appliedRepeatableMigration.getInstalledRank());
-            }
-            migrationInfos.add(new MigrationInfoImpl(resolvedMigration, appliedRepeatableMigration, context, false));
-        }
-
-        for (ResolvedMigration pendingResolvedRepeatableMigration : pendingResolvedRepeatableMigrations) {
-            migrationInfos.add(new MigrationInfoImpl(pendingResolvedRepeatableMigration, null, context, false));
+            AppliedMigration appliedMigration = appliedMigrationsMap.get(version);
+            migrationInfos.add(new MigrationInfoImpl(resolvedMigration, appliedMigration, context));
         }
 
         Collections.sort(migrationInfos);
@@ -210,7 +160,7 @@ public class MigrationInfoServiceImpl implements MigrationInfoService {
     public MigrationInfo current() {
         for (int i = migrationInfos.size() - 1; i >= 0; i--) {
             MigrationInfo migrationInfo = migrationInfos.get(i);
-            if (migrationInfo.getState().isApplied() && migrationInfo.getVersion() != null) {
+            if (migrationInfo.getState().isApplied()) {
                 return migrationInfo;
             }
         }
@@ -221,8 +171,7 @@ public class MigrationInfoServiceImpl implements MigrationInfoService {
     public MigrationInfoImpl[] pending() {
         List<MigrationInfoImpl> pendingMigrations = new ArrayList<MigrationInfoImpl>();
         for (MigrationInfoImpl migrationInfo : migrationInfos) {
-            if (MigrationState.PENDING == migrationInfo.getState()
-                    || MigrationState.OUTDATED == migrationInfo.getState()) {
+            if (MigrationState.PENDING == migrationInfo.getState()) {
                 pendingMigrations.add(migrationInfo);
             }
         }

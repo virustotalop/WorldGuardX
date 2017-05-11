@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,11 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.command;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
 import com.sk89q.worldguard.internal.flywaydb.core.api.callback.FlywayCallback;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.metadatatable.MetaDataTable;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.StopWatch;
@@ -26,9 +28,6 @@ import com.sk89q.worldguard.internal.flywaydb.core.internal.util.jdbc.Transactio
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.jdbc.TransactionTemplate;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.Log;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.LogFactory;
-
-import java.sql.Connection;
-import java.sql.SQLException;
 
 /**
  * Main workflow for cleaning the database.
@@ -52,41 +51,24 @@ public class DbClean {
     private final Schema[] schemas;
 
     /**
-     * The list of callbacks that fire before or after the clean task is executed.
+     * This is a list of callbacks that fire before or after the validate task is executed.
      * You can add as many callbacks as you want.  These should be set on the Flyway class
      * by the end user as Flyway will set them automatically for you here.
      */
     private final FlywayCallback[] callbacks;
 
     /**
-     * Whether to disable clean.
-     * <p>This is especially useful for production environments where running clean can be quite a career limiting move.</p>
-     */
-    private boolean cleanDisabled;
-
-    /**
-     * The DB support for the connection.
-     */
-    private final DbSupport dbSupport;
-
-    /**
      * Creates a new database cleaner.
      *
      * @param connection    The connection to use.
-     * @param dbSupport     The DB support for the connection.
      * @param metaDataTable The metadata table.
      * @param schemas       The schemas to clean.
-     * @param callbacks     The list of callbacks that fire before or after the clean task is executed.
-     * @param cleanDisabled Whether to disable clean.
      */
-    public DbClean(Connection connection, DbSupport dbSupport, MetaDataTable metaDataTable, Schema[] schemas,
-                   FlywayCallback[] callbacks, boolean cleanDisabled) {
+    public DbClean(Connection connection, MetaDataTable metaDataTable, Schema[] schemas, FlywayCallback[] callbacks) {
         this.connection = connection;
-        this.dbSupport = dbSupport;
         this.metaDataTable = metaDataTable;
         this.schemas = schemas;
         this.callbacks = callbacks;
-        this.cleanDisabled = cleanDisabled;
     }
 
     /**
@@ -95,54 +77,39 @@ public class DbClean {
      * @throws FlywayException when clean failed.
      */
     public void clean() throws FlywayException {
-        if (cleanDisabled) {
-            throw new FlywayException("Unable to execute clean as it has been disabled with the \"flyway.cleanDisabled\" property.");
+        for (final FlywayCallback callback : callbacks) {
+            new TransactionTemplate(connection).execute(new TransactionCallback<Object>() {
+                @Override
+                public Object doInTransaction() throws SQLException {
+                    callback.beforeClean(connection);
+                    return null;
+                }
+            });
         }
+
+        boolean dropSchemas = false;
         try {
-            for (final FlywayCallback callback : callbacks) {
-                new TransactionTemplate(connection).execute(new TransactionCallback<Object>() {
-                    @Override
-                    public Object doInTransaction() throws SQLException {
-                        dbSupport.changeCurrentSchemaTo(schemas[0]);
-                        callback.beforeClean(connection);
-                        return null;
-                    }
-                });
-            }
+            dropSchemas = metaDataTable.hasSchemasMarker();
+        } catch (Exception e) {
+            LOG.error("Error while checking whether the schemas should be dropped", e);
+        }
 
-            dbSupport.changeCurrentSchemaTo(schemas[0]);
-            boolean dropSchemas = false;
-            try {
-                dropSchemas = metaDataTable.hasSchemasMarker();
-            } catch (Exception e) {
-                LOG.error("Error while checking whether the schemas should be dropped", e);
+        for (Schema schema : schemas) {
+            if (dropSchemas) {
+                dropSchema(schema);
+            } else {
+                cleanSchema(schema);
             }
+        }
 
-            for (Schema schema : schemas) {
-                if (!schema.exists()) {
-                    LOG.warn("Unable to clean unknown schema: " + schema);
-                    continue;
+        for (final FlywayCallback callback : callbacks) {
+            new TransactionTemplate(connection).execute(new TransactionCallback<Object>() {
+                @Override
+                public Object doInTransaction() throws SQLException {
+                    callback.afterClean(connection);
+                    return null;
                 }
-
-                if (dropSchemas) {
-                    dropSchema(schema);
-                } else {
-                    cleanSchema(schema);
-                }
-            }
-
-            for (final FlywayCallback callback : callbacks) {
-                new TransactionTemplate(connection).execute(new TransactionCallback<Object>() {
-                    @Override
-                    public Object doInTransaction() throws SQLException {
-                        dbSupport.changeCurrentSchemaTo(schemas[0]);
-                        callback.afterClean(connection);
-                        return null;
-                    }
-                });
-            }
-        } finally {
-            dbSupport.restoreCurrentSchema();
+            });
         }
     }
 
@@ -163,7 +130,7 @@ public class DbClean {
             }
         });
         stopWatch.stop();
-        LOG.info(String.format("Successfully dropped schema %s (execution time %s)",
+        LOG.info(String.format("Dropped schema %s (execution time %s)",
                 schema, TimeFormat.format(stopWatch.getTotalTimeMillis())));
     }
 
@@ -184,7 +151,7 @@ public class DbClean {
             }
         });
         stopWatch.stop();
-        LOG.info(String.format("Successfully cleaned schema %s (execution time %s)",
+        LOG.info(String.format("Cleaned schema %s (execution time %s)",
                 schema, TimeFormat.format(stopWatch.getTotalTimeMillis())));
     }
 }

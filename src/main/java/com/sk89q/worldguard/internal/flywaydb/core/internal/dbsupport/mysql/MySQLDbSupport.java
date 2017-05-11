@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,26 +15,20 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.mysql;
 
-import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.SqlStatementBuilder;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.StringUtils;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.Log;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.LogFactory;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.UUID;
 
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.SqlStatementBuilder;
+
 /**
  * Mysql-specific support.
  */
 public class MySQLDbSupport extends DbSupport {
-    private static final Log LOG = LogFactory.getLog(MySQLDbSupport.class);
-
     /**
      * Creates a new instance.
      *
@@ -53,41 +47,20 @@ public class MySQLDbSupport extends DbSupport {
     }
 
     @Override
-    protected String doGetCurrentSchemaName() throws SQLException {
+    protected String doGetCurrentSchema() throws SQLException {
         return jdbcTemplate.getConnection().getCatalog();
     }
 
-    /**
-     * Sets the current schema to this schema.
-     *
-     * @param schema The new current schema for this connection.
-     */
-    public void changeCurrentSchemaTo(Schema schema) {
-        if (schema.getName().equals(originalSchema) || !schema.exists()) {
-            return;
-        }
-
-        try {
-            doChangeCurrentSchemaTo(schema.getName());
-        } catch (SQLException e) {
-            throw new FlywayException("Error setting current schema to " + schema, e);
-        }
-    }
-
     @Override
-    protected void doChangeCurrentSchemaTo(String schema) throws SQLException {
-        if (!StringUtils.hasLength(schema)) {
-            try {
-                // Weird hack to switch back to no database selected...
-                String newDb = quote(UUID.randomUUID().toString());
-                jdbcTemplate.execute("CREATE SCHEMA " + newDb);
-                jdbcTemplate.execute("USE " + newDb);
-                jdbcTemplate.execute("DROP SCHEMA " + newDb);
-            } catch (Exception e) {
-                LOG.warn("Unable to restore connection to having no default schema: " + e.getMessage());
-            }
+    protected void doSetCurrentSchema(Schema schema) throws SQLException {
+        if ("".equals(schema.getName())) {
+            // Weird hack to switch back to no database selected...
+            String newDb = quote(UUID.randomUUID().toString());
+            jdbcTemplate.execute("CREATE SCHEMA " + newDb);
+            jdbcTemplate.execute("USE " + newDb);
+            jdbcTemplate.execute("DROP SCHEMA " + newDb);
         } else {
-            jdbcTemplate.getConnection().setCatalog(schema);
+            jdbcTemplate.execute("USE " + schema);
         }
     }
 

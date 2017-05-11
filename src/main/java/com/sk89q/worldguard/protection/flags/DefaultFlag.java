@@ -19,13 +19,14 @@
 
 package com.sk89q.worldguard.protection.flags;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
+import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.WeatherType;
 import org.bukkit.entity.EntityType;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * The flags that are used in WorldGuard.
@@ -34,13 +35,6 @@ public final class DefaultFlag {
 
     // Overrides membership check
     public static final StateFlag PASSTHROUGH = new StateFlag("passthrough", false);
-
-    /**
-     * @deprecated This flag is being removed because group flags can now be
-     *             set on all flags.
-     */
-    @Deprecated
-    public static final RegionGroupFlag CONSTRUCT = new RegionGroupFlag("construct", RegionGroup.MEMBERS);
 
     // This flag is unlike the others. It forces the checking of region membership
     public static final StateFlag BUILD = new BuildFlag("build", true);
@@ -79,7 +73,9 @@ public final class DefaultFlag {
     public static final StateFlag CREEPER_EXPLOSION = new StateFlag("creeper-explosion", true);
     public static final StateFlag ENDERDRAGON_BLOCK_DAMAGE = new StateFlag("enderdragon-block-damage", true);
     public static final StateFlag GHAST_FIREBALL = new StateFlag("ghast-fireball", true);
+    public static final StateFlag FIREWORK_DAMAGE = new StateFlag("firework-damage", true);
     public static final StateFlag OTHER_EXPLOSION = new StateFlag("other-explosion", true);
+    public static final StateFlag WITHER_DAMAGE = new StateFlag("wither-damage", true);
     public static final StateFlag FIRE_SPREAD = new StateFlag("fire-spread", true);
     public static final StateFlag LAVA_FIRE = new StateFlag("lava-fire", true);
     public static final StateFlag LIGHTNING = new StateFlag("lightning", true);
@@ -103,6 +99,7 @@ public final class DefaultFlag {
     public static final StateFlag ENTRY = new StateFlag("entry", true, RegionGroup.NON_MEMBERS);
     public static final StateFlag EXIT = new StateFlag("exit", true, RegionGroup.NON_MEMBERS);
     public static final StateFlag ENDERPEARL = new StateFlag("enderpearl", true);
+    public static final StateFlag CHORUS_TELEPORT = new StateFlag("chorus-fruit-teleport", true);
     public static final StateFlag ENTITY_PAINTING_DESTROY = new StateFlag("entity-painting-destroy", true);
     public static final StateFlag ENTITY_ITEM_FRAME_DESTROY = new StateFlag("entity-item-frame-destroy", true);
     public static final StateFlag FALL_DAMAGE = new StateFlag("fall-damage", true);
@@ -136,55 +133,67 @@ public final class DefaultFlag {
     // public static final StringFlag MAX_PLAYERS_MESSAGE = new StringFlag("max-players-reject-message");
     public static final LocationFlag TELE_LOC = new LocationFlag("teleport", RegionGroup.MEMBERS);
     public static final LocationFlag SPAWN_LOC = new LocationFlag("spawn", RegionGroup.MEMBERS);
-    public static final StateFlag ENABLE_SHOP = new StateFlag("allow-shop", false);
-    public static final BooleanFlag BUYABLE = new BooleanFlag("buyable");
-    public static final DoubleFlag PRICE = new DoubleFlag("price");
     public static final SetFlag<String> BLOCKED_CMDS = new SetFlag<String>("blocked-cmds", new CommandStringFlag(null));
     public static final SetFlag<String> ALLOWED_CMDS = new SetFlag<String>("allowed-cmds", new CommandStringFlag(null));
-    
-    /*MAX_PLAYERS, MAX_PLAYERS_MESSAGE,*/
-    
-    public static final ArrayList<Flag<?>> flagList = new ArrayList<Flag<?>>(Arrays.asList(PASSTHROUGH, BUILD, CONSTRUCT, BLOCK_BREAK, BLOCK_PLACE, PVP, CHEST_ACCESS, PISTONS,
+
+    // these 3 are not used by worldguard and should be re-implemented in plugins that may use them using custom flag api
+    @Deprecated
+    public static final StateFlag ENABLE_SHOP = new StateFlag("allow-shop", false);
+    @Deprecated
+    public static final BooleanFlag BUYABLE = new BooleanFlag("buyable");
+    @Deprecated
+    public static final DoubleFlag PRICE = new DoubleFlag("price");
+
+    public static final Flag<?>[] flagsList = new Flag<?>[] {
+            PASSTHROUGH, BUILD, BLOCK_BREAK, BLOCK_PLACE, PVP, CHEST_ACCESS, PISTONS,
             TNT, LIGHTER, RIDE, USE, INTERACT, PLACE_VEHICLE, DESTROY_VEHICLE, DAMAGE_ANIMALS, SLEEP,
-            MOB_DAMAGE, MOB_SPAWNING, DENY_SPAWN, INVINCIBILITY, EXP_DROPS,
+            MOB_DAMAGE, MOB_SPAWNING, DENY_SPAWN, INVINCIBILITY, EXP_DROPS, FIREWORK_DAMAGE, WITHER_DAMAGE,
             CREEPER_EXPLOSION, OTHER_EXPLOSION, ENDERDRAGON_BLOCK_DAMAGE, GHAST_FIREBALL, ENDER_BUILD,
             DENY_MESSAGE, ENTRY_DENY_MESSAGE, EXIT_DENY_MESSAGE, EXIT_OVERRIDE, EXIT_VIA_TELEPORT,
             GREET_MESSAGE, FAREWELL_MESSAGE, NOTIFY_ENTER, NOTIFY_LEAVE,
-            EXIT, ENTRY, LIGHTNING, ENTITY_PAINTING_DESTROY, ENDERPEARL,
-            ENTITY_ITEM_FRAME_DESTROY, FALL_DAMAGE, ITEM_PICKUP, ITEM_DROP, 
+            EXIT, ENTRY, LIGHTNING, ENTITY_PAINTING_DESTROY, ENDERPEARL, CHORUS_TELEPORT,
+            ENTITY_ITEM_FRAME_DESTROY, FALL_DAMAGE, ITEM_PICKUP, ITEM_DROP, /*MAX_PLAYERS, MAX_PLAYERS_MESSAGE,*/
             HEAL_AMOUNT, HEAL_DELAY, MIN_HEAL, MAX_HEAL,
             FEED_DELAY, FEED_AMOUNT, MIN_FOOD, MAX_FOOD,
             SNOW_FALL, SNOW_MELT, ICE_FORM, ICE_MELT, SOIL_DRY, GAME_MODE,
             MUSHROOMS, LEAF_DECAY, GRASS_SPREAD, MYCELIUM_SPREAD, VINE_GROWTH,
             SEND_CHAT, RECEIVE_CHAT, FIRE_SPREAD, LAVA_FIRE, LAVA_FLOW, WATER_FLOW,
             TELE_LOC, SPAWN_LOC, POTION_SPLASH, TIME_LOCK, WEATHER_LOCK,
-            BLOCKED_CMDS, ALLOWED_CMDS, PRICE, BUYABLE, ENABLE_SHOP));
+            BLOCKED_CMDS, ALLOWED_CMDS, PRICE, BUYABLE, ENABLE_SHOP
+    };
 
-    public static void addFlag(Flag<?> flag)
-    {
-    	DefaultFlag.flagList.add(flag);
-    }
-    
     private DefaultFlag() {
-    	
     }
 
-    public static ArrayList<Flag<?>> getFlags()
-    {
-    	return DefaultFlag.flagList;
-    }
-    /*public static Flag<?>[] getFlags() {
+    /**
+     * Get a list of default flags.
+     *
+     * @deprecated Use {@link FlagRegistry}
+     * @return An array of flags
+     */
+    @Deprecated
+    public static Flag<?>[] getFlags() {
         return flagsList;
-    }*/
+    }
+
+    /**
+     * Get a list of default flags.
+     *
+     * @return An array of flags
+     */
+    public static List<Flag<?>> getDefaultFlags() {
+        return Arrays.asList(flagsList);
+    }
 
     /**
      * Try to match the flag with the given ID using a fuzzy name match.
      *
+     * @param flagRegistry the flag registry
      * @param id the flag ID
      * @return a flag, or null
      */
-    public static Flag<?> fuzzyMatchFlag(String id) {
-        for (Flag<?> flag : DefaultFlag.getFlags()) {
+    public static Flag<?> fuzzyMatchFlag(FlagRegistry flagRegistry, String id) {
+        for (Flag<?> flag : flagRegistry) {
             if (flag.getName().replace("-", "").equalsIgnoreCase(id.replace("-", ""))) {
                 return flag;
             }
@@ -192,4 +201,5 @@ public final class DefaultFlag {
 
         return null;
     }
+
 }

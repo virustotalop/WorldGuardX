@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package com.sk89q.worldguard.internal.flywaydb.core.internal.resolver;
 import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
 import com.sk89q.worldguard.internal.flywaydb.core.api.MigrationVersion;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.Pair;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.StringUtils;
 
 /**
  * Parsing support for migrations that use the standard Flyway version + description embedding in their name. These
@@ -55,9 +54,6 @@ public class MigrationInfoHelper {
 
         String version = cleanMigrationName.substring(0, descriptionPos);
         String description = cleanMigrationName.substring(descriptionPos + separator.length()).replaceAll("_", " ");
-        if (StringUtils.hasText(version)) {
-            return Pair.of(MigrationVersion.fromVersion(version), description);
-        }
-        return Pair.of(null, description);
+        return Pair.of(MigrationVersion.fromVersion(version), description);
     }
 }

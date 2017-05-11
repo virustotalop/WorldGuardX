@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,20 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.mysql;
 
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Table;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Table;
+
 /**
  * MySQL implementation of Schema.
  */
-public class MySQLSchema extends Schema<MySQLDbSupport> {
+public class MySQLSchema extends Schema {
     /**
      * Creates a new MySQL schema.
      *
@@ -35,7 +36,7 @@ public class MySQLSchema extends Schema<MySQLDbSupport> {
      * @param dbSupport    The database-specific support.
      * @param name         The name of the schema.
      */
-    public MySQLSchema(JdbcTemplate jdbcTemplate, MySQLDbSupport dbSupport, String name) {
+    public MySQLSchema(JdbcTemplate jdbcTemplate, DbSupport dbSupport, String name) {
         super(jdbcTemplate, dbSupport, name);
     }
 
@@ -47,14 +48,12 @@ public class MySQLSchema extends Schema<MySQLDbSupport> {
     @Override
     protected boolean doEmpty() throws SQLException {
         int objectCount = jdbcTemplate.queryForInt("Select "
-                        + "(Select count(*) from information_schema.TABLES Where TABLE_SCHEMA=?) + "
-                        + "(Select count(*) from information_schema.VIEWS Where TABLE_SCHEMA=?) + "
-                        + "(Select count(*) from information_schema.TABLE_CONSTRAINTS Where TABLE_SCHEMA=?) + "
-                        + "(Select count(*) from information_schema.EVENTS Where EVENT_SCHEMA=?) + "
-                        + "(Select count(*) from information_schema.TRIGGERS Where TRIGGER_SCHEMA=?) + "
-                        + "(Select count(*) from information_schema.ROUTINES Where ROUTINE_SCHEMA=?)",
-                name, name, name, name, name, name
-        );
+                + "(Select count(*) from information_schema.TABLES Where TABLE_SCHEMA=?) + "
+                + "(Select count(*) from information_schema.VIEWS Where TABLE_SCHEMA=?) + "
+                + "(Select count(*) from information_schema.TABLE_CONSTRAINTS Where TABLE_SCHEMA=?) + "
+                + "(Select count(*) from information_schema.EVENTS Where EVENT_SCHEMA=?) + "
+                + "(Select count(*) from information_schema.ROUTINES Where ROUTINE_SCHEMA=?)",
+                name, name, name, name, name);
         return objectCount == 0;
     }
 

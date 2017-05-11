@@ -28,6 +28,7 @@ import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.sk89q.worldguard.util.io.Closer;
 import com.sk89q.worldguard.util.sql.DataSourceConfig;
 
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -156,12 +157,12 @@ public class SQLDriver implements RegionDriver {
             // The SQL support predates the usage of Flyway, so let's do some
             // checks and issue messages appropriately
             if (!hasMigrations) {
-                flyway.setBaselineOnMigrate(true);
+                flyway.setInitOnMigrate(true);
 
                 if (tablesExist) {
                     // Detect if this is before migrations
                     if (isBeforeMigrations) {
-                        flyway.setBaselineVersion(MigrationVersion.fromVersion("1"));
+                        flyway.setInitVersion(MigrationVersion.fromVersion("1"));
                     }
 
                     log.log(Level.INFO, "The SQL region tables exist but the migrations table seems to not exist yet. Creating the migrations table...");
@@ -170,7 +171,7 @@ public class SQLDriver implements RegionDriver {
                     // will assume that we are up to date, so we have to manually
                     // check ourselves and then ask Flyway to start from the beginning
                     // if our test table doesn't exist
-                    flyway.setBaselineVersion(MigrationVersion.fromVersion("0"));
+                    flyway.setInitVersion(MigrationVersion.fromVersion("0"));
 
                     log.log(Level.INFO, "SQL region tables do not exist: creating...");
                 }

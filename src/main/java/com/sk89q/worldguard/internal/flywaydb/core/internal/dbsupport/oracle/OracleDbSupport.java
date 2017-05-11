@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.oracle;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Types;
+
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.SqlStatementBuilder;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Types;
 
 /**
  * Oracle-specific support.
@@ -37,6 +37,7 @@ public class OracleDbSupport extends DbSupport {
         super(new JdbcTemplate(connection, Types.VARCHAR));
     }
 
+
     public String getDbName() {
         return "oracle";
     }
@@ -46,12 +47,12 @@ public class OracleDbSupport extends DbSupport {
     }
 
     @Override
-    protected String doGetCurrentSchemaName() throws SQLException {
+    protected String doGetCurrentSchema() throws SQLException {
         return jdbcTemplate.queryForString("SELECT USER FROM dual");
     }
 
     @Override
-    protected void doChangeCurrentSchemaTo(String schema) throws SQLException {
+    protected void doSetCurrentSchema(Schema schema) throws SQLException {
         jdbcTemplate.execute("ALTER SESSION SET CURRENT_SCHEMA=" + schema);
     }
 

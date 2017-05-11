@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,30 +15,29 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport;
 
-import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.StringUtils;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.scanner.Resource;
-
 import java.sql.SQLException;
+
+import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
 
 /**
  * This specific exception thrown when Flyway encounters a problem in SQL script
  */
 public class FlywaySqlScriptException extends FlywayException {
 
-    private final Resource resource;
-    private final SqlStatement statement;
+    private final int lineNumber;
+    private final String statement;
 
     /**
      * Creates new instance of FlywaySqlScriptException.
      *
-     * @param resource     The resource containg the failed statement.
+     * @param lineNumber   The line number in SQL script where exception occurred.
      * @param statement    The failed SQL statement.
      * @param sqlException Cause of the problem.
      */
-    public FlywaySqlScriptException(Resource resource, SqlStatement statement, SQLException sqlException) {
-        super(sqlException);
-        this.resource = resource;
+    public FlywaySqlScriptException(int lineNumber, String statement, SQLException sqlException) {
+        super("Error executing statement at line " + lineNumber + ": " + statement, sqlException);
+
+        this.lineNumber = lineNumber;
         this.statement = statement;
     }
 
@@ -48,7 +47,7 @@ public class FlywaySqlScriptException extends FlywayException {
      * @return The line number.
      */
     public int getLineNumber() {
-        return statement.getLineNumber();
+        return lineNumber;
     }
 
     /**
@@ -57,31 +56,6 @@ public class FlywaySqlScriptException extends FlywayException {
      * @return The failed statement.
      */
     public String getStatement() {
-        return statement.getSql();
-    }
-
-    @Override
-    public String getMessage() {
-        String title = resource == null ? "Script failed" : "Migration " + resource.getFilename() + " failed";
-        String underline = StringUtils.trimOrPad("", title.length(), '-');
-
-        SQLException cause = (SQLException) getCause();
-        while (cause.getNextException() != null) {
-            cause = cause.getNextException();
-        }
-
-        String message = "\n" + title + "\n" + underline + "\n";
-        message += "SQL State  : " + cause.getSQLState() + "\n";
-        message += "Error Code : " + cause.getErrorCode() + "\n";
-        if (cause.getMessage() != null) {
-            message += "Message    : " + cause.getMessage().trim() + "\n";
-        }
-        if (resource != null) {
-            message += "Location   : " + resource.getLocation() + " (" + resource.getLocationOnDisk() + ")\n";
-        }
-        message += "Line       : " + getLineNumber() + "\n";
-        message += "Statement  : " + getStatement() + "\n";
-
-        return message;
+        return statement;
     }
 }

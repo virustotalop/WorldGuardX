@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,21 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.postgresql;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Table;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Type;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 /**
  * PostgreSQL implementation of Schema.
  */
-public class PostgreSQLSchema extends Schema<PostgreSQLDbSupport> {
+public class PostgreSQLSchema extends Schema {
     /**
      * Creates a new PostgreSQL schema.
      *
@@ -37,7 +37,7 @@ public class PostgreSQLSchema extends Schema<PostgreSQLDbSupport> {
      * @param dbSupport    The database-specific support.
      * @param name         The name of the schema.
      */
-    public PostgreSQLSchema(JdbcTemplate jdbcTemplate, PostgreSQLDbSupport dbSupport, String name) {
+    public PostgreSQLSchema(JdbcTemplate jdbcTemplate, DbSupport dbSupport, String name) {
         super(jdbcTemplate, dbSupport, name);
     }
 
@@ -66,20 +66,6 @@ public class PostgreSQLSchema extends Schema<PostgreSQLDbSupport> {
 
     @Override
     protected void doClean() throws SQLException {
-        int databaseMajorVersion = jdbcTemplate.getMetaData().getDatabaseMajorVersion();
-        int databaseMinorVersion = jdbcTemplate.getMetaData().getDatabaseMinorVersion();
-
-        if ((databaseMajorVersion > 9) || ((databaseMajorVersion == 9) && (databaseMinorVersion >= 3))) {
-            // PostgreSQL 9.3 and newer only
-            for (String statement : generateDropStatementsForMaterializedViews()) {
-                jdbcTemplate.execute(statement);
-            }
-        }
-
-        for (String statement : generateDropStatementsForViews()) {
-            jdbcTemplate.execute(statement);
-        }
-
         for (Table table : allTables()) {
             table.drop();
         }
@@ -112,6 +98,9 @@ public class PostgreSQLSchema extends Schema<PostgreSQLDbSupport> {
             jdbcTemplate.execute(statement);
         }
 
+        for (Type type : allTypes()) {
+            type.drop();
+        }
     }
 
     /**
@@ -141,26 +130,19 @@ public class PostgreSQLSchema extends Schema<PostgreSQLDbSupport> {
      * @throws SQLException when the clean statements could not be generated.
      */
     private List<String> generateDropStatementsForBaseTypes(boolean recreate) throws SQLException {
-
-        List<Map<String, String>> rows =
-                jdbcTemplate.queryForList(
-                "select typname, typcategory from pg_catalog.pg_type t "
-                + "where (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid)) and "
-                + "NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid) and "
-                + "t.typnamespace in (select oid from pg_catalog.pg_namespace where nspname = ?)",
-                name);
+        List<String> typeNames =
+                jdbcTemplate.queryForStringList(
+                        "select typname from pg_catalog.pg_type where typcategory in ('P', 'U') and typnamespace in (select oid from pg_catalog.pg_namespace where nspname = ?)",
+                        name);
 
         List<String> statements = new ArrayList<String>();
-        for (Map<String, String> row : rows) {
-            statements.add("DROP TYPE IF EXISTS " + dbSupport.quote(name, row.get("typname")) + " CASCADE");
+        for (String typeName : typeNames) {
+            statements.add("DROP TYPE IF EXISTS " + dbSupport.quote(name, typeName) + " CASCADE");
         }
 
         if (recreate) {
-            for (Map<String, String> row : rows) {
-                // Only recreate Pseudo-types (P) and User-defined types (U)
-                if (Arrays.asList("P", "U").contains(row.get("typcategory"))) {
-                    statements.add("CREATE TYPE " + dbSupport.quote(name, row.get("typname")));
-                }
+            for (String typeName : typeNames) {
+                statements.add("CREATE TYPE " + dbSupport.quote(name, typeName));
             }
         }
 
@@ -179,8 +161,7 @@ public class PostgreSQLSchema extends Schema<PostgreSQLDbSupport> {
                         "SELECT proname, oidvectortypes(proargtypes) AS args "
                                 + "FROM pg_proc INNER JOIN pg_namespace ns ON (pg_proc.pronamespace = ns.oid) "
                                 + "WHERE pg_proc.proisagg = true AND ns.nspname = ?",
-                        name
-                );
+                        name);
 
         List<String> statements = new ArrayList<String>();
         for (Map<String, String> row : rows) {
@@ -198,14 +179,10 @@ public class PostgreSQLSchema extends Schema<PostgreSQLDbSupport> {
     private List<String> generateDropStatementsForRoutines() throws SQLException {
         List<Map<String, String>> rows =
                 jdbcTemplate.queryForList(
-                // Search for all functions
                         "SELECT proname, oidvectortypes(proargtypes) AS args "
                                 + "FROM pg_proc INNER JOIN pg_namespace ns ON (pg_proc.pronamespace = ns.oid) "
-                // that don't depend on an extension
-                        + "LEFT JOIN pg_depend dep ON dep.objid = pg_proc.oid AND dep.deptype = 'e' "
-                        + "WHERE pg_proc.proisagg = false AND ns.nspname = ? AND dep.objid IS NULL",
-                        name
-                );
+                                + "WHERE pg_proc.proisagg = false AND ns.nspname = ?",
+                        name);
 
         List<String> statements = new ArrayList<String>();
         for (Map<String, String> row : rows) {
@@ -252,49 +229,6 @@ public class PostgreSQLSchema extends Schema<PostgreSQLDbSupport> {
         return statements;
     }
 
-    /**
-     * Generates the statements for dropping the materialized views in this schema.
-     *
-     * @return The drop statements.
-     * @throws SQLException when the clean statements could not be generated.
-     */
-    private List<String> generateDropStatementsForMaterializedViews() throws SQLException {
-        List<String> viewNames =
-                jdbcTemplate.queryForStringList(
-                        "SELECT relname FROM pg_catalog.pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace"
-                                + " WHERE c.relkind = 'm' AND n.nspname = ?", name);
-
-        List<String> statements = new ArrayList<String>();
-        for (String domainName : viewNames) {
-            statements.add("DROP MATERIALIZED VIEW IF EXISTS " + dbSupport.quote(name, domainName) + " CASCADE");
-        }
-
-        return statements;
-    }
-
-    /**
-     * Generates the statements for dropping the views in this schema.
-     *
-     * @return The drop statements.
-     * @throws SQLException when the clean statements could not be generated.
-     */
-    private List<String> generateDropStatementsForViews() throws SQLException {
-        List<String> viewNames =
-                jdbcTemplate.queryForStringList(
-                // Search for all views
-                "SELECT relname FROM pg_catalog.pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace" +
-                        // that don't depend on an extension
-                        " LEFT JOIN pg_depend dep ON dep.objid = c.oid AND dep.deptype = 'e'" +
-                        " WHERE c.relkind = 'v' AND  n.nspname = ? AND dep.objid IS NULL",
-                name);
-        List<String> statements = new ArrayList<String>();
-        for (String domainName : viewNames) {
-            statements.add("DROP VIEW IF EXISTS " + dbSupport.quote(name, domainName) + " CASCADE");
-        }
-
-        return statements;
-    }
-
     @Override
     protected Table[] doAllTables() throws SQLException {
         List<String> tableNames =
@@ -307,9 +241,8 @@ public class PostgreSQLSchema extends Schema<PostgreSQLDbSupport> {
                                 " AND table_type='BASE TABLE'" +
                                 //and are not child tables (= do not inherit from another table).
                                 " AND NOT (SELECT EXISTS (SELECT inhrelid FROM pg_catalog.pg_inherits" +
-                                " WHERE inhrelid = (quote_ident(t.table_schema)||'.'||quote_ident(t.table_name))::regclass::oid))",
-                        name
-                );
+                                " WHERE inhrelid = ('\"'||t.table_schema||'\".\"'||t.table_name||'\"')::regclass::oid))",
+                        name);
         //Views and child tables are excluded as they are dropped with the parent table when using cascade.
 
         Table[] tables = new Table[tableNames.size()];

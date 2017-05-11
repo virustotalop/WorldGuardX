@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,20 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.sqlserver;
 
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Table;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Table;
+
 /**
  * SQLServer implementation of Schema.
  */
-public class SQLServerSchema extends Schema<SQLServerDbSupport> {
+public class SQLServerSchema extends Schema {
     /**
      * Creates a new SQLServer schema.
      *
@@ -35,7 +36,7 @@ public class SQLServerSchema extends Schema<SQLServerDbSupport> {
      * @param dbSupport    The database-specific support.
      * @param name         The name of the schema.
      */
-    public SQLServerSchema(JdbcTemplate jdbcTemplate, SQLServerDbSupport dbSupport, String name) {
+    public SQLServerSchema(JdbcTemplate jdbcTemplate, DbSupport dbSupport, String name) {
         super(jdbcTemplate, dbSupport, name);
     }
 
@@ -80,7 +81,7 @@ public class SQLServerSchema extends Schema<SQLServerDbSupport> {
             jdbcTemplate.execute(statement);
         }
 
-        for (String statement : cleanRoutines("procedure")) {
+        for (String statement : cleanRoutines()) {
             jdbcTemplate.execute(statement);
         }
 
@@ -92,22 +93,12 @@ public class SQLServerSchema extends Schema<SQLServerDbSupport> {
             table.drop();
         }
 
-        for (String statement : cleanRoutines("function")) {
-            jdbcTemplate.execute(statement);
-        }
-
         for (String statement : cleanTypes()) {
             jdbcTemplate.execute(statement);
         }
 
         for (String statement : cleanSynonyms()) {
             jdbcTemplate.execute(statement);
-        }
-
-        if (jdbcTemplate.getMetaData().getDatabaseMajorVersion() >= 11) {
-            for (String statement : cleanSequences()) {
-                jdbcTemplate.execute(statement);
-            }
         }
     }
 
@@ -123,8 +114,7 @@ public class SQLServerSchema extends Schema<SQLServerDbSupport> {
                 jdbcTemplate.queryForList(
                         "SELECT table_name, constraint_name FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS" +
                                 " WHERE constraint_type in ('FOREIGN KEY','CHECK') and table_schema=?",
-                        name
-                );
+                        name);
 
         List<String> statements = new ArrayList<String>();
         for (Map<String, String> row : constraintNames) {
@@ -150,8 +140,7 @@ public class SQLServerSchema extends Schema<SQLServerDbSupport> {
                                 " inner join sys.default_constraints d on d.parent_object_id = t.object_id\n" +
                                 " inner join sys.schemas s on s.schema_id = t.schema_id\n" +
                                 " where s.name = ?",
-                        name
-                );
+                        name);
 
         List<String> statements = new ArrayList<String>();
         for (Map<String, String> row : constraintNames) {
@@ -168,17 +157,17 @@ public class SQLServerSchema extends Schema<SQLServerDbSupport> {
      * @return The drop statements.
      * @throws SQLException when the clean statements could not be generated.
      */
-    private List<String> cleanRoutines(String routineType) throws SQLException {
+    private List<String> cleanRoutines() throws SQLException {
         @SuppressWarnings({"unchecked"})
         List<Map<String, String>> routineNames =
-                jdbcTemplate.queryForList("SELECT routine_name FROM INFORMATION_SCHEMA.ROUTINES" +
-                                " WHERE routine_schema=? AND routine_type=?",
-                        name, routineType
-                );
+                jdbcTemplate.queryForList("SELECT routine_name, routine_type FROM INFORMATION_SCHEMA.ROUTINES" +
+                        " WHERE routine_schema=?",
+                        name);
 
         List<String> statements = new ArrayList<String>();
         for (Map<String, String> row : routineNames) {
             String routineName = row.get("routine_name");
+            String routineType = row.get("routine_type");
             statements.add("DROP " + routineType + " " + dbSupport.quote(name, routineName));
         }
         return statements;
@@ -213,8 +202,7 @@ public class SQLServerSchema extends Schema<SQLServerDbSupport> {
                 jdbcTemplate.queryForStringList(
                         "SELECT t.name FROM sys.types t INNER JOIN sys.schemas s ON t.schema_id = s.schema_id" +
                                 " WHERE t.is_user_defined = 1 AND s.name = ?",
-                        name
-                );
+                        name);
 
         List<String> statements = new ArrayList<String>();
         for (String typeName : typeNames) {
@@ -234,30 +222,11 @@ public class SQLServerSchema extends Schema<SQLServerDbSupport> {
                 jdbcTemplate.queryForStringList(
                         "SELECT sn.name FROM sys.synonyms sn INNER JOIN sys.schemas s ON sn.schema_id = s.schema_id" +
                                 " WHERE s.name = ?",
-                        name
-                );
+                        name);
 
         List<String> statements = new ArrayList<String>();
         for (String synonymName : synonymNames) {
             statements.add("DROP SYNONYM " + dbSupport.quote(name, synonymName));
-        }
-        return statements;
-    }
-
-    /**
-     * Cleans the sequences in this schema.
-     *
-     * @return The drop statements.
-     * @throws SQLException when the clean statements could not be generated.
-     */
-    private List<String> cleanSequences() throws SQLException {
-        List<String> names =
-                jdbcTemplate.queryForStringList(
-                        "SELECT sequence_name FROM INFORMATION_SCHEMA.SEQUENCES WHERE sequence_schema=?", name);
-
-        List<String> statements = new ArrayList<String>();
-        for (String sequenceName : names) {
-            statements.add("DROP SEQUENCE " + dbSupport.quote(name, sequenceName));
         }
         return statements;
     }

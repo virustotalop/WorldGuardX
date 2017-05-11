@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,12 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.db2;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Function;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
@@ -22,15 +28,10 @@ import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Table;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Type;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.StringUtils;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 /**
  * DB2 implementation of Schema.
  */
-public class DB2Schema extends Schema<DB2DbSupport> {
+public class DB2Schema extends Schema {
     /**
      * Creates a new DB2 schema.
      *
@@ -38,7 +39,7 @@ public class DB2Schema extends Schema<DB2DbSupport> {
      * @param dbSupport    The database-specific support.
      * @param name         The name of the schema.
      */
-    public DB2Schema(JdbcTemplate jdbcTemplate, DB2DbSupport dbSupport, String name) {
+    public DB2Schema(JdbcTemplate jdbcTemplate, DbSupport dbSupport, String name) {
         super(jdbcTemplate, dbSupport, name);
     }
 
@@ -55,7 +56,6 @@ public class DB2Schema extends Schema<DB2DbSupport> {
         objectCount += jdbcTemplate.queryForInt("select count(*) from syscat.indexes where indschema = ?", name);
         objectCount += jdbcTemplate.queryForInt("select count(*) from syscat.procedures where procschema = ?", name);
         objectCount += jdbcTemplate.queryForInt("select count(*) from syscat.functions where funcschema = ?", name);
-        objectCount += jdbcTemplate.queryForInt("select count(*) from syscat.triggers where trigschema = ?", name);
         return objectCount == 0;
     }
 
@@ -75,20 +75,18 @@ public class DB2Schema extends Schema<DB2DbSupport> {
         // MQTs are dropped when the backing views or tables are dropped
         // Indexes in DB2 are dropped when the corresponding table is dropped
 
-        if (dbSupport.getDb2MajorVersion() >= 10) {
-            // drop versioned table link -> not supported for DB2 9.x
-            for (String dropVersioningStatement : generateDropVersioningStatement()) {
-                jdbcTemplate.execute(dropVersioningStatement);
-            }
+        // drop versioned table link
+        for (String dropVersioningStatement : generateDropVersioningStatement()) {
+            jdbcTemplate.execute(dropVersioningStatement);
         }
 
         // views
-        for (String dropStatement : generateDropStatementsForViews()) {
+        for (String dropStatement : generateDropStatements(name, "V", "VIEW")) {
             jdbcTemplate.execute(dropStatement);
         }
 
         // aliases
-        for (String dropStatement : generateDropStatements("A", "ALIAS")) {
+        for (String dropStatement : generateDropStatements(name, "A", "ALIAS")) {
             jdbcTemplate.execute(dropStatement);
         }
 
@@ -97,17 +95,12 @@ public class DB2Schema extends Schema<DB2DbSupport> {
         }
 
         // sequences
-        for (String dropStatement : generateDropStatementsForSequences()) {
+        for (String dropStatement : generateDropStatementsForSequences(name)) {
             jdbcTemplate.execute(dropStatement);
         }
 
         // procedures
-        for (String dropStatement : generateDropStatementsForProcedures()) {
-            jdbcTemplate.execute(dropStatement);
-        }
-
-        // triggers
-        for (String dropStatement : generateDropStatementsForTriggers()) {
+        for (String dropStatement : generateDropStatementsForProcedures(name)) {
             jdbcTemplate.execute(dropStatement);
         }
 
@@ -121,64 +114,45 @@ public class DB2Schema extends Schema<DB2DbSupport> {
     }
 
 
+
     /**
      * Generates DROP statements for the procedures in this schema.
      *
+     * @param schema The schema of the objects.
      * @return The drop statements.
      * @throws SQLException when the statements could not be generated.
      */
-    private List<String> generateDropStatementsForProcedures() throws SQLException {
-        String dropProcGenQuery = "select PROCNAME from SYSCAT.PROCEDURES where PROCSCHEMA = '" + name + "'";
-        return buildDropStatements("DROP PROCEDURE", dropProcGenQuery);
-    }
-
-    /**
-     * Generates DROP statements for the triggers in this schema.
-     *
-     * @return The drop statements.
-     * @throws SQLException when the statements could not be generated.
-     */
-    private List<String> generateDropStatementsForTriggers() throws SQLException {
-        String dropTrigGenQuery = "select TRIGNAME from SYSCAT.TRIGGERS where TRIGSCHEMA = '" + name + "'";
-        return buildDropStatements("DROP TRIGGER", dropTrigGenQuery);
+    private List<String> generateDropStatementsForProcedures(String schema) throws SQLException {
+        String dropProcGenQuery = "select rtrim(PROCNAME) from SYSCAT.PROCEDURES where PROCSCHEMA = '" + schema + "'";
+        return buildDropStatements("DROP PROCEDURE", dropProcGenQuery, schema);
     }
 
     /**
      * Generates DROP statements for the sequences in this schema.
      *
+     * @param schema The schema of the objects.
      * @return The drop statements.
      * @throws SQLException when the statements could not be generated.
      */
-    private List<String> generateDropStatementsForSequences() throws SQLException {
-        String dropSeqGenQuery = "select SEQNAME from SYSCAT.SEQUENCES where SEQSCHEMA = '" + name
+    private List<String> generateDropStatementsForSequences(String schema) throws SQLException {
+        String dropSeqGenQuery = "select rtrim(SEQNAME) from SYSCAT.SEQUENCES where SEQSCHEMA = '" + schema
                 + "' and SEQTYPE='S'";
-        return buildDropStatements("DROP SEQUENCE", dropSeqGenQuery);
-    }
-
-    /**
-     * Generates DROP statements for the views in this schema.
-     *
-     * @return The drop statements.
-     * @throws SQLException when the statements could not be generated.
-     */
-    private List<String> generateDropStatementsForViews() throws SQLException {
-        String dropSeqGenQuery = "select TABNAME from SYSCAT.TABLES where TABSCHEMA = '" + name
-                + "' and TABNAME NOT LIKE '%_V' and TYPE='V'";
-        return buildDropStatements("DROP VIEW", dropSeqGenQuery);
+        return buildDropStatements("DROP SEQUENCE", dropSeqGenQuery, schema);
     }
 
     /**
      * Generates DROP statements for this type of table, representing this type of object in this schema.
      *
+     * @param schema     The schema of the objects.
      * @param tableType  The type of table (Can be T, V, S, ...).
      * @param objectType The type of object.
      * @return The drop statements.
      * @throws SQLException when the statements could not be generated.
      */
-    private List<String> generateDropStatements(String tableType, String objectType) throws SQLException {
-        String dropTablesGenQuery = "select TABNAME from SYSCAT.TABLES where TYPE='" + tableType + "' and TABSCHEMA = '"
-                + name + "'";
-        return buildDropStatements("DROP " + objectType, dropTablesGenQuery);
+    private List<String> generateDropStatements(String schema, String tableType, String objectType) throws SQLException {
+        String dropTablesGenQuery = "select rtrim(TABNAME) from SYSCAT.TABLES where TYPE='" + tableType + "' and TABSCHEMA = '"
+                + schema + "'";
+        return buildDropStatements("DROP " + objectType, dropTablesGenQuery, schema);
     }
 
     /**
@@ -186,32 +160,36 @@ public class DB2Schema extends Schema<DB2DbSupport> {
      *
      * @param dropPrefix The drop command for the database object (e.g. 'drop table').
      * @param query      The query to get all present database objects
+     * @param schema     The schema for which to build the statements.
      * @return The statements.
      * @throws SQLException when the drop statements could not be built.
      */
-    private List<String> buildDropStatements(final String dropPrefix, final String query) throws SQLException {
+    private List<String> buildDropStatements(final String dropPrefix, final String query, String schema) throws SQLException {
         List<String> dropStatements = new ArrayList<String>();
         List<String> dbObjects = jdbcTemplate.queryForStringList(query);
         for (String dbObject : dbObjects) {
-            dropStatements.add(dropPrefix + " " + dbSupport.quote(name, dbObject));
+            dropStatements.add(dropPrefix + " " + dbSupport.quote(schema, dbObject));
         }
         return dropStatements;
     }
 
     /**
-     * @return All tables that have versioning associated with them.
+     * Returns all tables that have versioning associated with them.
+     *
+     * @return
+     * @throws SQLException
      */
     private List<String> generateDropVersioningStatement() throws SQLException {
         List<String> dropVersioningStatements = new ArrayList<String>();
-        Table[] versioningTables = findTables("select TABNAME from SYSCAT.TABLES where TEMPORALTYPE <> 'N' and TABSCHEMA = ?", name);
-        for (Table table : versioningTables) {
+        Table[] versioningTables = findTables("select rtrim(TABNAME) from SYSCAT.TABLES where TEMPORALTYPE <> 'N' and TABSCHEMA = ?", name);
+        for(Table table : versioningTables) {
             dropVersioningStatements.add("ALTER TABLE " + table.toString() + " DROP VERSIONING");
         }
 
         return dropVersioningStatements;
     }
 
-    private Table[] findTables(String sqlQuery, String... params) throws SQLException {
+    private Table[] findTables(String sqlQuery, String ... params) throws SQLException {
         List<String> tableNames = jdbcTemplate.queryForStringList(sqlQuery, params);
         Table[] tables = new Table[tableNames.size()];
         for (int i = 0; i < tableNames.size(); i++) {
@@ -222,7 +200,7 @@ public class DB2Schema extends Schema<DB2DbSupport> {
 
     @Override
     protected Table[] doAllTables() throws SQLException {
-        return findTables("select TABNAME from SYSCAT.TABLES where TYPE='T' and TABSCHEMA = ?", name);
+        return findTables("select rtrim(TABNAME) from SYSCAT.TABLES where TYPE='T' and TABSCHEMA = ?", name);
     }
 
     @Override
@@ -233,8 +211,7 @@ public class DB2Schema extends Schema<DB2DbSupport> {
                         " from SYSCAT.FUNCTIONS f inner join SYSCAT.FUNCPARMS p on f.SPECIFICNAME = p.SPECIFICNAME" +
                         " where f.ORIGIN = 'Q' and p.FUNCSCHEMA = ? and p.ROWTYPE = 'P'" +
                         " group by p.SPECIFICNAME, p.FUNCNAME" +
-                        " order by p.SPECIFICNAME", name
-        );
+                        " order by p.SPECIFICNAME", name);
 
         List<Function> functions = new ArrayList<Function>();
         for (Map<String, String> row : rows) {

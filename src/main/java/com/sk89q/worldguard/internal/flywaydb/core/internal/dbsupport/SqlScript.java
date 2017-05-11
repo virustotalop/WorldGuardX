@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,6 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport;
 
-import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.PlaceholderReplacer;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.StringUtils;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.Log;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.LogFactory;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.scanner.Resource;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -30,9 +23,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.util.StringUtils;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.Log;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.LogFactory;
+
 /**
- * Sql script containing a series of statements terminated by a delimiter (eg: ;).
- * Single-line (--) and multi-line (/* * /) comments are stripped and ignored.
+ * Sql script containing a series of statements terminated by semi-columns (;). Single-line (--) and multi-line (/* * /)
+ * comments are stripped and ignored.
  */
 public class SqlScript {
     private static final Log LOG = LogFactory.getLog(SqlScript.class);
@@ -48,12 +46,7 @@ public class SqlScript {
     private final List<SqlStatement> sqlStatements;
 
     /**
-     * The resource containing the statements.
-     */
-    private final Resource resource;
-
-    /**
-     * Creates a new sql script from this source.
+     * Creates a new sql script from this source with these placeholders to replace.
      *
      * @param sqlScriptSource The sql script as a text block with all placeholders already replaced.
      * @param dbSupport       The database-specific support.
@@ -61,24 +54,16 @@ public class SqlScript {
     public SqlScript(String sqlScriptSource, DbSupport dbSupport) {
         this.dbSupport = dbSupport;
         this.sqlStatements = parse(sqlScriptSource);
-        this.resource = null;
     }
 
     /**
-     * Creates a new sql script from this resource.
+     * Dummy constructor to increase testability.
      *
-     * @param dbSupport           The database-specific support.
-     * @param sqlScriptResource   The resource containing the statements.
-     * @param placeholderReplacer The placeholder replacer.
-     * @param encoding            The encoding to use.
+     * @param dbSupport The database-specific support.
      */
-    public SqlScript(DbSupport dbSupport, Resource sqlScriptResource, PlaceholderReplacer placeholderReplacer, String encoding) {
+    SqlScript(DbSupport dbSupport) {
         this.dbSupport = dbSupport;
-
-        String sqlScriptSource = sqlScriptResource.loadAsString(encoding);
-        this.sqlStatements = parse(placeholderReplacer.replacePlaceholders(sqlScriptSource));
-
-        this.resource = sqlScriptResource;
+        this.sqlStatements = null;
     }
 
     /**
@@ -88,13 +73,6 @@ public class SqlScript {
      */
     public List<SqlStatement> getSqlStatements() {
         return sqlStatements;
-    }
-
-    /**
-     * @return The resource containing the statements.
-     */
-    public Resource getResource() {
-        return resource;
     }
 
     /**
@@ -108,13 +86,9 @@ public class SqlScript {
             LOG.debug("Executing SQL: " + sql);
 
             try {
-                if (sqlStatement.isPgCopy()) {
-                    dbSupport.executePgCopy(jdbcTemplate.getConnection(), sql);
-                } else {
-                    jdbcTemplate.executeStatement(sql);
-                }
+                jdbcTemplate.executeStatement(sql);
             } catch (SQLException e) {
-                throw new FlywaySqlScriptException(resource, sqlStatement, e);
+                throw new FlywaySqlScriptException(sqlStatement.getLineNumber(), sql, e);
             }
         }
     }
@@ -140,6 +114,7 @@ public class SqlScript {
     List<SqlStatement> linesToStatements(List<String> lines) {
         List<SqlStatement> statements = new ArrayList<SqlStatement>();
 
+        boolean inMultilineComment = false;
         Delimiter nonStandardDelimiter = null;
         SqlStatementBuilder sqlStatementBuilder = dbSupport.createSqlStatementBuilder();
 
@@ -150,6 +125,27 @@ public class SqlScript {
                 if (!StringUtils.hasText(line)) {
                     // Skip empty line between statements.
                     continue;
+                }
+
+                String trimmedLine = line.trim();
+
+                if (!sqlStatementBuilder.isCommentDirective(trimmedLine)) {
+                    if (trimmedLine.startsWith("/*")) {
+                        inMultilineComment = true;
+                    }
+
+                    if (inMultilineComment) {
+                        if (trimmedLine.endsWith("*/")) {
+                            inMultilineComment = false;
+                        }
+                        // Skip line part of a multi-line comment
+                        continue;
+                    }
+
+                    if (sqlStatementBuilder.isSingleLineComment(trimmedLine)) {
+                        // Skip single-line comment
+                        continue;
+                    }
                 }
 
                 Delimiter newDelimiter = sqlStatementBuilder.extractNewDelimiterFromLine(line);
@@ -169,9 +165,7 @@ public class SqlScript {
 
             sqlStatementBuilder.addLine(line);
 
-            if (sqlStatementBuilder.canDiscard()) {
-                sqlStatementBuilder = dbSupport.createSqlStatementBuilder();
-            } else if (sqlStatementBuilder.isTerminated()) {
+            if (sqlStatementBuilder.isTerminated()) {
                 SqlStatement sqlStatement = sqlStatementBuilder.getSqlStatement();
                 statements.add(sqlStatement);
                 LOG.debug("Found statement at line " + sqlStatement.getLineNumber() + ": " + sqlStatement.getSql());
@@ -206,10 +200,7 @@ public class SqlScript {
                 lines.add(line);
             }
         } catch (IOException e) {
-            String message = resource == null ?
-                    "Unable to parse lines" :
-                    "Unable to parse " + resource.getLocation() + " (" + resource.getLocationOnDisk() + ")";
-            throw new FlywayException(message, e);
+            throw new FlywayException("Cannot parse lines", e);
         }
 
         return lines;

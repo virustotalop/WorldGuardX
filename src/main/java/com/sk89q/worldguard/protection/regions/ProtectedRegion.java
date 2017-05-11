@@ -30,7 +30,6 @@ import com.sk89q.worldguard.util.ChangeTracked;
 import com.sk89q.worldguard.util.Normal;
 
 import javax.annotation.Nullable;
-
 import java.awt.geom.Area;
 import java.awt.geom.Line2D;
 import java.util.Collection;
@@ -57,6 +56,7 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
     protected BlockVector max;
 
     private final String id;
+    private final boolean transientRegion;
     private int priority = 0;
     private ProtectedRegion parent;
     private DefaultDomain owners = new DefaultDomain();
@@ -68,9 +68,10 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      * Construct a new instance of this region.
      *
      * @param id the name of this region
+     * @param transientRegion whether this region should only be kept in memory and not be saved
      * @throws IllegalArgumentException thrown if the ID is invalid (see {@link #isValidId(String)}
      */
-    ProtectedRegion(String id) { // Package private because we can't have people creating their own region types
+    ProtectedRegion(String id, boolean transientRegion) { // Package private because we can't have people creating their own region types
         checkNotNull(id);
 
         if (!isValidId(id)) {
@@ -78,6 +79,7 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
         }
 
         this.id = Normal.normalize(id);
+        this.transientRegion = transientRegion;
     }
 
     /**
@@ -85,8 +87,7 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      *
      * @param points the points to set with at least one entry
      */
-    protected void setMinMaxPoints(List<Vector> points) 
-    {
+    protected void setMinMaxPoints(List<Vector> points) {
         int minX = points.get(0).getBlockX();
         int minY = points.get(0).getBlockY();
         int minZ = points.get(0).getBlockZ();
@@ -109,8 +110,8 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
         }
 
         setDirty(true);
-        this.min = new BlockVector(minX, minY, minZ);
-        this.max = new BlockVector(maxX, maxY, maxZ);
+        min = new BlockVector(minX, minY, minZ);
+        max = new BlockVector(maxX, maxY, maxZ);
     }
 
     /**
@@ -118,9 +119,8 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      *
      * @return the name
      */
-    public String getId() 
-    {
-        return this.id;
+    public String getId() {
+        return id;
     }
 
     /**
@@ -137,7 +137,7 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      * @return the minimum point
      */
     public BlockVector getMinimumPoint() {
-        return this.min;
+        return min;
     }
 
     /**
@@ -147,7 +147,7 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      * @return the maximum point
      */
     public BlockVector getMaximumPoint() {
-        return this.max;
+        return max;
     }
 
     /**
@@ -156,9 +156,8 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      *
      * @return the priority
      */
-    public int getPriority() 
-    {
-        return this.priority;
+    public int getPriority() {
+        return priority;
     }
 
     /**
@@ -167,8 +166,7 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      *
      * @param priority the priority to set
      */
-    public void setPriority(int priority) 
-    {
+    public void setPriority(int priority) {
         setDirty(true);
         this.priority = priority;
     }
@@ -179,9 +177,8 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      * @return the parent, or {@code null}
      */
     @Nullable
-    public ProtectedRegion getParent() 
-    {
-        return this.parent;
+    public ProtectedRegion getParent() {
+        return parent;
     }
 
     /**
@@ -228,7 +225,7 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      * @return the domain
      */
     public DefaultDomain getOwners() {
-        return this.owners;
+        return owners;
     }
 
     /**
@@ -686,8 +683,21 @@ public abstract class ProtectedRegion implements ChangeTracked, Comparable<Prote
      */
     abstract Area toArea();
 
+    /**
+     * @return <code>true</code> if this region should only be kept in memory and not be saved
+     */
+    public boolean isTransient() {
+        return transientRegion;
+    }
+
+    /**
+     * @return <code>true</code> if this region is not transient and changes have been made.
+     */
     @Override
     public boolean isDirty() {
+        if (isTransient()) {
+            return false;
+        }
         return dirty || owners.isDirty() || members.isDirty();
     }
 

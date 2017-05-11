@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,23 +15,27 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.metadatatable;
 
+import java.util.Date;
+
 import com.sk89q.worldguard.internal.flywaydb.core.api.MigrationType;
 import com.sk89q.worldguard.internal.flywaydb.core.api.MigrationVersion;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.ObjectUtils;
-
-import java.util.Date;
 
 /**
  * A migration applied to the database (maps to a row in the metadata table).
  */
 public class AppliedMigration implements Comparable<AppliedMigration> {
     /**
+     * The position of this version amongst all others. (For easy order by sorting)
+     */
+    private int versionRank;
+
+    /**
      * The order in which this migration was applied amongst all others. (For out of order detection)
      */
     private int installedRank;
 
     /**
-     * The target version of this migration. {@code null} if it is a repeatable migration.
+     * The target version of this migration.
      */
     private MigrationVersion version;
 
@@ -41,7 +45,7 @@ public class AppliedMigration implements Comparable<AppliedMigration> {
     private String description;
 
     /**
-     * The type of migration (BASELINE, SQL, ...)
+     * The type of migration (INIT, SQL, ...)
      */
     private MigrationType type;
 
@@ -78,6 +82,7 @@ public class AppliedMigration implements Comparable<AppliedMigration> {
     /**
      * Creates a new applied migration. Only called from the RowMapper.
      *
+     * @param versionRank   The position of this version amongst all others. (For easy order by sorting)
      * @param installedRank The order in which this migration was applied amongst all others. (For out of order detection)
      * @param version       The target version of this migration.
      * @param description   The description of the migration.
@@ -89,9 +94,10 @@ public class AppliedMigration implements Comparable<AppliedMigration> {
      * @param executionTime The execution time (in millis) of this migration.
      * @param success       Flag indicating whether the migration was successful or not.
      */
-    public AppliedMigration(int installedRank, MigrationVersion version, String description,
+    public AppliedMigration(int versionRank, int installedRank, MigrationVersion version, String description,
                      MigrationType type, String script, Integer checksum, Date installedOn,
                      String installedBy, int executionTime, boolean success) {
+        this.versionRank = versionRank;
         this.installedRank = installedRank;
         this.version = version;
         this.description = description;
@@ -109,7 +115,7 @@ public class AppliedMigration implements Comparable<AppliedMigration> {
      *
      * @param version       The target version of this migration.
      * @param description   The description of the migration.
-     * @param type          The type of migration (BASELINE, SQL, ...)
+     * @param type          The type of migration (INIT, SQL, ...)
      * @param script        The name of the script to execute for this migration, relative to its classpath location.
      * @param checksum      The checksum of the migration. (Optional)
      * @param executionTime The execution time (in millis) of this migration.
@@ -163,6 +169,13 @@ public class AppliedMigration implements Comparable<AppliedMigration> {
     }
 
     /**
+     * @return The position of this version amongst all others. (For easy order by sorting)
+     */
+    public int getVersionRank() {
+        return versionRank;
+    }
+
+    /**
      * @return The order in which this migration was applied amongst all others. (For out of order detection)
      */
     public int getInstalledRank() {
@@ -184,7 +197,7 @@ public class AppliedMigration implements Comparable<AppliedMigration> {
     }
 
     /**
-     * @return The type of migration (BASELINE, SQL, ...)
+     * @return The type of migration (INIT, SQL, ...)
      */
     public MigrationType getType() {
         return type;
@@ -243,19 +256,21 @@ public class AppliedMigration implements Comparable<AppliedMigration> {
         if (executionTime != that.executionTime) return false;
         if (installedRank != that.installedRank) return false;
         if (success != that.success) return false;
+        if (versionRank != that.versionRank) return false;
         if (checksum != null ? !checksum.equals(that.checksum) : that.checksum != null) return false;
         if (!description.equals(that.description)) return false;
         if (installedBy != null ? !installedBy.equals(that.installedBy) : that.installedBy != null) return false;
         if (installedOn != null ? !installedOn.equals(that.installedOn) : that.installedOn != null) return false;
         if (!script.equals(that.script)) return false;
         if (type != that.type) return false;
-        return ObjectUtils.nullSafeEquals(version, that.version);
+        return version.equals(that.version);
     }
 
     @Override
     public int hashCode() {
-        int result = installedRank;
-        result = 31 * result + (version != null ? version.hashCode() : 0);
+        int result = versionRank;
+        result = 31 * result + installedRank;
+        result = 31 * result + version.hashCode();
         result = 31 * result + description.hashCode();
         result = 31 * result + type.hashCode();
         result = 31 * result + script.hashCode();
@@ -269,6 +284,6 @@ public class AppliedMigration implements Comparable<AppliedMigration> {
 
     @SuppressWarnings("NullableProblems")
     public int compareTo(AppliedMigration o) {
-        return installedRank - o.installedRank;
+        return version.compareTo(o.version);
     }
 }

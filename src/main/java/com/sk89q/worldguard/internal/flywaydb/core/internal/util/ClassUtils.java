@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.util;
 
-import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
 
 /**
  * Utility methods for dealing with classes.
@@ -64,7 +64,7 @@ public class ClassUtils {
                 try {
                     clazzes.add(ClassUtils.<T>instantiate(clazz, classLoader));
                 } catch (Exception e) {
-                    throw new FlywayException("Unable to instantiate class: " + clazz, e);
+                    throw new FlywayException("Unable to instantiate class: " + clazz);
                 }
             }
         }

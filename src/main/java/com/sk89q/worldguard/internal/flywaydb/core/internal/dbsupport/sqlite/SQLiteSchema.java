@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,21 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.sqlite;
 
+import java.sql.SQLException;
+import java.util.List;
+
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Table;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.util.StringUtils;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.Log;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.LogFactory;
-
-import java.sql.SQLException;
-import java.util.List;
 
 /**
  * SQLite implementation of Schema.
  */
-public class SQLiteSchema extends Schema<SQLiteDbSupport> {
+public class SQLiteSchema extends Schema {
     private static final Log LOG = LogFactory.getLog(SQLiteSchema.class);
 
     /**
@@ -37,7 +39,7 @@ public class SQLiteSchema extends Schema<SQLiteDbSupport> {
      * @param dbSupport    The database-specific support.
      * @param name         The name of the schema.
      */
-    public SQLiteSchema(JdbcTemplate jdbcTemplate, SQLiteDbSupport dbSupport, String name) {
+    public SQLiteSchema(JdbcTemplate jdbcTemplate, DbSupport dbSupport, String name) {
         super(jdbcTemplate, dbSupport, name);
     }
 

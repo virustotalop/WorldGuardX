@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,12 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.command;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 import com.sk89q.worldguard.internal.flywaydb.core.api.MigrationVersion;
 import com.sk89q.worldguard.internal.flywaydb.core.api.callback.FlywayCallback;
 import com.sk89q.worldguard.internal.flywaydb.core.api.resolver.MigrationResolver;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.info.MigrationInfoServiceImpl;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.metadatatable.MetaDataTable;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.Pair;
@@ -29,9 +30,6 @@ import com.sk89q.worldguard.internal.flywaydb.core.internal.util.jdbc.Transactio
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.jdbc.TransactionTemplate;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.Log;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.LogFactory;
-
-import java.sql.Connection;
-import java.sql.SQLException;
 
 /**
  * Handles the validate command.
@@ -52,11 +50,6 @@ public class DbValidate {
     private final MetaDataTable metaDataTable;
 
     /**
-     * The schema containing the metadata table.
-     */
-    private final Schema schema;
-
-    /**
      * The migration resolver.
      */
     private final MigrationResolver migrationResolver;
@@ -64,7 +57,12 @@ public class DbValidate {
     /**
      * The connection to use.
      */
-    private final Connection connection;
+    private final Connection connectionMetaDataTable;
+
+    /**
+     * The connection to use to perform the actual database migrations.
+     */
+    private final Connection connectionUserObjects;
 
     /**
      * Allows migrations to be run "out of order".
@@ -80,11 +78,6 @@ public class DbValidate {
     private final boolean pending;
 
     /**
-     * Whether future migrations are allowed.
-     */
-    private final boolean future;
-
-    /**
      * This is a list of callbacks that fire before or after the validate task is executed.
      * You can add as many callbacks as you want.  These should be set on the Flyway class
      * by the end user as Flyway will set them automatically for you here.
@@ -92,36 +85,26 @@ public class DbValidate {
     private final FlywayCallback[] callbacks;
 
     /**
-     * The DB support for the connection.
-     */
-    private final DbSupport dbSupport;
-
-    /**
      * Creates a new database validator.
      *
-     * @param connection        The connection to use.
-     * @param dbSupport         The DB support for the connection.
-     * @param metaDataTable     The database metadata table.
-     * @param schema            The database schema to use by default.
-     * @param migrationResolver The migration resolver.
-     * @param target            The target version of the migration.
-     * @param outOfOrder        Allows migrations to be run "out of order".
-     * @param pending           Whether pending migrations are allowed.
-     * @param future            Whether future migrations are allowed.
-     * @param callbacks         The lifecycle callbacks.
+     * @param connectionMetaDataTable The connection to use.
+     * @param metaDataTable           The database metadata table.
+     * @param migrationResolver       The migration resolver.
+     * @param target                  The target version of the migration.
+     * @param outOfOrder              Allows migrations to be run "out of order".
+     * @param pending                 Whether pending migrations are allowed.
+     * @param callbacks               The lifecycle callbacks.
      */
-    public DbValidate(Connection connection,
-                      DbSupport dbSupport, MetaDataTable metaDataTable, Schema schema, MigrationResolver migrationResolver,
-                      MigrationVersion target, boolean outOfOrder, boolean pending, boolean future, FlywayCallback[] callbacks) {
-        this.connection = connection;
-        this.dbSupport = dbSupport;
+    public DbValidate(Connection connectionMetaDataTable, Connection connectionUserObjects,
+                      MetaDataTable metaDataTable, MigrationResolver migrationResolver,
+                      MigrationVersion target, boolean outOfOrder, boolean pending, FlywayCallback[] callbacks) {
+        this.connectionMetaDataTable = connectionMetaDataTable;
+        this.connectionUserObjects = connectionUserObjects;
         this.metaDataTable = metaDataTable;
-        this.schema = schema;
         this.migrationResolver = migrationResolver;
         this.target = target;
         this.outOfOrder = outOfOrder;
         this.pending = pending;
-        this.future = future;
         this.callbacks = callbacks;
     }
 
@@ -131,64 +114,54 @@ public class DbValidate {
      * @return The validation error, if any.
      */
     public String validate() {
-        try {
-            for (final FlywayCallback callback : callbacks) {
-                new TransactionTemplate(connection).execute(new TransactionCallback<Object>() {
-                    @Override
-                    public Object doInTransaction() throws SQLException {
-                        dbSupport.changeCurrentSchemaTo(schema);
-                        callback.beforeValidate(connection);
-                        return null;
-                    }
-                });
-            }
-
-            LOG.debug("Validating migrations ...");
-            StopWatch stopWatch = new StopWatch();
-            stopWatch.start();
-
-            Pair<Integer, String> result = new TransactionTemplate(connection).execute(new TransactionCallback<Pair<Integer, String>>() {
-                public Pair<Integer, String> doInTransaction() {
-                    dbSupport.changeCurrentSchemaTo(schema);
-                    MigrationInfoServiceImpl migrationInfoService =
-                            new MigrationInfoServiceImpl(migrationResolver, metaDataTable, target, outOfOrder, pending, future);
-
-                    migrationInfoService.refresh();
-
-                    int count = migrationInfoService.all().length;
-                    String validationError = migrationInfoService.validate();
-                    return Pair.of(count, validationError);
+        for (final FlywayCallback callback : callbacks) {
+            new TransactionTemplate(connectionUserObjects).execute(new TransactionCallback<Object>() {
+                @Override
+                public Object doInTransaction() throws SQLException {
+                    callback.beforeValidate(connectionUserObjects);
+                    return null;
                 }
             });
-
-            stopWatch.stop();
-
-            String error = result.getRight();
-            if (error == null) {
-                int count = result.getLeft();
-                if (count == 1) {
-                    LOG.info(String.format("Successfully validated 1 migration (execution time %s)",
-                            TimeFormat.format(stopWatch.getTotalTimeMillis())));
-                } else {
-                    LOG.info(String.format("Successfully validated %d migrations (execution time %s)",
-                            count, TimeFormat.format(stopWatch.getTotalTimeMillis())));
-                }
-            }
-
-            for (final FlywayCallback callback : callbacks) {
-                new TransactionTemplate(connection).execute(new TransactionCallback<Object>() {
-                    @Override
-                    public Object doInTransaction() throws SQLException {
-                        dbSupport.changeCurrentSchemaTo(schema);
-                        callback.afterValidate(connection);
-                        return null;
-                    }
-                });
-            }
-
-            return error;
-        } finally {
-            dbSupport.restoreCurrentSchema();
         }
+
+        LOG.debug("Validating migrations ...");
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        Pair<Integer, String> result = new TransactionTemplate(connectionMetaDataTable).execute(new TransactionCallback<Pair<Integer, String>>() {
+            public Pair<Integer, String> doInTransaction() {
+                MigrationInfoServiceImpl migrationInfoService =
+                        new MigrationInfoServiceImpl(migrationResolver, metaDataTable, target, outOfOrder, pending);
+
+                migrationInfoService.refresh();
+
+                int count = migrationInfoService.all().length;
+                String validationError = migrationInfoService.validate();
+                return Pair.of(count, validationError);
+            }
+        });
+
+        stopWatch.stop();
+
+        int count = result.getLeft();
+        if (count == 1) {
+            LOG.info(String.format("Validated 1 migration (execution time %s)",
+                    TimeFormat.format(stopWatch.getTotalTimeMillis())));
+        } else {
+            LOG.info(String.format("Validated %d migrations (execution time %s)",
+                    count, TimeFormat.format(stopWatch.getTotalTimeMillis())));
+        }
+
+        for (final FlywayCallback callback : callbacks) {
+            new TransactionTemplate(connectionUserObjects).execute(new TransactionCallback<Object>() {
+                @Override
+                public Object doInTransaction() throws SQLException {
+                    callback.afterValidate(connectionUserObjects);
+                    return null;
+                }
+            });
+        }
+
+        return result.getRight();
     }
 }

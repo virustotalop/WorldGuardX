@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,15 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.resolver;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
-import com.sk89q.worldguard.internal.flywaydb.core.api.configuration.FlywayConfiguration;
 import com.sk89q.worldguard.internal.flywaydb.core.api.resolver.MigrationResolver;
 import com.sk89q.worldguard.internal.flywaydb.core.api.resolver.ResolvedMigration;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
@@ -26,15 +33,6 @@ import com.sk89q.worldguard.internal.flywaydb.core.internal.util.FeatureDetector
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.Location;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.Locations;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.PlaceholderReplacer;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.scanner.Scanner;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Facility for retrieving and sorting the available migrations from the classpath through the various migration
@@ -55,29 +53,25 @@ public class CompositeMigrationResolver implements MigrationResolver {
     /**
      * Creates a new CompositeMigrationResolver.
      *
-     * @param dbSupport                    The database-specific support.
-     * @param scanner                      The Scanner for loading migrations on the classpath.
-     * @param locations                    The locations where migrations are located.
-     * @param encoding                     The encoding of Sql migrations.
-     * @param sqlMigrationPrefix           The file name prefix for sql migrations.
-     * @param repeatableSqlMigrationPrefix The file name prefix for repeatable sql migrations.
-     * @param sqlMigrationSeparator        The file name separator for sql migrations.
-     * @param sqlMigrationSuffix           The file name suffix for sql migrations.
-     * @param placeholderReplacer          The placeholder replacer to use.
-     * @param customMigrationResolvers     Custom Migration Resolvers.
+     * @param dbSupport                The database-specific support.
+     * @param classLoader              The ClassLoader for loading migrations on the classpath.
+     * @param locations                The locations where migrations are located.
+     * @param encoding                 The encoding of Sql migrations.
+     * @param sqlMigrationPrefix       The file name prefix for sql migrations.
+     * @param sqlMigrationSeparator    The file name separator for sql migrations.
+     * @param sqlMigrationSuffix       The file name suffix for sql migrations.
+     * @param placeholderReplacer      The placeholder replacer to use.
+     * @param customMigrationResolvers Custom Migration Resolvers.
      */
-    public CompositeMigrationResolver(DbSupport dbSupport, Scanner scanner, FlywayConfiguration config, Locations locations,
+    public CompositeMigrationResolver(DbSupport dbSupport, ClassLoader classLoader, Locations locations,
                                       String encoding,
-                                      String sqlMigrationPrefix, String repeatableSqlMigrationPrefix,
-                                      String sqlMigrationSeparator, String sqlMigrationSuffix,
+                                      String sqlMigrationPrefix, String sqlMigrationSeparator, String sqlMigrationSuffix,
                                       PlaceholderReplacer placeholderReplacer,
                                       MigrationResolver... customMigrationResolvers) {
-        if (!config.isSkipDefaultResolvers()) {
-            for (Location location : locations.getLocations()) {
-                migrationResolvers.add(new SqlMigrationResolver(dbSupport, scanner, location, placeholderReplacer,
-                        encoding, sqlMigrationPrefix, repeatableSqlMigrationPrefix, sqlMigrationSeparator, sqlMigrationSuffix));
-                migrationResolvers.add(new JdbcMigrationResolver(scanner, location, config));
-            }
+        for (Location location : locations.getLocations()) {
+            migrationResolvers.add(new SqlMigrationResolver(dbSupport, classLoader, location, placeholderReplacer,
+                    encoding, sqlMigrationPrefix, sqlMigrationSeparator, sqlMigrationSuffix));
+            migrationResolvers.add(new JdbcMigrationResolver(classLoader, location));
         }
 
         migrationResolvers.addAll(Arrays.asList(customMigrationResolvers));
@@ -141,21 +135,13 @@ public class CompositeMigrationResolver implements MigrationResolver {
         for (int i = 0; i < migrations.size() - 1; i++) {
             ResolvedMigration current = migrations.get(i);
             ResolvedMigration next = migrations.get(i + 1);
-            if (new ResolvedMigrationComparator().compare(current, next) == 0) {
-                if (current.getVersion() != null) {
-                    throw new FlywayException(String.format("Found more than one migration with version %s\nOffenders:\n-> %s (%s)\n-> %s (%s)",
-                            current.getVersion(),
-                            current.getPhysicalLocation(),
-                            current.getType(),
-                            next.getPhysicalLocation(),
-                            next.getType()));
-                }
-                throw new FlywayException(String.format("Found more than one repeatable migration with description %s\nOffenders:\n-> %s (%s)\n-> %s (%s)",
-                        current.getDescription(),
-                        current.getPhysicalLocation(),
+            if (current.getVersion().compareTo(next.getVersion()) == 0) {
+                throw new FlywayException(String.format("Found more than one migration with version '%s' (Offenders: %s '%s' and %s '%s')",
+                        current.getVersion(),
                         current.getType(),
-                        next.getPhysicalLocation(),
-                        next.getType()));
+                        current.getPhysicalLocation(),
+                        next.getType(),
+                        next.getPhysicalLocation()));
             }
         }
     }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,13 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.resolver.jdbc;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
 import com.sk89q.worldguard.internal.flywaydb.core.api.MigrationType;
 import com.sk89q.worldguard.internal.flywaydb.core.api.MigrationVersion;
-import com.sk89q.worldguard.internal.flywaydb.core.api.configuration.FlywayConfiguration;
 import com.sk89q.worldguard.internal.flywaydb.core.api.migration.MigrationChecksumProvider;
 import com.sk89q.worldguard.internal.flywaydb.core.api.migration.MigrationInfoProvider;
 import com.sk89q.worldguard.internal.flywaydb.core.api.migration.jdbc.JdbcMigration;
@@ -28,18 +31,13 @@ import com.sk89q.worldguard.internal.flywaydb.core.internal.resolver.MigrationIn
 import com.sk89q.worldguard.internal.flywaydb.core.internal.resolver.ResolvedMigrationComparator;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.resolver.ResolvedMigrationImpl;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.ClassUtils;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.ConfigurationInjectionUtils;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.Location;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.Pair;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.StringUtils;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.scanner.Scanner;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 /**
- * Migration resolver for Jdbc migrations. The classes must have a name like R__My_description, V1__Description
+ * Migration resolver for Jdbc migrations. The classes must have a name like V1 or V1_1_3 or V1__Description
  * or V1_1_3__Description.
  */
 public class JdbcMigrationResolver implements MigrationResolver {
@@ -49,29 +47,21 @@ public class JdbcMigrationResolver implements MigrationResolver {
     private final Location location;
 
     /**
-     * The Scanner to use.
+     * The ClassLoader to use.
      */
-    private Scanner scanner;
-
-    /**
-     * The configuration to inject (if necessary) in the migration classes.
-     */
-    private FlywayConfiguration configuration;
+    private ClassLoader classLoader;
 
     /**
      * Creates a new instance.
      *
-     * @param location      The base package on the classpath where to migrations are located.
-     * @param scanner       The Scanner for loading migrations on the classpath.
-     * @param configuration The configuration to inject (if necessary) in the migration classes.
+     * @param location    The base package on the classpath where to migrations are located.
+     * @param classLoader The ClassLoader for loading migrations on the classpath.
      */
-    public JdbcMigrationResolver(Scanner scanner, Location location, FlywayConfiguration configuration) {
+    public JdbcMigrationResolver(ClassLoader classLoader, Location location) {
         this.location = location;
-        this.scanner = scanner;
-        this.configuration = configuration;
+        this.classLoader = classLoader;
     }
 
-    @Override
     public List<ResolvedMigration> resolveMigrations() {
         List<ResolvedMigration> migrations = new ArrayList<ResolvedMigration>();
 
@@ -80,10 +70,9 @@ public class JdbcMigrationResolver implements MigrationResolver {
         }
 
         try {
-            Class<?>[] classes = scanner.scanForClasses(location, JdbcMigration.class);
+            Class<?>[] classes = new Scanner(classLoader).scanForClasses(location, JdbcMigration.class);
             for (Class<?> clazz : classes) {
-                JdbcMigration jdbcMigration = ClassUtils.instantiate(clazz.getName(), scanner.getClassLoader());
-                ConfigurationInjectionUtils.injectFlywayConfiguration(jdbcMigration, configuration);
+                JdbcMigration jdbcMigration = ClassUtils.instantiate(clazz.getName(), classLoader);
 
                 ResolvedMigrationImpl migrationInfo = extractMigrationInfo(jdbcMigration);
                 migrationInfo.setPhysicalLocation(ClassUtils.getLocationOnDisk(clazz));
@@ -122,24 +111,20 @@ public class JdbcMigrationResolver implements MigrationResolver {
                 throw new FlywayException("Missing description for migration " + version);
             }
         } else {
-            String shortName = ClassUtils.getShortName(jdbcMigration.getClass());
-            String prefix;
-            if (shortName.startsWith("V") || shortName.startsWith("R")) {
-                prefix = shortName.substring(0, 1);
-            } else {
-                throw new FlywayException("Invalid Jdbc migration class name: " + jdbcMigration.getClass().getName()
-                        + " => ensure it starts with V or R," +
-                        " or implement org.flywaydb.core.api.migration.MigrationInfoProvider for non-default naming");
-            }
-            Pair<MigrationVersion, String> info = MigrationInfoHelper.extractVersionAndDescription(shortName, prefix, "__", "");
+            Pair<MigrationVersion, String> info =
+                    MigrationInfoHelper.extractVersionAndDescription(
+                            ClassUtils.getShortName(jdbcMigration.getClass()), "V", "__", "");
             version = info.getLeft();
             description = info.getRight();
         }
 
+        String script = jdbcMigration.getClass().getName();
+
+
         ResolvedMigrationImpl resolvedMigration = new ResolvedMigrationImpl();
         resolvedMigration.setVersion(version);
         resolvedMigration.setDescription(description);
-        resolvedMigration.setScript(jdbcMigration.getClass().getName());
+        resolvedMigration.setScript(script);
         resolvedMigration.setChecksum(checksum);
         resolvedMigration.setType(MigrationType.JDBC);
         return resolvedMigration;

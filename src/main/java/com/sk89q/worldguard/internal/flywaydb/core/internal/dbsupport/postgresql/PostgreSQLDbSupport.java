@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,15 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.postgresql;
 
-import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Types;
+
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.SqlStatementBuilder;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.StringUtils;
-
-import java.io.IOException;
-import java.io.StringReader;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Types;
 
 /**
  * PostgreSQL-specific support.
@@ -50,50 +47,23 @@ public class PostgreSQLDbSupport extends DbSupport {
     }
 
     @Override
-    public Schema getOriginalSchema() {
-        if (originalSchema == null) {
-            return null;
-        }
-
-        String result = originalSchema.replace(doQuote("$user"), "").trim();
-        if (result.startsWith(",")) {
-            result = result.substring(1);
-        }
-        if (result.contains(",")) {
-            result = result.substring(0, result.indexOf(","));
-        }
-        return getSchema(result.trim());
+    protected String doGetCurrentSchema() throws SQLException {
+        return jdbcTemplate.queryForString("SELECT current_schema()");
     }
 
     @Override
-    protected String doGetCurrentSchemaName() throws SQLException {
-        return jdbcTemplate.queryForString("SHOW search_path");
-    }
-
-    @Override
-    public void changeCurrentSchemaTo(Schema schema) {
-        if (schema.getName().equals(originalSchema) || originalSchema.startsWith(schema.getName() + ",") || !schema.exists()) {
-            return;
-        }
-
-        try {
-            if (StringUtils.hasText(originalSchema)) {
-                doChangeCurrentSchemaTo(schema.toString() + "," + originalSchema);
-            } else {
-                doChangeCurrentSchemaTo(schema.toString());
-            }
-        } catch (SQLException e) {
-            throw new FlywayException("Error setting current schema to " + schema, e);
-        }
-    }
-
-    @Override
-    protected void doChangeCurrentSchemaTo(String schema) throws SQLException {
-        if (!StringUtils.hasLength(schema)) {
+    protected void doSetCurrentSchema(Schema schema) throws SQLException {
+        if (schema == null) {
             jdbcTemplate.execute("SELECT set_config('search_path', '', false)");
             return;
         }
-        jdbcTemplate.execute("SET search_path = " + schema);
+
+        String searchPath = jdbcTemplate.queryForString("SHOW search_path");
+        if (StringUtils.hasText(searchPath)) {
+            jdbcTemplate.execute("SET search_path = " + schema + "," + searchPath);
+        } else {
+            jdbcTemplate.execute("SET search_path = " + schema);
+        }
     }
 
     public boolean supportsDdlTransactions() {

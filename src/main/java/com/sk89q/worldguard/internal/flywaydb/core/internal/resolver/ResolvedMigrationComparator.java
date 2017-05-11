@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.resolver;
 
-import com.sk89q.worldguard.internal.flywaydb.core.api.resolver.ResolvedMigration;
-
 import java.util.Comparator;
+
+import com.sk89q.worldguard.internal.flywaydb.core.api.resolver.ResolvedMigration;
 
 /**
 * Comparator for ResolvedMigration.
@@ -25,15 +25,6 @@ import java.util.Comparator;
 public class ResolvedMigrationComparator implements Comparator<ResolvedMigration> {
     @Override
     public int compare(ResolvedMigration o1, ResolvedMigration o2) {
-        if ((o1.getVersion() != null) && o2.getVersion() != null) {
-            return o1.getVersion().compareTo(o2.getVersion());
-        }
-        if (o1.getVersion() != null) {
-            return Integer.MIN_VALUE;
-        }
-        if (o2.getVersion() != null) {
-            return Integer.MAX_VALUE;
-        }
-        return o1.getDescription().compareTo(o2.getDescription());
+        return o1.getVersion().compareTo(o2.getVersion());
     }
 }

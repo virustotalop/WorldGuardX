@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,13 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.api.callback;
 
-import com.sk89q.worldguard.internal.flywaydb.core.api.MigrationInfo;
-import com.sk89q.worldguard.internal.flywaydb.core.api.configuration.ConfigurationAware;
-
 import java.sql.Connection;
+
+import com.sk89q.worldguard.internal.flywaydb.core.api.MigrationInfo;
 
 /**
  * This is the main callback interface that should be implemented to get access to flyway lifecycle notifications.
- * Simply add code to the callback method you are interested in having. A convenience implementation will all methods
- * doing nothing is provided with {@link BaseFlywayCallback}. To ensure backward compatibility, you are encouraged
- * to subclass that class instead of implementing this interface directly.
- *
- * <p>If a callback also implements the {@link ConfigurationAware} interface,
- * a {@link com.sk89q.worldguard.internal.flywaydb.core.api.configuration.FlywayConfiguration} object will automatically be injected before
- * calling any methods, giving the callback access to the core flyway configuration. {@link BaseFlywayCallback}
- * already implements {@link ConfigurationAware}</p>
+ * Simply add code to the callback method you are interested in having.
  *
  * <p>Each callback method will run within its own transaction.</p>
  * 
@@ -95,18 +87,18 @@ public interface FlywayCallback {
 	void afterValidate(Connection connection);
 
 	/**
-	 * Runs before the baseline task executes.
+	 * Runs before the init task executes.
 	 * 
 	 * @param connection A valid connection to the database.
 	 */
-	void beforeBaseline(Connection connection);
+	void beforeInit(Connection connection);
 
 	/**
-	 * Runs after the baseline task executes.
+	 * Runs after the init task executes.
 	 * 
 	 * @param connection A valid connection to the database.
 	 */
-	void afterBaseline(Connection connection);
+	void afterInit(Connection connection);
 
 	/**
 	 * Runs before the repair task executes.

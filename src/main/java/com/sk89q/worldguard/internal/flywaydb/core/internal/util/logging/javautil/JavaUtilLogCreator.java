@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,10 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.javautil;
 
+import java.util.logging.Logger;
+
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.Log;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.LogCreator;
-
-import java.util.logging.Logger;
 
 /**
  * Log Creator for java.util.logging.

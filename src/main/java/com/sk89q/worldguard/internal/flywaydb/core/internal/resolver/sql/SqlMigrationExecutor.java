@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.resolver.sql;
 
+import java.sql.Connection;
+
 import com.sk89q.worldguard.internal.flywaydb.core.api.resolver.MigrationExecutor;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.SqlScript;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.PlaceholderReplacer;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.scanner.Resource;
-
-import java.sql.Connection;
 
 /**
  * Database migration based on a sql file.
@@ -67,7 +67,9 @@ public class SqlMigrationExecutor implements MigrationExecutor {
 
     @Override
     public void execute(Connection connection) {
-        SqlScript sqlScript = new SqlScript(dbSupport, sqlScriptResource, placeholderReplacer, encoding);
+        String sqlScriptSource = sqlScriptResource.loadAsString(encoding);
+        String sqlScriptSourceNoPlaceholders = placeholderReplacer.replacePlaceholders(sqlScriptSource);
+        SqlScript sqlScript = new SqlScript(sqlScriptSourceNoPlaceholders, dbSupport);
         sqlScript.execute(new JdbcTemplate(connection, 0));
     }
 

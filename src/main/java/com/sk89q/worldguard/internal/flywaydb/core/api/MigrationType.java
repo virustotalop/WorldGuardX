@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,9 @@ public enum MigrationType {
     SCHEMA,
 
     /**
-     * The type for the metadata baseline migration.
+     * The type for the metadata init migration.
      */
-    BASELINE,
+    INIT,
 
     /**
      * The type for sql migrations.
@@ -47,5 +47,5 @@ public enum MigrationType {
     /**
      * The type for other migrations by custom MigrationResolvers.
      */
-    CUSTOM
+    CUSTOM;
 }

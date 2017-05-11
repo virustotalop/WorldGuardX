@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,34 +15,26 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.command;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 import com.sk89q.worldguard.internal.flywaydb.core.api.MigrationInfo;
 import com.sk89q.worldguard.internal.flywaydb.core.api.MigrationVersion;
 import com.sk89q.worldguard.internal.flywaydb.core.api.callback.FlywayCallback;
 import com.sk89q.worldguard.internal.flywaydb.core.api.resolver.MigrationResolver;
 import com.sk89q.worldguard.internal.flywaydb.core.api.resolver.ResolvedMigration;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.info.MigrationInfoImpl;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.info.MigrationInfoServiceImpl;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.metadatatable.AppliedMigration;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.metadatatable.MetaDataTable;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.ObjectUtils;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.StopWatch;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.TimeFormat;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.jdbc.TransactionCallback;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.jdbc.TransactionTemplate;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.Log;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.LogFactory;
-
-import java.sql.Connection;
-import java.sql.SQLException;
 
 /**
  * Handles Flyway's repair command.
  */
 public class DbRepair {
-    private static final Log LOG = LogFactory.getLog(DbRepair.class);
-
     /**
      * The database connection to use for accessing the metadata table.
      */
@@ -52,11 +44,6 @@ public class DbRepair {
      * The migration infos.
      */
     private final MigrationInfoServiceImpl migrationInfoService;
-
-    /**
-     * The schema containing the metadata table.
-     */
-    private final Schema schema;
 
     /**
      * The metadata table.
@@ -71,25 +58,16 @@ public class DbRepair {
     private final FlywayCallback[] callbacks;
 
     /**
-     * The database-specific support.
-     */
-    private final DbSupport dbSupport;
-
-    /**
      * Creates a new DbRepair.
      *
-     * @param dbSupport         The database-specific support.
      * @param connection        The database connection to use for accessing the metadata table.
-     * @param schema            The database schema to use by default.
      * @param migrationResolver The migration resolver.
      * @param metaDataTable     The metadata table.
      * @param callbacks         Callbacks for the Flyway lifecycle.
      */
-    public DbRepair(DbSupport dbSupport, Connection connection, Schema schema, MigrationResolver migrationResolver, MetaDataTable metaDataTable, FlywayCallback[] callbacks) {
-        this.dbSupport = dbSupport;
+    public DbRepair(Connection connection, MigrationResolver migrationResolver, MetaDataTable metaDataTable, FlywayCallback[] callbacks) {
         this.connection = connection;
-        this.schema = schema;
-        this.migrationInfoService = new MigrationInfoServiceImpl(migrationResolver, metaDataTable, MigrationVersion.LATEST, true, true, true);
+        this.migrationInfoService = new MigrationInfoServiceImpl(migrationResolver, metaDataTable, MigrationVersion.LATEST, true, true);
         this.metaDataTable = metaDataTable;
         this.callbacks = callbacks;
     }
@@ -98,66 +76,45 @@ public class DbRepair {
      * Repairs the metadata table.
      */
     public void repair() {
-        try {
-            for (final FlywayCallback callback : callbacks) {
-                new TransactionTemplate(connection).execute(new TransactionCallback<Object>() {
-                    @Override
-                    public Object doInTransaction() throws SQLException {
-                        dbSupport.changeCurrentSchemaTo(schema);
-                        callback.beforeRepair(connection);
-                        return null;
-                    }
-                });
-            }
-
-            StopWatch stopWatch = new StopWatch();
-            stopWatch.start();
-
-            new TransactionTemplate(connection).execute(new TransactionCallback<Void>() {
-                public Void doInTransaction() {
-                    dbSupport.changeCurrentSchemaTo(schema);
-                    metaDataTable.removeFailedMigrations();
-                    repairChecksums();
+        for (final FlywayCallback callback : callbacks) {
+            new TransactionTemplate(connection).execute(new TransactionCallback<Object>() {
+                @Override
+                public Object doInTransaction() throws SQLException {
+                    callback.beforeRepair(connection);
                     return null;
                 }
             });
-
-            stopWatch.stop();
-
-            LOG.info("Successfully repaired metadata table " + metaDataTable + " (execution time "
-                    + TimeFormat.format(stopWatch.getTotalTimeMillis()) + ").");
-            if (!dbSupport.supportsDdlTransactions()) {
-                LOG.info("Manual cleanup of the remaining effects the failed migration may still be required.");
-            }
-
-            for (final FlywayCallback callback : callbacks) {
-                new TransactionTemplate(connection).execute(new TransactionCallback<Object>() {
-                    @Override
-                    public Object doInTransaction() throws SQLException {
-                        dbSupport.changeCurrentSchemaTo(schema);
-                        callback.afterRepair(connection);
-                        return null;
-                    }
-                });
-            }
-        } finally {
-            dbSupport.restoreCurrentSchema();
         }
-    }
 
-    public void repairChecksums() {
-        migrationInfoService.refresh();
-        for (MigrationInfo migrationInfo : migrationInfoService.all()) {
-            MigrationInfoImpl migrationInfoImpl = (MigrationInfoImpl) migrationInfo;
+        new TransactionTemplate(connection).execute(new TransactionCallback<Void>() {
+            public Void doInTransaction() {
+                metaDataTable.removeFailedMigrations();
 
-            ResolvedMigration resolved = migrationInfoImpl.getResolvedMigration();
-            AppliedMigration applied = migrationInfoImpl.getAppliedMigration();
-            if ((resolved != null) && (applied != null)) {
-                if (!ObjectUtils.nullSafeEquals(resolved.getChecksum(), applied.getChecksum())
-                        && resolved.getVersion() != null) {
-                    metaDataTable.updateChecksum(migrationInfoImpl.getVersion(), resolved.getChecksum());
+                migrationInfoService.refresh();
+                for (MigrationInfo migrationInfo : migrationInfoService.all()) {
+                    MigrationInfoImpl migrationInfoImpl = (MigrationInfoImpl) migrationInfo;
+
+                    ResolvedMigration resolved = migrationInfoImpl.getResolvedMigration();
+                    AppliedMigration applied = migrationInfoImpl.getAppliedMigration();
+                    if ((resolved != null) && (applied != null)) {
+                        if (!ObjectUtils.nullSafeEquals(resolved.getChecksum(), applied.getChecksum())) {
+                            metaDataTable.updateChecksum(migrationInfoImpl.getVersion(), resolved.getChecksum());
+                        }
+                    }
                 }
+
+                return null;
             }
+        });
+
+        for (final FlywayCallback callback : callbacks) {
+            new TransactionTemplate(connection).execute(new TransactionCallback<Object>() {
+                @Override
+                public Object doInTransaction() throws SQLException {
+                    callback.afterRepair(connection);
+                    return null;
+                }
+            });
         }
     }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,13 +27,5 @@ public class DerbySqlStatementBuilder extends SqlStatementBuilder {
             return "$$";
         }
         return null;
-    }
-
-    @Override
-    protected String cleanToken(String token) {
-        if (token.startsWith("X'")) {
-            return token.substring(token.indexOf("'"));
-        }
-        return super.cleanToken(token);
     }
 }

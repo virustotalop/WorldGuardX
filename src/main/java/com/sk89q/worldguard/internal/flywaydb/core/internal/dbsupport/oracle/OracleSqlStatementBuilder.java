@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,23 +19,10 @@ import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Delimiter;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.SqlStatementBuilder;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.StringUtils;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
  * SqlStatementBuilder supporting Oracle-specific PL/SQL constructs.
  */
 public class OracleSqlStatementBuilder extends SqlStatementBuilder {
-    /**
-     * Regex for keywords that can appear before a string literal without being separated by a space.
-     */
-    private static final Pattern KEYWORDS_BEFORE_STRING_LITERAL_REGEX = Pattern.compile("^(N|IF|ELSIF|SELECT|IMMEDIATE|RETURN|IS)('.*)");
-
-    /**
-     * Regex for keywords that can appear after a string literal without being separated by a space.
-     */
-    private static final Pattern KEYWORDS_AFTER_STRING_LITERAL_REGEX = Pattern.compile("(.*')(USING|THEN|FROM|AND|OR)(?!.)");
-
     /**
      * Delimiter of PL/SQL blocks and statements.
      */
@@ -52,14 +39,22 @@ public class OracleSqlStatementBuilder extends SqlStatementBuilder {
             return PLSQL_DELIMITER;
         }
 
-        if (StringUtils.countOccurrencesOf(statementStart, " ") < 8) {
+        if (StringUtils.countOccurrencesOf(statementStart, " ") < 4) {
             statementStart += line;
             statementStart += " ";
             statementStart = statementStart.replaceAll("\\s+", " ");
         }
 
-        if (statementStart.matches("CREATE( OR REPLACE)? (FUNCTION|PROCEDURE|PACKAGE|TYPE|TRIGGER).*")
-                || statementStart.matches("CREATE( OR REPLACE)?( AND (RESOLVE|COMPILE))?( NOFORCE)? JAVA (SOURCE|RESOURCE|CLASS).*")){
+        if (statementStart.startsWith("CREATE FUNCTION")
+                || statementStart.startsWith("CREATE PROCEDURE")
+                || statementStart.startsWith("CREATE PACKAGE")
+                || statementStart.startsWith("CREATE TYPE")
+                || statementStart.startsWith("CREATE TRIGGER")
+                || statementStart.startsWith("CREATE OR REPLACE FUNCTION")
+                || statementStart.startsWith("CREATE OR REPLACE PROCEDURE")
+                || statementStart.startsWith("CREATE OR REPLACE PACKAGE")
+                || statementStart.startsWith("CREATE OR REPLACE TYPE")
+                || statementStart.startsWith("CREATE OR REPLACE TRIGGER")){
             return PLSQL_DELIMITER;
         }
 
@@ -67,21 +62,10 @@ public class OracleSqlStatementBuilder extends SqlStatementBuilder {
     }
 
     @Override
-    protected String cleanToken(String token) {
-    	if (token.startsWith("'") && token.endsWith("'")){
-    		return token;
-    	}
-
-        Matcher beforeMatcher = KEYWORDS_BEFORE_STRING_LITERAL_REGEX.matcher(token);
-        if (beforeMatcher.find()) {
-            token = beforeMatcher.group(2);
+    protected String removeCharsetCasting(String token) {
+        if (token.startsWith("N'")) {
+            return token.substring(1);
         }
-
-        Matcher afterMatcher = KEYWORDS_AFTER_STRING_LITERAL_REGEX.matcher(token);
-        if (afterMatcher.find()) {
-            token = afterMatcher.group(1);
-        }
-
         return token;
     }
 
@@ -114,10 +98,5 @@ public class OracleSqlStatementBuilder extends SqlStatementBuilder {
             default:
                 return specialChar + "'";
         }
-    }
-
-    @Override
-    public boolean canDiscard() {
-        return super.canDiscard() || statementStart.startsWith("SET DEFINE OFF");
     }
 }

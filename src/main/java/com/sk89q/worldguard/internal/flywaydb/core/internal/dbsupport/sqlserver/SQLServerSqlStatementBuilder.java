@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,34 +18,25 @@ package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.sqlserver
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Delimiter;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.SqlStatementBuilder;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
  * SqlStatementBuilder supporting SQL Server-specific delimiter changes.
  */
 public class SQLServerSqlStatementBuilder extends SqlStatementBuilder {
-    /**
-     * Regex for keywords that can appear before a string literal without being separated by a space.
-     */
-    private static final Pattern KEYWORDS_BEFORE_STRING_LITERAL_REGEX = Pattern.compile("^(LIKE)('.*)");
-
     @Override
     protected Delimiter getDefaultDelimiter() {
         return new Delimiter("GO", true);
     }
 
     @Override
-    protected String cleanToken(String token) {
+    protected String extractAlternateOpenQuote(String token) {
         if (token.startsWith("N'")) {
-            return token.substring(token.indexOf("'"));
+            return "N'";
         }
+        return null;
+    }
 
-        Matcher beforeMatcher = KEYWORDS_BEFORE_STRING_LITERAL_REGEX.matcher(token);
-        if (beforeMatcher.find()) {
-            token = beforeMatcher.group(2);
-        }
-
-        return token;
+    @Override
+    protected String computeAlternateCloseQuote(String openQuote) {
+        return "'";
     }
 }

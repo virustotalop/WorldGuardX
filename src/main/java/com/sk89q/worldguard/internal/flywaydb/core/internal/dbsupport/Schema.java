@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,18 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport;
 
-import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.jdbc.JdbcUtils;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.util.jdbc.JdbcUtils;
+
 /**
  * Represents a database schema.
  */
-public abstract class Schema<S extends DbSupport> {
+public abstract class Schema {
     /**
      * The Jdbc Template for communicating with the DB.
      */
@@ -35,7 +35,7 @@ public abstract class Schema<S extends DbSupport> {
     /**
      * The database-specific support.
      */
-    protected final S dbSupport;
+    protected final DbSupport dbSupport;
 
     /**
      * The name of the schema.
@@ -49,7 +49,7 @@ public abstract class Schema<S extends DbSupport> {
      * @param dbSupport    The database-specific support.
      * @param name         The name of the schema.
      */
-    public Schema(JdbcTemplate jdbcTemplate, S dbSupport, String name) {
+    public Schema(JdbcTemplate jdbcTemplate, DbSupport dbSupport, String name) {
         this.jdbcTemplate = jdbcTemplate;
         this.dbSupport = dbSupport;
         this.name = name;
@@ -253,9 +253,6 @@ public abstract class Schema<S extends DbSupport> {
         return new Function[0];
     }
 
-    /**
-     * @return The quoted name of the schema.
-     */
     @Override
     public String toString() {
         return dbSupport.quote(name);

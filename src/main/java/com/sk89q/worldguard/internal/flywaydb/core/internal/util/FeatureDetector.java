@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,11 +44,6 @@ public final class FeatureDetector {
     private Boolean apacheCommonsLoggingAvailable;
 
     /**
-     * Flag indicating availability of the Slf4j.
-     */
-    private Boolean slf4jAvailable;
-
-    /**
      * Flag indicating availability of Spring JDBC.
      */
     private Boolean springJdbcAvailable;
@@ -84,19 +79,6 @@ public final class FeatureDetector {
         }
 
         return apacheCommonsLoggingAvailable;
-    }
-
-    /**
-     * Checks whether Slf4j is available.
-     *
-     * @return {@code true} if it is, {@code false if it is not}
-     */
-    public boolean isSlf4jAvailable() {
-        if (slf4jAvailable == null) {
-            slf4jAvailable = ClassUtils.isPresent("org.slf4j.Logger", classLoader);
-        }
-
-        return slf4jAvailable;
     }
 
     /**
@@ -148,7 +130,7 @@ public final class FeatureDetector {
      */
     public boolean isOsgiFrameworkAvailable() {
         if (osgiFrameworkAvailable == null) {
-            osgiFrameworkAvailable = ClassUtils.isPresent("org.osgi.framework.Bundle", FeatureDetector.class.getClassLoader());
+            osgiFrameworkAvailable = ClassUtils.isPresent("org.osgi.framework.Bundle", classLoader);
             LOG.debug("OSGi framework available: " + osgiFrameworkAvailable);
         }
 

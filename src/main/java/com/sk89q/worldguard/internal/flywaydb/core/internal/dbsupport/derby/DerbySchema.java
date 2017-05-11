@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,21 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.derby;
 
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Table;
-import com.sk89q.worldguard.internal.flywaydb.core.internal.util.StringUtils;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Table;
+import com.sk89q.worldguard.internal.flywaydb.core.internal.util.StringUtils;
+
 /**
  * Derby implementation of Schema.
  */
-public class DerbySchema extends Schema<DerbyDbSupport> {
+public class DerbySchema extends Schema {
     /**
      * Creates a new Derby schema.
      *
@@ -36,7 +37,7 @@ public class DerbySchema extends Schema<DerbyDbSupport> {
      * @param dbSupport    The database-specific support.
      * @param name         The name of the schema.
      */
-    public DerbySchema(JdbcTemplate jdbcTemplate, DerbyDbSupport dbSupport, String name) {
+    public DerbySchema(JdbcTemplate jdbcTemplate, DbSupport dbSupport, String name) {
         super(jdbcTemplate, dbSupport, name);
     }
 
@@ -63,11 +64,6 @@ public class DerbySchema extends Schema<DerbyDbSupport> {
 
     @Override
     protected void doClean() throws SQLException {
-        List<String> triggerNames = listObjectNames("TRIGGER", "");
-        for (String statement : generateDropStatements("TRIGGER", triggerNames, "")) {
-            jdbcTemplate.execute(statement);
-        }
-
         for (String statement : generateDropStatementsForConstraints()) {
             jdbcTemplate.execute(statement);
         }

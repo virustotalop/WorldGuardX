@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.command;
 
+import java.sql.Connection;
+
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.metadatatable.MetaDataTable;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.jdbc.TransactionCallback;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.jdbc.TransactionTemplate;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.Log;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.LogFactory;
-
-import java.sql.Connection;
 
 /**
  * Handles Flyway's automatic schema creation.

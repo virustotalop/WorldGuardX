@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,11 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.resolver.jdbc;
 
+import java.sql.Connection;
+
 import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
 import com.sk89q.worldguard.internal.flywaydb.core.api.migration.jdbc.JdbcMigration;
 import com.sk89q.worldguard.internal.flywaydb.core.api.resolver.MigrationExecutor;
-
-import java.sql.Connection;
 
 /**
  * Adapter for executing migrations implementing JdbcMigration.

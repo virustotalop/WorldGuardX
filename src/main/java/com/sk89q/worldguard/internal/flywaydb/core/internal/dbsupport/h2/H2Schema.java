@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,11 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.h2;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.DbSupport;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.JdbcTemplate;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Schema;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.dbsupport.Table;
@@ -22,14 +27,10 @@ import com.sk89q.worldguard.internal.flywaydb.core.internal.util.StringUtils;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.Log;
 import com.sk89q.worldguard.internal.flywaydb.core.internal.util.logging.LogFactory;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * H2 implementation of Schema.
  */
-public class H2Schema extends Schema<H2DbSupport> {
+public class H2Schema extends Schema {
     private static final Log LOG = LogFactory.getLog(H2Schema.class);
 
     /**
@@ -39,7 +40,7 @@ public class H2Schema extends Schema<H2DbSupport> {
      * @param dbSupport    The database-specific support.
      * @param name         The name of the schema.
      */
-    public H2Schema(JdbcTemplate jdbcTemplate, H2DbSupport dbSupport, String name) {
+    public H2Schema(JdbcTemplate jdbcTemplate, DbSupport dbSupport, String name) {
         super(jdbcTemplate, dbSupport, name);
     }
 
@@ -81,7 +82,7 @@ public class H2Schema extends Schema<H2DbSupport> {
 
         List<String> domainNames = listObjectNames("DOMAIN", "");
         if (!domainNames.isEmpty()) {
-            if (name.equals(dbSupport.getCurrentSchemaName())) {
+            if (name.equals(dbSupport.getCurrentSchema().getName())) {
                 for (String statement : generateDropStatementsForCurrentSchema("DOMAIN", domainNames, "")) {
                     jdbcTemplate.execute(statement);
                 }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.util;
 
-import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -38,14 +37,18 @@ public class UrlUtils {
      * @return The file path.
      */
     public static String toFilePath(URL url) {
+        String filePath;
+
         try {
-            String filePath = new File(URLDecoder.decode(url.getPath().replace("+", "%2b"), "UTF-8")).getAbsolutePath();
-            if (filePath.endsWith("/")) {
-                return filePath.substring(0, filePath.length() - 1);
-            }
-            return filePath;
+            filePath = URLDecoder.decode(url.getPath(), "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException("Can never happen", e);
         }
+
+        if (filePath.endsWith("/")) {
+            filePath = filePath.substring(0, filePath.length() - 1);
+        }
+
+        return filePath;
     }
 }

@@ -1,4 +1,5 @@
 /*
+ /*
  * WorldGuard, a suite of tools for Minecraft
  * Copyright (C) sk89q <http://www.sk89q.com>
  * Copyright (C) WorldGuard team and contributors
@@ -46,9 +47,11 @@ import com.sk89q.worldguard.bukkit.util.logging.LoggerToChatHandler;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.flags.Flag;
+import com.sk89q.worldguard.protection.flags.FlagContext;
 import com.sk89q.worldguard.protection.flags.InvalidFlagFormat;
 import com.sk89q.worldguard.protection.flags.RegionGroup;
 import com.sk89q.worldguard.protection.flags.RegionGroupFlag;
+import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.managers.RemovalStrategy;
 import com.sk89q.worldguard.protection.managers.migration.DriverMigration;
@@ -60,6 +63,7 @@ import com.sk89q.worldguard.protection.regions.GlobalProtectedRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion.CircularInheritanceException;
+import com.sk89q.worldguard.protection.util.DomainInputResolver.UserLocatorPolicy;
 import com.sk89q.worldguard.util.Enums;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -201,9 +205,9 @@ public final class RegionCommands extends RegionCommandsBase {
      * @throws CommandException any error
      */
     @Command(aliases = {"claim"},
-             usage = "<id> [<owner1> [<owner2> [<owners...>]]]",
+             usage = "<id>",
              desc = "Claim a region",
-             min = 1)
+             min = 1, max = 1)
     public void claim(CommandContext args, CommandSender sender) throws CommandException {
         warnAboutSaveFailures(sender);
 
@@ -279,9 +283,9 @@ public final class RegionCommands extends RegionCommandsBase {
             }
         }
 
-        region.getOwners().addPlayer(player.getName());
-
         RegionAdder task = new RegionAdder(plugin, manager, region);
+        task.setLocatorPolicy(UserLocatorPolicy.UUID_ONLY);
+        task.setOwnersInput(new String[]{player.getName()});
         ListenableFuture<?> future = plugin.getExecutorService().submit(task);
 
         AsyncCommandHelper.wrap(future, plugin, player)
@@ -465,6 +469,7 @@ public final class RegionCommands extends RegionCommandsBase {
         String flagName = args.getString(1);
         String value = args.argsLength() >= 3 ? args.getJoinedStrings(2) : null;
         RegionGroup groupValue = null;
+        FlagRegistry flagRegistry = plugin.getFlagRegistry();
         RegionPermissionModel permModel = getPermissionModel(sender);
 
         if (args.hasFlag('e')) {
@@ -489,7 +494,7 @@ public final class RegionCommands extends RegionCommandsBase {
             throw new CommandPermissionsException();
         }
 
-        Flag<?> foundFlag = DefaultFlag.fuzzyMatchFlag(flagName);
+        Flag<?> foundFlag = DefaultFlag.fuzzyMatchFlag(flagRegistry, flagName);
 
         // We didn't find the flag, so let's print a list of flags that the user
         // can use, and do nothing afterwards
@@ -497,7 +502,7 @@ public final class RegionCommands extends RegionCommandsBase {
             StringBuilder list = new StringBuilder();
 
             // Need to build a list
-            for (Flag<?> flag : DefaultFlag.getFlags()) {
+            for (Flag<?> flag : flagRegistry) {
                 // Can the user set this flag?
                 if (!permModel.maySetFlag(existing, flag)) {
                     continue;
@@ -536,7 +541,7 @@ public final class RegionCommands extends RegionCommandsBase {
             // Parse the [-g group] separately so entire command can abort if parsing
             // the [value] part throws an error.
             try {
-                groupValue = groupFlag.parseInput(plugin, sender, group);
+                groupValue = groupFlag.parseInput(FlagContext.create().setSender(sender).setInput(group).setObject("region", existing).build());
             } catch (InvalidFlagFormat e) {
                 throw new CommandException(e.getMessage());
             }
@@ -912,7 +917,7 @@ public final class RegionCommands extends RegionCommandsBase {
             throw new CommandException("The driver specified as 'to' does not seem to be supported in your version of WorldGuard.");
         }
 
-        DriverMigration migration = new DriverMigration(fromDriver, toDriver);
+        DriverMigration migration = new DriverMigration(fromDriver, toDriver, plugin.getFlagRegistry());
 
         LoggerToChatHandler handler = null;
         Logger minecraftLogger = null;
@@ -971,7 +976,7 @@ public final class RegionCommands extends RegionCommandsBase {
             ConfigurationManager config = plugin.getGlobalStateManager();
             RegionContainer container = plugin.getRegionContainer();
             RegionDriver driver = container.getDriver();
-            UUIDMigration migration = new UUIDMigration(driver, plugin.getProfileService());
+            UUIDMigration migration = new UUIDMigration(driver, plugin.getProfileService(), plugin.getFlagRegistry());
             migration.setKeepUnresolvedNames(config.keepUnresolvedNames);
             sender.sendMessage(ChatColor.YELLOW + "Now performing migration... this may take a while.");
             container.migrate(migration);

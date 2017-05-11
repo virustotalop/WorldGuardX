@@ -1,5 +1,5 @@
 /**
- * Copyright 2010-2016 Boxfuse GmbH
+ * Copyright 2010-2014 Axel Fontaine
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
  */
 package com.sk89q.worldguard.internal.flywaydb.core.internal.util;
 
-import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.sk89q.worldguard.internal.flywaydb.core.api.FlywayException;
 
 /**
  * Tool for replacing placeholders.
@@ -31,12 +31,7 @@ public class PlaceholderReplacer {
     /**
      * PlaceholderReplacer that doesn't replace any placeholders.
      */
-    public static final PlaceholderReplacer NO_PLACEHOLDERS = new PlaceholderReplacer(new HashMap<String, String>(), "", "") {
-        @Override
-        public String replacePlaceholders(String input) {
-            return input;
-        }
-    };
+    public static final PlaceholderReplacer NO_PLACEHOLDERS = new PlaceholderReplacer(new HashMap<String, String>(), "", "");
 
     /**
      * A map of <placeholder, replacementValue> to apply to sql migration scripts.
